@@ -978,6 +978,30 @@
             font-weight: 500;
         }
 
+        /* Ad Progress */
+        .ad-progress {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .ad-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(214, 41, 57, 0.1);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .ad-progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
         /* Responsive Design */
         @media (max-width: 480px) {
             .container {
@@ -1066,8 +1090,14 @@
             <div class="ad-buttons">
                 <button class="btn btn-primary" id="rewardedBtn">
                     <i class="fas fa-play-circle"></i>
-                    Watch Ad (+0.0005$)
+                    Watch 2 Ads (+0.001$)
                 </button>
+                <div class="ad-progress" id="adProgress" style="display: none;">
+                    <div>Watching ads: <span id="currentAd">1</span>/2</div>
+                    <div class="ad-progress-bar">
+                        <div class="ad-progress-fill" id="adProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
                 <div class="countdown-timer" id="countdownTimer" style="display: none;"></div>
             </div>
             
@@ -1185,37 +1215,54 @@
             </div>
         </div>
 
-        <!-- Profile View -->
-        <div id="profile-view" class="view">
+        <!-- About View -->
+        <div id="about-view" class="view">
             <div class="header">
-                <h1>My Profile</h1>
-                <p>Account information</p>
+                <h1>About</h1>
+                <p>Learn more about TronAdsFaucet</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-user"></i> User Information</h2>
-                <div class="input-group">
-                    <label for="userName"><i class="fas fa-signature"></i> User ID</label>
-                    <input type="text" id="userName" readonly>
+                <h2><i class="fas fa-info-circle"></i> How It Works</h2>
+                <div class="about-section">
+                    <h3>1. Watch Ads</h3>
+                    <p>Watch ads and earn TRON cryptocurrency. Each ad gives you 0.0005$ worth of TRON.</p>
                 </div>
                 
-                <button class="btn btn-warning" id="resetDataBtn">
-                    <i class="fas fa-redo"></i>
-                    Reset All Data
-                </button>
+                <div class="about-section">
+                    <h3>2. Invite Friends</h3>
+                    <p>Invite your friends and earn 0.01$ bonus for each friend who joins using your referral code.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>3. Withdraw Earnings</h3>
+                    <p>Withdraw your earnings to your TRON wallet when you reach the minimum amount of 0.10 TRX.</p>
+                </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-info-circle"></i> About</h2>
+                <h2><i class="fas fa-question-circle"></i> FAQ</h2>
                 <div class="about-section">
-                    <h3>TronAdsFaucet</h3>
-                    <p>A platform where you can earn TRON by watching ads. Earn 0.0005$ per ad and get extra bonuses by inviting your friends.</p>
+                    <h3>How many ads can I watch per day?</h3>
+                    <p>There's no daily limit! You can watch ads as many times as you want.</p>
                 </div>
                 
                 <div class="about-section">
-                    <h3>Version</h3>
-                    <p>v2.0.1</p>
+                    <h3>What is the minimum withdrawal amount?</h3>
+                    <p>The minimum withdrawal amount is 0.10 TRX.</p>
                 </div>
+                
+                <div class="about-section">
+                    <h3>How long do withdrawals take?</h3>
+                    <p>Withdrawal requests are processed within 24-48 hours.</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-shield-alt"></i> Privacy & Security</h2>
+                <p style="color: var(--tg-theme-hint-color);">
+                    Your personal information is safe. We only require your TRON wallet address for withdrawals.
+                </p>
             </div>
         </div>
 
@@ -1294,9 +1341,9 @@
             <div class="icon"><i class="fas fa-users"></i></div>
             Referral
         </button>
-        <button class="nav-btn" data-view="profile-view">
-            <div class="icon"><i class="fas fa-user"></i></div>
-            Profile
+        <button class="nav-btn" data-view="about-view">
+            <div class="icon"><i class="fas fa-info-circle"></i></div>
+            About
         </button>
     </div>
 
@@ -1312,17 +1359,22 @@
             referralCode: null,
             hasAppliedReferral: false,
             isAdmin: false,
-            adSequence: 0, // 0: TMA, 1: Adexora
             minWithdrawal: 0.10,
-            adReward: 0.0005,
+            adReward: 0.0005, // Per ad
+            totalAdReward: 0.001, // For 2 ads
             referralReward: 0.01,
             tronPrice: 0,
             tronChange: 0,
             adManager: null,
             adexoraReady: false,
             adCooldown: false,
-            cooldownTime: 5 // 5 seconds cooldown
+            cooldownTime: 5, // 5 seconds cooldown
+            currentAdIndex: 0,
+            totalAds: 2
         };
+
+        // Admin user IDs
+        const adminUsers = ['8401848644', '7904032877'];
 
         // DOM elements
         const views = document.querySelectorAll('.view');
@@ -1337,14 +1389,15 @@
         const applyReferralBtn = document.getElementById('applyReferralBtn');
         const referralInput = document.getElementById('referralInput');
         const rewardedBtn = document.getElementById('rewardedBtn');
+        const adProgress = document.getElementById('adProgress');
+        const currentAd = document.getElementById('currentAd');
+        const adProgressFill = document.getElementById('adProgressFill');
         const countdownTimer = document.getElementById('countdownTimer');
         const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
         const withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay');
         const withdrawBtn = document.getElementById('withdrawBtn');
         const paymentAddress = document.getElementById('paymentAddress');
         const withdrawAmount = document.getElementById('withdrawAmount');
-        const userName = document.getElementById('userName');
-        const resetDataBtn = document.getElementById('resetDataBtn');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
         const adminView = document.getElementById('admin-view');
         const adminTotalUsers = document.getElementById('adminTotalUsers');
@@ -1388,13 +1441,10 @@
             appState.referralCode = localStorage.getItem('referralCode');
             
             // Admin check
-            if (appState.userId === 'admin' || localStorage.getItem('isAdmin') === 'true') {
+            if (adminUsers.includes(appState.userId) || localStorage.getItem('isAdmin') === 'true') {
                 appState.isAdmin = true;
                 adminHeaderBtn.style.display = 'flex';
             }
-            
-            // Set user name
-            userName.value = 'User#' + appState.userId.substring(0, 6);
             
             // Check if referral applied
             if (localStorage.getItem('hasAppliedReferral')) {
@@ -1423,7 +1473,7 @@
             });
             
             // Ad button
-            rewardedBtn.addEventListener('click', showAd);
+            rewardedBtn.addEventListener('click', showAds);
             
             // Withdraw button
             mainWithdrawBtn.addEventListener('click', function() {
@@ -1437,9 +1487,6 @@
             // Referral buttons
             shareReferralBtn.addEventListener('click', shareReferralCode);
             applyReferralBtn.addEventListener('click', applyReferralCode);
-            
-            // Profile buttons
-            resetDataBtn.addEventListener('click', resetUserData);
             
             // Admin buttons
             adminResetStatsBtn.addEventListener('click', resetAdminStats);
@@ -1541,22 +1588,40 @@
             }
         }
 
-        // Show ad
-        function showAd() {
+        // Show ads (both TMA and Adexora)
+        function showAds() {
             // Check if in cooldown
             if (appState.adCooldown) {
-                showStatus('Please wait before watching another ad.', 'error');
+                showStatus('Please wait before watching more ads.', 'error');
                 return;
             }
+            
+            // Reset ad index
+            appState.currentAdIndex = 0;
             
             // Set button to loading state
             rewardedBtn.classList.add('btn-loading');
             rewardedBtn.disabled = true;
             
-            // Show ad based on sequence
-            if (appState.adSequence === 0) {
+            // Show progress
+            adProgress.style.display = 'block';
+            updateAdProgress();
+            
+            // Start showing ads
+            showNextAd();
+        }
+
+        // Show next ad in sequence
+        function showNextAd() {
+            appState.currentAdIndex++;
+            currentAd.textContent = appState.currentAdIndex;
+            updateAdProgress();
+            
+            if (appState.currentAdIndex === 1) {
+                // Show TMA ad first
                 showTMAAd();
-            } else {
+            } else if (appState.currentAdIndex === 2) {
+                // Show Adexora ad second
                 showAdexoraAd();
             }
         }
@@ -1564,8 +1629,8 @@
         // Show TMA ad
         function showTMAAd() {
             if (!appState.adManager) {
-                showStatus('Ad could not be loaded. Please try again.', 'error');
-                resetAdButton();
+                showStatus('TMA ad could not be loaded. Please try again.', 'error');
+                showNextAd(); // Try next ad anyway
                 return;
             }
             
@@ -1573,26 +1638,26 @@
                 appState.adManager()
                     .then(() => {
                         // Ad successful
-                        rewardUser();
-                        appState.adSequence = 1; // Next ad is Adexora
+                        showStatus('TMA ad completed successfully!', 'success');
+                        showNextAd();
                     })
                     .catch(error => {
                         console.error('TMA ad error:', error);
-                        showStatus('Ad could not be loaded. Please try again.', 'error');
-                        resetAdButton();
+                        showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
+                        showNextAd(); // Continue to next ad
                     });
             } catch (error) {
                 console.error('TMA ad error:', error);
-                showStatus('Ad could not be loaded. Please try again.', 'error');
-                resetAdButton();
+                showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
+                showNextAd(); // Continue to next ad
             }
         }
 
         // Show Adexora ad
         function showAdexoraAd() {
             if (typeof window.showAdexora !== 'function') {
-                showStatus('Ad could not be loaded. Please try again.', 'error');
-                resetAdButton();
+                showStatus('Adexora ad could not be loaded.', 'error');
+                completeAdSession();
                 return;
             }
             
@@ -1600,68 +1665,30 @@
                 window.showAdexora()
                     .then(() => {
                         // Ad successful
-                        rewardUser();
-                        appState.adSequence = 0; // Next ad is TMA
+                        showStatus('Adexora ad completed successfully!', 'success');
+                        completeAdSession();
                     })
                     .catch(error => {
                         console.error('Adexora ad error:', error);
-                        showStatus('Ad could not be loaded. Please try again.', 'error');
-                        resetAdButton();
+                        showStatus('Adexora ad could not be loaded.', 'error');
+                        completeAdSession();
                     });
             } catch (error) {
                 console.error('Adexora ad error:', error);
-                showStatus('Ad could not be loaded. Please try again.', 'error');
-                resetAdButton();
+                showStatus('Adexora ad could not be loaded.', 'error');
+                completeAdSession();
             }
         }
 
-        // Reset ad button
-        function resetAdButton() {
-            rewardedBtn.classList.remove('btn-loading');
-            
-            // Start cooldown
-            startCooldown();
-        }
-
-        // Start cooldown after ad
-        function startCooldown() {
-            appState.adCooldown = true;
-            let timeLeft = appState.cooldownTime;
-            
-            // Show countdown timer
-            countdownTimer.style.display = 'block';
-            countdownTimer.textContent = `Next ad in ${timeLeft} seconds`;
-            
-            // Update button
-            rewardedBtn.disabled = true;
-            rewardedBtn.innerHTML = '<i class="fas fa-clock"></i> Wait for Cooldown';
-            
-            // Start countdown
-            const countdownInterval = setInterval(() => {
-                timeLeft--;
-                countdownTimer.textContent = `Next ad in ${timeLeft} seconds`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    appState.adCooldown = false;
-                    countdownTimer.style.display = 'none';
-                    
-                    // Reset button
-                    rewardedBtn.disabled = false;
-                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Watch Ad (+0.0005$)';
-                }
-            }, 1000);
-        }
-
-        // Reward user
-        function rewardUser() {
-            // Calculate reward in TRX
-            const rewardInTRX = appState.adReward / appState.tronPrice;
+        // Complete ad session and reward user
+        function completeAdSession() {
+            // Calculate reward in TRX (for both ads)
+            const rewardInTRX = appState.totalAdReward / appState.tronPrice;
             
             // Update balance
             appState.balance += rewardInTRX;
-            appState.adCount += 1;
-            appState.dailyAdCount += 1;
+            appState.adCount += appState.totalAds;
+            appState.dailyAdCount += appState.totalAds;
             
             // Update local storage
             localStorage.setItem('balance', appState.balance);
@@ -1672,10 +1699,55 @@
             updateUI();
             
             // Show success message
-            showStatus(`Congratulations! You earned ${rewardInTRX.toFixed(6)} TRX.`, 'success');
+            showStatus(`Congratulations! You earned ${rewardInTRX.toFixed(6)} TRX from ${appState.totalAds} ads.`, 'success');
             
-            // Reset button
+            // Reset button and progress
             resetAdButton();
+            
+            // Start cooldown
+            startCooldown();
+        }
+
+        // Update ad progress
+        function updateAdProgress() {
+            const progress = (appState.currentAdIndex / appState.totalAds) * 100;
+            adProgressFill.style.width = `${progress}%`;
+        }
+
+        // Reset ad button
+        function resetAdButton() {
+            rewardedBtn.classList.remove('btn-loading');
+            adProgress.style.display = 'none';
+        }
+
+        // Start cooldown after ads
+        function startCooldown() {
+            appState.adCooldown = true;
+            let timeLeft = appState.cooldownTime;
+            
+            // Show countdown timer
+            countdownTimer.style.display = 'block';
+            countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
+            
+            // Update button
+            rewardedBtn.disabled = true;
+            rewardedBtn.innerHTML = '<i class="fas fa-clock"></i> Wait for Cooldown';
+            
+            // Start countdown
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    appState.adCooldown = false;
+                    countdownTimer.style.display = 'none';
+                    
+                    // Reset button
+                    rewardedBtn.disabled = false;
+                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Watch 2 Ads (+0.001$)';
+                }
+            }, 1000);
         }
 
         // Request withdrawal
@@ -1810,28 +1882,6 @@
             referralInput.value = '';
         }
 
-        // Reset user data
-        function resetUserData() {
-            if (confirm('All your data will be reset. Are you sure?')) {
-                localStorage.removeItem('balance');
-                localStorage.removeItem('adCount');
-                localStorage.removeItem('dailyAdCount');
-                localStorage.removeItem('referralCount');
-                localStorage.removeItem('referralEarnings');
-                localStorage.removeItem('hasAppliedReferral');
-                
-                appState.balance = 0;
-                appState.adCount = 0;
-                appState.dailyAdCount = 0;
-                appState.referralCount = 0;
-                appState.referralEarnings = 0;
-                appState.hasAppliedReferral = false;
-                
-                updateUI();
-                showStatus('Your data has been reset.', 'success');
-            }
-        }
-
         // Update admin panel
         function updateAdminPanel() {
             // Get user data
@@ -1874,7 +1924,7 @@
                     userElement.className = 'admin-user-item';
                     userElement.innerHTML = `
                         <div class="admin-user-info">
-                            <div class="admin-user-id">${userData.userName || 'User#' + userId.substring(0, 6)}</div>
+                            <div class="admin-user-id">User#${userId.substring(0, 6)}</div>
                             <div class="admin-user-balance">Balance: ${(userData.balance || 0).toFixed(4)} TRX</div>
                             <div class="admin-user-date">Ads: ${userData.adCount || 0} | Referrals: ${userData.referralCount || 0}</div>
                         </div>
@@ -1901,7 +1951,7 @@
                     requestElement.className = 'withdraw-request-item';
                     requestElement.innerHTML = `
                         <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">${user.userName || 'User#' + withdrawal.userId.substring(0, 6)}</div>
+                            <div class="withdraw-request-user">User#${withdrawal.userId.substring(0, 6)}</div>
                             <div class="withdraw-request-details">Amount: ${withdrawal.amount.toFixed(4)} TRX</div>
                             <div class="withdraw-request-address" onclick="copyToClipboard('${withdrawal.address}')">${withdrawal.address}</div>
                             <div class="withdraw-request-date">${new Date(withdrawal.date).toLocaleString('en-US')}</div>
