@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TronAdsFaucet - Watch Ads, Earn TRON</title>
     
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1077,8 +1079,14 @@
             <div class="ad-buttons">
                 <button class="btn btn-primary" id="rewardedBtn">
                     <i class="fas fa-play-circle"></i>
-                    Watch 1 Ad (+0.0005$)
+                    Watch 2 Ads (+0.001$)
                 </button>
+                <div class="ad-progress" id="adProgress" style="display: none;">
+                    <div>Watching ads: <span id="currentAd">1</span>/2</div>
+                    <div class="ad-progress-bar">
+                        <div class="ad-progress-fill" id="adProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
                 <div class="countdown-timer" id="countdownTimer" style="display: none;"></div>
             </div>
             
@@ -1334,19 +1342,21 @@
             hasAppliedReferral: false,
             isAdmin: false,
             minWithdrawal: 0.10,
-            adReward: 0.0005, // Per ad (0.0005$)
-            totalAdReward: 0.0005, // CHANGED: For 1 ad
+            adReward: 0.0005, // Per ad
+            totalAdReward: 0.001, // For 2 ads
             referralReward: 0.01,
             tronPrice: 0,
             tronChange: 0,
+            adManager: null,
             adexoraReady: false,
             adCooldown: false,
-            cooldownTime: 5, // 5 seconds cooldown (GÜNCELLENDİ)
-            totalAds: 1 // CHANGED: Only 1 ad
+            cooldownTime: 30, // 30 seconds cooldown
+            currentAdIndex: 0,
+            totalAds: 2
         };
 
         // Admin user IDs
-        const adminUsers = ['8401848644', '7904032877']; 
+        const adminUsers = ['8401848644', '7904032877'];
 
         // DOM elements
         const views = document.querySelectorAll('.view');
@@ -1361,7 +1371,9 @@
         const applyReferralBtn = document.getElementById('applyReferralBtn');
         const referralInput = document.getElementById('referralInput');
         const rewardedBtn = document.getElementById('rewardedBtn');
-        // Ad Progress UI kaldırıldı
+        const adProgress = document.getElementById('adProgress');
+        const currentAd = document.getElementById('currentAd');
+        const adProgressFill = document.getElementById('adProgressFill');
         const countdownTimer = document.getElementById('countdownTimer');
         const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
         const withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay');
@@ -1394,28 +1406,13 @@
 
         // Initialize app
         function initializeApp() {
-            let actualUserId = null;
-            
-            // 1. Önce Telegram Mini App'ten gerçek User ID'yi almaya çalış
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-                // Telegram ID'yi al ve String'e çevir
-                actualUserId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
-            }
-
-            // 2. Gerçek User ID bulunamazsa veya uygulamadan sonraki ilk girişte ise
-            if (!actualUserId) {
-                // localStorage'da kayıtlı ID varsa onu kullan
-                if (localStorage.getItem('userId')) {
-                    actualUserId = localStorage.getItem('userId');
-                } else {
-                    // Hiç ID yoksa rastgele bir ID oluştur
-                    actualUserId = generateUserId();
-                }
+            // Create user ID
+            if (!localStorage.getItem('userId')) {
+                const userId = generateUserId();
+                localStorage.setItem('userId', userId);
             }
             
-            // Gerçek veya geçerli User ID'yi appState ve localStorage'a kaydet
-            appState.userId = actualUserId;
-            localStorage.setItem('userId', actualUserId);
+            appState.userId = localStorage.getItem('userId');
             
             // Create referral code
             if (!localStorage.getItem('referralCode')) {
@@ -1574,26 +1571,75 @@
             }
         }
 
-        // Show ads (only Adexora)
+        // Show ads (both TMA and Adexora)
         function showAds() {
             // Check if in cooldown
             if (appState.adCooldown) {
-                showStatus('Lütfen reklam izlemeden önce bekleyin.', 'error');
+                showStatus('Please wait before watching more ads.', 'error');
                 return;
             }
+            
+            // Reset ad index
+            appState.currentAdIndex = 0;
             
             // Set button to loading state
             rewardedBtn.classList.add('btn-loading');
             rewardedBtn.disabled = true;
             
-            // Start showing the single Adexora ad
-            showAd();
+            // Show progress
+            adProgress.style.display = 'block';
+            updateAdProgress();
+            
+            // Start showing ads
+            showNextAd();
         }
 
-        // Show the single Adexora ad (TMA kodu kaldırıldı)
-        function showAd() {
+        // Show next ad in sequence
+        function showNextAd() {
+            appState.currentAdIndex++;
+            currentAd.textContent = appState.currentAdIndex;
+            updateAdProgress();
+            
+            if (appState.currentAdIndex === 1) {
+                // Show TMA ad first
+                showTMAAd();
+            } else if (appState.currentAdIndex === 2) {
+                // Show Adexora ad second
+                showAdexoraAd();
+            }
+        }
+
+        // Show TMA ad
+        function showTMAAd() {
+            if (!appState.adManager) {
+                showStatus('TMA ad could not be loaded. Please try again.', 'error');
+                showNextAd(); // Try next ad anyway
+                return;
+            }
+            
+            try {
+                appState.adManager()
+                    .then(() => {
+                        // Ad successful
+                        showStatus('TMA ad completed successfully!', 'success');
+                        showNextAd();
+                    })
+                    .catch(error => {
+                        console.error('TMA ad error:', error);
+                        showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
+                        showNextAd(); // Continue to next ad
+                    });
+            } catch (error) {
+                console.error('TMA ad error:', error);
+                showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
+                showNextAd(); // Continue to next ad
+            }
+        }
+
+        // Show Adexora ad
+        function showAdexoraAd() {
             if (typeof window.showAdexora !== 'function') {
-                showStatus('Reklam yüklenemedi. Ödül veriliyor...', 'error');
+                showStatus('Adexora ad could not be loaded.', 'error');
                 completeAdSession();
                 return;
             }
@@ -1602,31 +1648,30 @@
                 window.showAdexora()
                     .then(() => {
                         // Ad successful
-                        showStatus('Reklam başarıyla tamamlandı!', 'success');
+                        showStatus('Adexora ad completed successfully!', 'success');
                         completeAdSession();
                     })
                     .catch(error => {
                         console.error('Adexora ad error:', error);
-                        // Kullanıcı deneyimi için, reklam gösterilemese bile ödül verilebilir
-                        showStatus('Reklam yüklenemedi. Ödül veriliyor...', 'error');
+                        showStatus('Adexora ad could not be loaded.', 'error');
                         completeAdSession();
                     });
             } catch (error) {
                 console.error('Adexora ad error:', error);
-                showStatus('Reklam yüklenemedi. Ödül veriliyor...', 'error');
+                showStatus('Adexora ad could not be loaded.', 'error');
                 completeAdSession();
             }
         }
 
-        // Complete ad session and reward user (Tek reklam için güncellendi)
+        // Complete ad session and reward user
         function completeAdSession() {
-            // Calculate reward in TRX (for 1 ad, 0.0005$)
+            // Calculate reward in TRX (for both ads)
             const rewardInTRX = appState.totalAdReward / appState.tronPrice;
             
             // Update balance
             appState.balance += rewardInTRX;
-            appState.adCount += appState.totalAds; // totalAds is 1
-            appState.dailyAdCount += appState.totalAds; // totalAds is 1
+            appState.adCount += appState.totalAds;
+            appState.dailyAdCount += appState.totalAds;
             
             // Update local storage
             localStorage.setItem('balance', appState.balance);
@@ -1637,37 +1682,44 @@
             updateUI();
             
             // Show success message
-            showStatus(`Tebrikler! 1 reklamdan ${rewardInTRX.toFixed(6)} TRX kazandınız.`, 'success');
+            showStatus(`Congratulations! You earned ${rewardInTRX.toFixed(6)} TRX from ${appState.totalAds} ads.`, 'success');
             
-            // Reset button
+            // Reset button and progress
             resetAdButton();
             
             // Start cooldown
             startCooldown();
         }
 
-        // Reset ad button (Basitleştirildi)
+        // Update ad progress
+        function updateAdProgress() {
+            const progress = (appState.currentAdIndex / appState.totalAds) * 100;
+            adProgressFill.style.width = `${progress}%`;
+        }
+
+        // Reset ad button
         function resetAdButton() {
             rewardedBtn.classList.remove('btn-loading');
+            adProgress.style.display = 'none';
         }
 
         // Start cooldown after ads
         function startCooldown() {
             appState.adCooldown = true;
-            let timeLeft = appState.cooldownTime; // 5 saniye
+            let timeLeft = appState.cooldownTime;
             
             // Show countdown timer
             countdownTimer.style.display = 'block';
-            countdownTimer.textContent = `Sıradaki reklam ${timeLeft} saniye sonra`;
+            countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
             
             // Update button
             rewardedBtn.disabled = true;
-            rewardedBtn.innerHTML = '<i class="fas fa-clock"></i> Beklemede';
+            rewardedBtn.innerHTML = '<i class="fas fa-clock"></i> Wait for Cooldown';
             
             // Start countdown
             const countdownInterval = setInterval(() => {
                 timeLeft--;
-                countdownTimer.textContent = `Sıradaki reklam ${timeLeft} saniye sonra`;
+                countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
@@ -1676,7 +1728,7 @@
                     
                     // Reset button
                     rewardedBtn.disabled = false;
-                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Watch 1 Ad (+0.0005$)'; // Buton metni güncellendi
+                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Watch 2 Ads (+0.001$)';
                 }
             }, 1000);
         }
@@ -1688,18 +1740,18 @@
             
             // Validation
             if (!address || address.length < 10) {
-                showStatus('Lütfen geçerli bir TRON adresi girin.', 'error');
+                showStatus('Please enter a valid TRON address.', 'error');
                 return;
             }
             
             if (isNaN(amount) || amount < appState.minWithdrawal) {
-                showStatus(`Minimum çekim miktarı ${appState.minWithdrawal} TRX.`, 'error');
+                showStatus(`Minimum withdrawal amount is ${appState.minWithdrawal} TRX.`, 'error');
                 return;
             }
             
             const balanceInTRX = appState.balance / appState.tronPrice;
             if (amount > balanceInTRX) {
-                showStatus('Yetersiz bakiye.', 'error');
+                showStatus('Insufficient balance.', 'error');
                 return;
             }
             
@@ -1726,7 +1778,7 @@
             updateUI();
             
             // Success message
-            showStatus('Çekim talebiniz alındı. En kısa sürede işlenecektir.', 'success');
+            showStatus('Your withdrawal request has been received. It will be processed as soon as possible.', 'success');
             
             // Clear form
             paymentAddress.value = '';
@@ -1736,20 +1788,20 @@
 
         // Share referral code
         function shareReferralCode() {
-            const message = `TronAdsFaucet ile TRON kazanın! Benim referans kodumu kullanın: ${appState.referralCode}\n\nhttps://t.me/TronAdsFaucetBot`;
+            const message = `Earn TRON with TronAdsFaucet! Use my referral code: ${appState.referralCode}\n\nhttps://t.me/TronAdsFaucetBot`;
             
             if (navigator.share) {
                 navigator.share({
                     title: 'TronAdsFaucet',
                     text: message
                 }).catch(err => {
-                    console.log('Paylaşım iptal edildi:', err);
+                    console.log('Share cancelled:', err);
                     copyToClipboard(message);
-                    showStatus('Referans kodu panoya kopyalandı!', 'success');
+                    showStatus('Referral code copied to clipboard!', 'success');
                 });
             } else {
                 copyToClipboard(message);
-                showStatus('Referans kodu panoya kopyalandı!', 'success');
+                showStatus('Referral code copied to clipboard!', 'success');
             }
         }
 
@@ -1758,17 +1810,17 @@
             const code = referralInput.value.trim();
             
             if (!code) {
-                showStatus('Lütfen bir referans kodu girin.', 'error');
+                showStatus('Please enter a referral code.', 'error');
                 return;
             }
             
             if (code === appState.referralCode) {
-                showStatus('Kendi referans kodunuzu kullanamazsınız.', 'error');
+                showStatus('You cannot use your own referral code.', 'error');
                 return;
             }
             
             if (appState.hasAppliedReferral) {
-                showStatus('Zaten bir referans kodu uyguladınız.', 'error');
+                showStatus('You have already applied a referral code.', 'error');
                 return;
             }
             
@@ -1784,7 +1836,7 @@
             }
             
             if (!referrerId) {
-                showStatus('Geçersiz referans kodu.', 'error');
+                showStatus('Invalid referral code.', 'error');
                 return;
             }
             
@@ -1808,7 +1860,7 @@
             updateUI();
             
             // Success message
-            showStatus(`Referans bonusu: ${rewardInTRX.toFixed(6)} TRX hesabınıza eklendi!`, 'success');
+            showStatus(`Referral bonus: ${rewardInTRX.toFixed(6)} TRX added to your account!`, 'success');
             
             // Clear input
             referralInput.value = '';
@@ -1825,6 +1877,7 @@
             let totalAds = 0;
             let totalWithdrawals = 0;
             let totalReferrals = 0;
+            let totalWithdrawalAmount = 0;
             
             for (const user of Object.values(users)) {
                 totalAds += user.adCount || 0;
@@ -1834,6 +1887,7 @@
             for (const withdrawal of withdrawals) {
                 if (withdrawal.status === 'completed') {
                     totalWithdrawals++;
+                    totalWithdrawalAmount += withdrawal.amount;
                 }
             }
             
@@ -1847,7 +1901,7 @@
             adminUserList.innerHTML = '';
             
             if (totalUsers === 0) {
-                adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcı bulunamadı.</p>';
+                adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">No users found.</p>';
             } else {
                 for (const [userId, userData] of Object.entries(users)) {
                     const userElement = document.createElement('div');
@@ -1855,12 +1909,12 @@
                     userElement.innerHTML = `
                         <div class="admin-user-info">
                             <div class="admin-user-id">User#${userId.substring(0, 6)}</div>
-                            <div class="admin-user-balance">Bakiye: ${(userData.balance || 0).toFixed(4)} TRX</div>
-                            <div class="admin-user-date">Reklam: ${userData.adCount || 0} | Referans: ${userData.referralCount || 0}</div>
+                            <div class="admin-user-balance">Balance: ${(userData.balance || 0).toFixed(4)} TRX</div>
+                            <div class="admin-user-date">Ads: ${userData.adCount || 0} | Referrals: ${userData.referralCount || 0}</div>
                         </div>
                         <div class="admin-user-actions">
                             <button class="admin-action-btn" onclick="adminAddBalance('${userId}')">+ TRX</button>
-                            <button class="admin-action-btn" onclick="adminResetUser('${userId}')">Sıfırla</button>
+                            <button class="admin-action-btn" onclick="adminResetUser('${userId}')">Reset</button>
                         </div>
                     `;
                     adminUserList.appendChild(userElement);
@@ -1873,21 +1927,22 @@
             const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
             
             if (pendingWithdrawals.length === 0) {
-                withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Bekleyen çekim talebi yok.</p>';
+                withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">No pending withdrawal requests.</p>';
             } else {
                 for (const withdrawal of pendingWithdrawals) {
+                    const user = users[withdrawal.userId] || {};
                     const requestElement = document.createElement('div');
                     requestElement.className = 'withdraw-request-item';
                     requestElement.innerHTML = `
                         <div class="withdraw-request-info">
                             <div class="withdraw-request-user">User#${withdrawal.userId.substring(0, 6)}</div>
-                            <div class="withdraw-request-details">Miktar: ${withdrawal.amount.toFixed(4)} TRX</div>
+                            <div class="withdraw-request-details">Amount: ${withdrawal.amount.toFixed(4)} TRX</div>
                             <div class="withdraw-request-address" onclick="copyToClipboard('${withdrawal.address}')">${withdrawal.address}</div>
                             <div class="withdraw-request-date">${new Date(withdrawal.date).toLocaleString('en-US')}</div>
                         </div>
                         <div class="withdraw-request-actions">
-                            <button class="withdraw-action-btn approve" onclick="adminApproveWithdrawal('${withdrawal.id}')">Onayla</button>
-                            <button class="withdraw-action-btn reject" onclick="adminRejectWithdrawal('${withdrawal.id}')">Reddet</button>
+                            <button class="withdraw-action-btn approve" onclick="adminApproveWithdrawal('${withdrawal.id}')">Approve</button>
+                            <button class="withdraw-action-btn reject" onclick="adminRejectWithdrawal('${withdrawal.id}')">Reject</button>
                         </div>
                     `;
                     withdrawRequestsList.appendChild(requestElement);
@@ -1897,17 +1952,17 @@
 
         // Reset admin statistics
         function resetAdminStats() {
-            if (confirm('Tüm istatistikler sıfırlanacak. Emin misiniz?')) {
+            if (confirm('All statistics will be reset. Are you sure?')) {
                 localStorage.removeItem('users');
                 localStorage.removeItem('withdrawals');
                 updateAdminPanel();
-                showStatus('İstatistikler sıfırlandı.', 'success');
+                showStatus('Statistics have been reset.', 'success');
             }
         }
 
         // Clear all data
         function clearAllData() {
-            if (confirm('TÜM veriler silinecek. Bu işlem geri alınamaz. Emin misiniz?')) {
+            if (confirm('ALL data will be deleted. This action cannot be undone. Are you sure?')) {
                 localStorage.clear();
                 location.reload();
             }
@@ -1940,10 +1995,10 @@
                         tronPriceElement.textContent = `$${appState.tronPrice.toFixed(4)}`;
                         
                         if (change24h >= 0) {
-                            tronChangeElement.textContent = `24s: +${change24h.toFixed(2)}%`;
+                            tronChangeElement.textContent = `24h: +${change24h.toFixed(2)}%`;
                             tronChangeElement.className = 'chart-change positive';
                         } else {
-                            tronChangeElement.textContent = `24s: ${change24h.toFixed(2)}%`;
+                            tronChangeElement.textContent = `24h: ${change24h.toFixed(2)}%`;
                             tronChangeElement.className = 'chart-change negative';
                         }
                         
@@ -1954,10 +2009,10 @@
                         drawTronChart();
                     }
                 } else {
-                    throw new Error('TRON fiyatı alınamadı');
+                    throw new Error('Failed to fetch TRON price');
                 }
             } catch (error) {
-                console.error('TRON fiyatı yüklenirken hata:', error);
+                console.error('Error loading TRON price:', error);
                 // Fallback to simulated data
                 const simulatedPrice = 0.12 + (Math.random() * 0.02 - 0.01);
                 const simulatedChange = (Math.random() * 4 - 2);
@@ -1968,10 +2023,10 @@
                 tronPriceElement.textContent = `$${simulatedPrice.toFixed(4)}`;
                 
                 if (simulatedChange >= 0) {
-                    tronChangeElement.textContent = `24s: +${simulatedChange.toFixed(2)}%`;
+                    tronChangeElement.textContent = `24h: +${simulatedChange.toFixed(2)}%`;
                     tronChangeElement.className = 'chart-change positive';
                 } else {
-                    tronChangeElement.textContent = `24s: ${simulatedChange.toFixed(2)}%`;
+                    tronChangeElement.textContent = `24h: ${simulatedChange.toFixed(2)}%`;
                     tronChangeElement.className = 'chart-change negative';
                 }
                 
@@ -2001,18 +2056,17 @@
                 data.push(currentPrice);
             }
             
-            // Define chart area and scaling
-            const padding = 10;
-            const chartWidth = width - 2 * padding;
-            const chartHeight = height - 2 * padding;
-            const maxPrice = Math.max(...data) * 1.05;
-            const minPrice = Math.min(...data) * 0.95;
+            // Draw chart
+            const padding = 20;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            const minPrice = Math.min(...data);
+            const maxPrice = Math.max(...data);
             const priceRange = maxPrice - minPrice;
             
             // Line
             ctx.beginPath();
-            
-            // Move to the first point
             ctx.moveTo(padding, height - padding - ((data[0] - minPrice) / priceRange) * chartHeight);
             
             for (let i = 1; i < data.length; i++) {
@@ -2038,8 +2092,20 @@
             ctx.fill();
         }
 
-        // Initialize Ad Manager (TMA kodu kaldırıldı)
+        // Initialize Ad Manager
         function initializeAdManager() {
+            // Initialize TMA Ad Manager
+            if (typeof window.initCdTma === 'function') {
+                window.initCdTma({ id: 6093277 })
+                    .then(show => {
+                        appState.adManager = show;
+                        console.log('TMA Ad Manager initialized');
+                    })
+                    .catch(error => {
+                        console.error('Failed to initialize TMA Ad Manager:', error);
+                    });
+            }
+            
             // Check Adexora
             if (typeof window.showAdexora === 'function') {
                 appState.adexoraReady = true;
@@ -2050,14 +2116,14 @@
         // Copy referral code
         function copyReferralCode() {
             copyToClipboard(appState.referralCode);
-            showStatus('Referans kodu panoya kopyalandı!', 'success');
+            showStatus('Referral code copied to clipboard!', 'success');
         }
 
         // Copy to clipboard
         function copyToClipboard(text) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text).catch(err => {
-                    console.error('Pano hatası:', err);
+                    console.error('Clipboard error:', err);
                     fallbackCopyToClipboard(text);
                 });
             } else {
@@ -2108,10 +2174,10 @@
 
         // Admin functions (global scope)
         window.adminAddBalance = function(userId) {
-            const amount = parseFloat(prompt('Eklenecek TRX Miktarı:'));
+            const amount = parseFloat(prompt('Amount of TRX to add:'));
             
             if (isNaN(amount) || amount <= 0) {
-                showStatus('Geçersiz miktar.', 'error');
+                showStatus('Invalid amount.', 'error');
                 return;
             }
             
@@ -2121,12 +2187,12 @@
                 users[userId].balance = (users[userId].balance || 0) + amount;
                 localStorage.setItem('users', JSON.stringify(users));
                 updateAdminPanel();
-                showStatus(`${amount} TRX kullanıcıya eklendi.`, 'success');
+                showStatus(`${amount} TRX added to user.`, 'success');
             }
         };
 
         window.adminResetUser = function(userId) {
-            if (confirm('Kullanıcı verileri sıfırlanacak. Emin misiniz?')) {
+            if (confirm('User data will be reset. Are you sure?')) {
                 const users = JSON.parse(localStorage.getItem('users') || '{}');
                 
                 if (users[userId]) {
@@ -2137,7 +2203,7 @@
                     users[userId].referralEarnings = 0;
                     localStorage.setItem('users', JSON.stringify(users));
                     updateAdminPanel();
-                    showStatus('Kullanıcı verileri sıfırlandı.', 'success');
+                    showStatus('User data has been reset.', 'success');
                 }
             }
         };
@@ -2150,7 +2216,7 @@
                 withdrawals[withdrawalIndex].status = 'completed';
                 localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
                 updateAdminPanel();
-                showStatus('Çekim talebi onaylandı.', 'success');
+                showStatus('Withdrawal request approved.', 'success');
             }
         };
 
@@ -2171,7 +2237,7 @@
                 withdrawals.splice(withdrawalIndex, 1);
                 localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
                 updateAdminPanel();
-                showStatus('Çekim talebi reddedildi ve bakiye iade edildi.', 'success');
+                showStatus('Withdrawal request rejected and balance returned.', 'success');
             }
         };
     </script>
