@@ -11,9 +11,6 @@
     <!-- Adexora SDK -->
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
     
-    <!-- Telegram WebApp -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -1065,7 +1062,7 @@
                         <canvas id="trxChartCanvas"></canvas>
                     </div>
                     <div class="chart-info">
-                        Visit CoinGecko for more information
+                        Real-time data from CoinGecko
                     </div>
                 </div>
             </div>
@@ -1368,7 +1365,7 @@
             adManager: null,
             adexoraReady: false,
             adCooldown: false,
-            cooldownTime: 5, // 5 seconds cooldown
+            cooldownTime: 30, // 30 seconds cooldown
             currentAdIndex: 0,
             totalAds: 2
         };
@@ -1538,8 +1535,9 @@
         // Update UI
         function updateUI() {
             // Balance
-            balanceDisplay.textContent = `TRX ${appState.balance.toFixed(4)}`;
-            withdrawBalanceDisplay.textContent = `TRX ${appState.balance.toFixed(4)}`;
+            const balanceInTRX = appState.balance / appState.tronPrice;
+            balanceDisplay.textContent = `TRX ${balanceInTRX.toFixed(4)}`;
+            withdrawBalanceDisplay.textContent = `TRX ${balanceInTRX.toFixed(4)}`;
             
             // Ad counts
             adCountDisplay.textContent = appState.adCount;
@@ -1551,9 +1549,9 @@
             referralCodeBox.textContent = appState.referralCode;
             
             // Update withdraw button
-            if (appState.balance >= appState.minWithdrawal) {
+            if (balanceInTRX >= appState.minWithdrawal) {
                 mainWithdrawBtn.disabled = false;
-                mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Withdraw (' + appState.balance.toFixed(4) + ' TRX)';
+                mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Withdraw (' + balanceInTRX.toFixed(4) + ' TRX)';
             } else {
                 mainWithdrawBtn.disabled = true;
                 mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Reach ' + appState.minWithdrawal + ' TRX to Withdraw';
@@ -1766,7 +1764,8 @@
                 return;
             }
             
-            if (amount > appState.balance) {
+            const balanceInTRX = appState.balance / appState.tronPrice;
+            if (amount > balanceInTRX) {
                 showStatus('Insufficient balance.', 'error');
                 return;
             }
@@ -1787,7 +1786,7 @@
             localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
             
             // Update balance
-            appState.balance -= amount;
+            appState.balance -= amount * appState.tronPrice;
             localStorage.setItem('balance', appState.balance);
             
             // Update UI
@@ -1989,7 +1988,7 @@
             const amount = parseFloat(withdrawAmount.value);
             const address = paymentAddress.value.trim();
             
-            if (amount >= appState.minWithdrawal && amount <= appState.balance && address.length >= 10) {
+            if (amount >= appState.minWithdrawal && amount <= (appState.balance / appState.tronPrice) && address.length >= 10) {
                 withdrawBtn.disabled = false;
             } else {
                 withdrawBtn.disabled = true;
@@ -2008,7 +2007,7 @@
                         appState.tronPrice = data.tron.usd;
                         const change24h = data.tron.usd_24h_change || 0;
                         
-                        tronPriceElement.textContent = `$${appState.tronPrice.toFixed(3)}`;
+                        tronPriceElement.textContent = `$${appState.tronPrice.toFixed(4)}`;
                         
                         if (change24h >= 0) {
                             tronChangeElement.textContent = `24h: +${change24h.toFixed(2)}%`;
@@ -2017,6 +2016,9 @@
                             tronChangeElement.textContent = `24h: ${change24h.toFixed(2)}%`;
                             tronChangeElement.className = 'chart-change negative';
                         }
+                        
+                        // Update UI with new price
+                        updateUI();
                         
                         // Draw chart
                         drawTronChart();
@@ -2033,7 +2035,7 @@
                 appState.tronPrice = simulatedPrice;
                 appState.tronChange = simulatedChange;
                 
-                tronPriceElement.textContent = `$${simulatedPrice.toFixed(3)}`;
+                tronPriceElement.textContent = `$${simulatedPrice.toFixed(4)}`;
                 
                 if (simulatedChange >= 0) {
                     tronChangeElement.textContent = `24h: +${simulatedChange.toFixed(2)}%`;
@@ -2042,6 +2044,9 @@
                     tronChangeElement.textContent = `24h: ${simulatedChange.toFixed(2)}%`;
                     tronChangeElement.className = 'chart-change negative';
                 }
+                
+                // Update UI with simulated price
+                updateUI();
                 
                 drawTronChart();
             }
