@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TronAdsFaucet - Watch Ads, Earn TRON</title>
     
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -97,6 +99,7 @@
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
             50% { transform: translateY(-10px); }
         }
 
@@ -612,26 +615,385 @@
             box-shadow: var(--shadow);
         }
 
-        /* Chart/Price Styles - Canlı Fiyat Gösterimi */
-        .price-card {
-            background: var(--gradient-card);
-            padding: 25px;
-            border-radius: var(--radius);
-            margin-bottom: 25px;
-            box-shadow: var(--shadow);
+        /* Chart Styles */
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(214, 41, 57, 0.05);
+            border-radius: 12px;
             border: 1px solid var(--border-color);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color);
+        }
+
+        .chart-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .chart-change {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .chart-change.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .chart-change.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            cursor: pointer;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            text-align: center;
         }
 
-        .live-price-display {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--success-color);
+        .chart-placeholder:hover {
+            background: rgba(214, 41, 57, 0.1);
+        }
+
+        .chart-info {
+            text-align: center;
             margin-top: 10px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        /* TRX Chart Canvas */
+        #trxChartCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        /* Admin Styles */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat-card {
+            background: rgba(214, 41, 57, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .admin-stat-card:hover {
+            background: rgba(214, 41, 57, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .admin-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .admin-stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            text-transform: uppercase;
+        }
+
+        .admin-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .admin-control-btn {
+            padding: 14px;
+            background: var(--gradient-warning);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .admin-control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .admin-control-btn.danger {
+            background: var(--gradient-secondary);
+        }
+
+        /* Admin User List */
+        .admin-user-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .admin-user-item {
+            background: rgba(214, 41, 57, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
             margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .admin-user-item:hover {
+            background: rgba(214, 41, 57, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .admin-user-info {
+            flex: 1;
+        }
+
+        .admin-user-id {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .admin-user-balance {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 3px;
+        }
+
+        .admin-user-date {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .admin-user-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .admin-action-btn {
+            padding: 6px 10px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .admin-action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Withdraw Requests */
+        .withdraw-requests-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .withdraw-request-item {
+            background: rgba(214, 41, 57, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .withdraw-request-item:hover {
+            background: rgba(214, 41, 57, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .withdraw-request-info {
+            margin-bottom: 10px;
+        }
+
+        .withdraw-request-user {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .withdraw-request-details {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 3px;
+        }
+
+        .withdraw-request-address {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+            background: rgba(214, 41, 57, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: var(--transition);
+            word-break: break-all;
+        }
+
+        .withdraw-request-address:hover {
+            background: rgba(214, 41, 57, 0.2);
+        }
+
+        .withdraw-request-date {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .withdraw-request-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .withdraw-action-btn {
+            padding: 8px 12px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .withdraw-action-btn.approve {
+            background: var(--gradient-success);
+        }
+
+        .withdraw-action-btn.reject {
+            background: var(--gradient-secondary);
+        }
+
+        .withdraw-action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Referral History */
+        .referral-history {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .referral-history-item {
+            background: rgba(214, 41, 57, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .referral-history-item:hover {
+            background: rgba(214, 41, 57, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .referral-history-user {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .referral-history-date {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .referral-history-bonus {
+            font-size: 14px;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        /* About Styles */
+        .about-section {
+            margin-bottom: 20px;
+        }
+
+        .about-section h3 {
+            color: var(--tg-theme-text-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .about-section p {
+            color: var(--tg-theme-hint-color);
+            line-height: 1.6;
+        }
+
+        /* Countdown Timer */
+        .countdown-timer {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Ad Progress */
+        .ad-progress {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .ad-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(214, 41, 57, 0.1);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .ad-progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
         }
 
         /* Responsive Design */
@@ -639,24 +1001,19 @@
             .container {
                 padding: 15px 10px 90px 10px;
             }
-            
             .card {
                 padding: 20px;
             }
-            
             .balance-amount {
                 font-size: 36px;
             }
-            
             .btn {
                 padding: 16px;
                 font-size: 16px;
             }
-            
             .footer-nav {
                 padding: 10px 0;
             }
-            
             .nav-btn {
                 padding: 6px 12px;
                 font-size: 11px;
@@ -666,851 +1023,652 @@
 </head>
 <body>
     <div class="container">
-        <div id="home-view" class="view">
-            <div class="header">
-                <div class="logo-container">
-                    <div class="logo">
-                        <i class="fas fa-ad"></i>
-                    </div>
-                </div>
-                <h1>TronAdsFaucet</h1>
-                <p>Watch Ads and Earn TRON</p>
-                <button class="admin-header-btn" id="adminHeaderBtn" style="display: none;">
-                    <i class="fas fa-cog"></i>
-                    Admin
-                </button>
-            </div>
-            
-            <div class="price-card">
-                <h2><i class="fas fa-chart-line"></i> TRON Price (USD)</h2>
-                <div class="live-price-display" id="tronPriceDisplay">Loading...</div>
-                <div style="text-align: center; font-size: 12px; color: var(--tg-theme-hint-color);">
-                    (Price updated live via CoinGecko. If live data fails, a fallback price of $0.05 is used.)
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-wallet"></i> Current Balance</h2>
-                <div class="balance-amount" id="balanceDisplay">TRX 0.00</div>
-                <div class="ad-info-grid">
-                    <div class="ad-info-item">
-                        <h3 id="adCountDisplay">0</h3>
-                        <p>Total Ads Watched</p>
-                    </div>
-                    <div class="ad-info-item">
-                        <h3 id="dailyAdCountDisplay">0</h3>
-                        <p>Today's Ads</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="ad-buttons">
-                <button class="btn btn-primary" id="rewardedBtn">
-                    <i class="fas fa-play-circle"></i>
-                    Watch 2 Ads (+0.0005$ Equivalent)
-                </button>
-                <div class="ad-progress" id="adProgress" style="display: none;">
-                    <div>Watching ads: <span id="currentAd">1</span>/2</div>
-                    <div class="ad-progress-bar">
-                        <div class="ad-progress-fill" id="adProgressFill" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="countdown-timer" id="countdownTimer" style="display: none;"></div>
-            </div>
-            
-            <button class="btn btn-success" id="mainWithdrawBtn" disabled>
-                <i class="fas fa-money-bill-wave"></i>
-                Reach 0.10 TRX to Withdraw
-            </button>
-        </div>
 
-        <div id="withdraw-view" class="view">
-            <div class="header">
-                <h1>Withdraw</h1>
-                <p>Claim your earnings</p>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-wallet"></i> Your Balance</h2>
-                <div class="balance-amount" id="withdrawBalanceDisplay">TRX 0.00</div>
-                <p style="color: var(--tg-theme-hint-color); margin-top: 15px; text-align: center;">
-                    Minimum withdrawal amount is 0.10 TRX.
-                </p>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-money-check"></i> Payment Details</h2>
-                <div class="input-group">
-                    <label for="paymentAddress"><i class="fas fa-address-card"></i> Your TRON Wallet Address</label>
-                    <input type="text" id="paymentAddress" placeholder="T... (TRON Address)">
-                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
-                        Enter your TRON (TRC20) address. Must start with T.
-                    </p>
-                </div>
-                
-                <div class="input-group">
-                    <label for="withdrawAmount"><i class="fas fa-coins"></i> Amount to Withdraw (TRX)</label>
-                    <input type="number" id="withdrawAmount" placeholder="0.10">
-                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
-                        Minimum: 0.10 TRX
-                    </p>
-                </div>
-                
-                <button class="btn btn-success" id="withdrawBtn" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Withdrawal Request
-                </button>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-history"></i> Withdrawal History</h2>
-                <div id="withdrawHistory">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        You don't have any withdrawal requests yet.
-                    </p>
-                </div>
-            </div>
+        <div id="loading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--tg-theme-bg-color); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 50px; color: var(--tg-theme-button-color); margin-bottom: 20px;"></i>
+            <p style="color: var(--tg-theme-hint-color);">Veriler yükleniyor...</p>
         </div>
-
-        <div id="referral-view" class="view">
-            <div class="header">
-                <h1>Invite Friends</h1>
-                <p>Invite your friends and earn bonuses</p>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-user-plus"></i> Your Referral Info</h2>
-                <div class="ad-info-grid">
-                    <div class="ad-info-item">
-                        <h3 id="referralCount">0</h3>
-                        <p>Invited</p>
-                    </div>
-                    <div class="ad-info-item">
-                        <h3 id="referralEarnings">0 TRX</h3>
-                        <p>Total Earnings</p>
-                    </div>
-                </div>
-                <div class="referral-code-box" id="referralCodeBox"> Loading... </div>
-                <button class="referral-share-btn" id="shareReferralBtn">
-                    <i class="fas fa-share-alt"></i>
-                    Share Referral Code
-                </button>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-gift"></i> Invite Your Friend</h2>
-                <p style="margin-bottom: 15px; color: var(--tg-theme-hint-color);">
-                    Invite your friends and earn <strong>0.01$</strong> bonus for each!
-                </p>
-                <div class="referral-input-container">
-                    <h3 style="margin-bottom: 10px; color: var(--tg-theme-text-color);">Enter Referral Code</h3>
-                    <p style="font-size: 14px; color: var(--tg-theme-hint-color); margin-bottom: 10px;">
-                        Enter a friend's referral code to get a bonus.
-                    </p>
-                    <div class="referral-input-group">
-                        <input type="text" id="referralInput" placeholder="Enter referral code">
-                        <button id="applyReferralBtn">Apply</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-list"></i> Referral History</h2>
-                <div id="referralHistoryList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        You don't have any referral history yet.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div id="about-view" class="view">
-            <div class="header">
-                <h1>About</h1>
-                <p>Learn more about TronAdsFaucet</p>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-info-circle"></i> How It Works</h2>
-                <div class="about-section">
-                    <h3>1. Watch Ads</h3>
-                    <p>Watch 2 ads and earn 0.0005$ worth of TRON cryptocurrency.</p>
-                </div>
-                <div class="about-section">
-                    <h3>2. Invite Friends</h3>
-                    <p>Invite your friends and earn 0.01$ bonus for each friend who joins using your referral code.</p>
-                </div>
-                <div class="about-section">
-                    <h3>3. Withdraw Earnings</h3>
-                    <p>Withdraw your earnings to your TRON wallet when you reach the minimum amount of 0.10 TRX.</p>
-                </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-question-circle"></i> FAQ</h2>
-                <div class="about-section">
-                    <h3>How many ads can I watch per day?</h3>
-                    <p>There's no daily limit! You can watch ads as many times as you want.</p>
-                </div>
-                <div class="about-section">
-                    <h3>What is the minimum withdrawal amount?</h3>
-                    <p>The minimum withdrawal amount is 0.10 TRX.</p>
-                </div>
-                <div class="about-section">
-                    <h3>How long do withdrawals take?</h3>
-                    <p>Withdrawal requests are processed within 24-48 hours.</p>
-                </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-shield-alt"></i> Privacy & Security</h2>
-                <p style="color: var(--tg-theme-hint-color);">
-                    Your personal information is safe. We only require your TRON wallet address for withdrawals.
-                </p>
-            </div>
-        </div>
-
-        <div id="admin-view" class="view">
-            <div class="header">
-                <h1>Admin Panel</h1>
-                <p>Application management and statistics</p>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-chart-bar"></i> General Statistics</h2>
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalUsers">0</div>
-                        <div class="admin-stat-label">Total Users</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalAds">0</div>
-                        <div class="admin-stat-label">Total Ads</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalWithdrawals">0</div>
-                        <div class="admin-stat-label">Total Withdrawals</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalReferrals">0</div>
-                        <div class="admin-stat-label">Total Referrals</div>
-                    </div>
-                </div>
-                <div class="admin-controls">
-                    <button class="admin-control-btn" id="adminResetStatsBtn">
-                        <i class="fas fa-redo"></i>
-                        Reset Statistics
-                    </button>
-                    <button class="admin-control-btn danger" id="adminClearDataBtn">
-                        <i class="fas fa-trash"></i>
-                        Clear All Data
-                    </button>
-                </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-users"></i> User Management</h2>
-                <div class="admin-user-list" id="adminUserList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        Loading users...
-                    </p>
-                </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-money-bill-wave"></i> Withdrawal Requests</h2>
-                <div class="withdraw-requests-list" id="withdrawRequestsList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        No withdrawal requests.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="status-message" id="statusMessage"></div>
-    
-    <div class="footer-nav">
-        <button class="nav-btn active" data-view="home-view">
-            <div class="icon"><i class="fas fa-home"></i></div>
-            Home
-        </button>
-        <button class="nav-btn" data-view="withdraw-view">
-            <div class="icon"><i class="fas fa-wallet"></i></div>
-            Withdraw
-        </button>
-        <button class="nav-btn" data-view="referral-view">
-            <div class="icon"><i class="fas fa-users"></i></div>
-            Referral
-        </button>
-        <button class="nav-btn" data-view="about-view">
-            <div class="icon"><i class="fas fa-info-circle"></i></div>
-            About
-        </button>
-    </div>
-    
-    <script>
-        // --- JSONBIN CONFIGURATION ---
-        // LÜTFEN BU JSONBIN ID'SİNİN DOĞRU OLDUĞUNDAN EMİN OLUN.
-        const JSONBIN_ID = '68e2b3ebd0ea881f40965de6'; 
-        // LÜTFEN BU MASTER KEY'İN DOĞRU OLDUĞUNDAN EMİN OLUN.
-        const JSONBIN_MASTER_KEY = '$2a$10$Z5pw8wmihH97EgC6kgHAoebiEzuzhHLO361BA7ZAdTLZR.NY1gfK6'; 
-        let serverData = { users: {}, withdrawals: [], stats: { totalUsers: 0, totalAds: 0, totalWithdrawals: 0, totalReferrals: 0 } };
         
-        // --- JSONBIN HELPER FUNCTIONS (HATA KONTROLÜ GÜÇLENDİRİLDİ) ---
+        <div id="app" class="view" style="display: none;">
 
-        async function fetchDataFromJsonBin() {
+            <div id="home-view" class="view" style="display: block;">
+                <div class="header">
+                    <div class="logo-container">
+                        <div class="logo">
+                            <i class="fas fa-ad"></i>
+                        </div>
+                    </div>
+                    <h1>TronAdsFaucet</h1>
+                    <p>Watch Ads and Earn TRON</p>
+                    <button class="admin-header-btn" id="adminButton" style="display: none;" onclick="showView('admin-view')">
+                        <i class="fas fa-cog"></i> Admin
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> TRON Price</h2>
+                    <div class="chart-header">
+                        <span class="chart-title">TRX/USD</span>
+                        <span id="trxPrice" class="chart-price">$0.1200</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-wallet"></i> Current Balance</h2>
+                    <div class="balance-amount" id="balanceAmount">
+                        0.0000 USD (0.00 TRX)
+                    </div>
+                    
+                    <div class="ad-buttons">
+                        <button class="btn btn-primary" id="withdrawButton" onclick="toggleAdPanel()">
+                            <i class="fas fa-dollar-sign"></i> Withdraw Funds
+                        </button>
+                        <button class="btn btn-success" id="adButton" onclick="toggleAdPanel()">
+                            <i class="fas fa-eye"></i> Watch Ads
+                        </button>
+                    </div>
+
+                    <div id="adPanel" style="display: none; flex-direction: column; gap: 15px;">
+                        <div class="ad-info-grid">
+                            <div class="ad-info-item">
+                                <h3><span id="adCount">0</span></h3>
+                                <p>Total Ads Watched</p>
+                            </div>
+                            <div class="ad-info-item">
+                                <h3><span id="dailyAdCount">0</span>/10</h3>
+                                <p>Daily Limit</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-success" onclick="startAdSession()">
+                            <i class="fas fa-play"></i> Start Ad Session (Earn $0.0005)
+                        </button>
+                    </div>
+                </div>
+
+                <div id="withdraw-view" class="card view" style="display: none;">
+                    <h2><i class="fas fa-sign-out-alt"></i> Withdraw TRX</h2>
+                    
+                    <div class="input-group">
+                        <label for="withdrawAmount">Amount (USD)</label>
+                        <input type="number" id="withdrawAmount" placeholder="Min $10.00 USD" value="10" min="10">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="walletAddress">TRC20/TRX Wallet Address</label>
+                        <input type="text" id="walletAddress" placeholder="T..." required>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="approveWithdrawal()">
+                        <i class="fas fa-paper-plane"></i> Send Withdrawal Request
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-user-friends"></i> Referral Program</h2>
+                    <p style="color: var(--tg-theme-hint-color); font-size: 14px; margin-bottom: 15px;">Invite friends and earn 5% of their ad earnings!</p>
+                    
+                    <p style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">Your Referral Code (Click to Copy):</p>
+                    <div class="referral-code-box" id="referralCodeBox" onclick="copyReferralCode()">
+                        Loading...
+                    </div>
+
+                    <a id="referralLink" href="#" target="_blank" style="display: block; font-size: 12px; color: var(--tg-theme-button-color); margin-top: 10px; word-break: break-all;"></a>
+
+                    <button class="referral-share-btn" onclick="copyReferralLink()">
+                        <i class="fas fa-share-alt"></i> Copy Share Link
+                    </button>
+                </div>
+            </div>
+
+            <div id="admin-view" class="view" style="display: none;">
+                <div class="header">
+                    <h1>Admin Panel</h1>
+                    <p>Manage Withdrawals and Users</p>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-clipboard-list"></i> Pending Withdrawals</h2>
+                    <div id="withdrawalRequests" class="withdraw-requests-list">
+                        <p>Loading requests...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about-view" class="view" style="display: none;">
+                <div class="header">
+                    <h1>About</h1>
+                </div>
+                <div class="card">
+                    <h2><i class="fas fa-info-circle"></i> Application Info</h2>
+                    <div class="about-section">
+                        <h3>How it Works</h3>
+                        <p>This is a Telegram Mini App faucet allowing users to earn small amounts of TRX (represented as USD) by watching ads. Earnings are tracked in USD and converted to TRX using the current market price upon display and withdrawal.</p>
+                        <h3>Data Storage</h3>
+                        <p>User data (balance, referral codes, ad counts, withdrawals) is securely stored using <strong>JsonBin.io</strong> as a persistent database.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="footer-nav">
+        <button class="nav-btn active" onclick="showView('home-view')">
+            <span class="icon"><i class="fas fa-home"></i></span> Home
+        </button>
+        <button class="nav-btn" onclick="showView('referral-view')">
+            <span class="icon"><i class="fas fa-user-friends"></i></span> Refer
+        </button>
+        <button class="nav-btn" onclick="showView('withdraw-view')">
+            <span class="icon"><i class="fas fa-dollar-sign"></i></span> Withdraw
+        </button>
+        <button class="nav-btn" onclick="showView('about-view')">
+            <span class="icon"><i class="fas fa-info-circle"></i></span> About
+        </button>
+    </div>
+    
+    <div id="statusMessage" class="status-message"></div>
+
+    <script>
+        // ********************************************
+        // * JSONBIN CONFIGURATION           *
+        // ********************************************
+        // KULLANICI TARAFINDAN GİRİLEN BİLGİLER
+        const JSONBIN_API_KEY = '$2a$10$Z5pw8wmihH97EgC6kgHAoebiEzuzhHLO361BA7ZAdTLZR.NY1gfK6'; // X-Master-Key
+        const JSONBIN_BIN_ID = '68e2b3ebd0ea881f40965de6'; 
+        const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+        // Admin kullanıcı ID'leri (Kendi Telegram ID'nizi buraya ekleyin)
+        const ADMIN_USER_IDS = [
+            '123456789' 
+        ];
+        
+        const MIN_WITHDRAWAL = 10; // Minimum çekim limiti (USD)
+        const REFERRAL_REWARD_PERCENTAGE = 0.05; // %5
+
+        const appState = {
+            userId: null,
+            username: 'Anonim',
+            isAdmin: false,
+            balance: 0, // Kullanıcının USD cinsinden bakiyesi
+            tronPrice: 0.12, // Başlangıç TRX fiyatı (API'den güncellenecek)
+            referralCode: 'LOADING',
+            adCount: 0,
+            dailyAdCount: 0,
+            lastAdReset: Date.now(),
+            totalAds: 2, // Bir reklam oturumunda gösterilecek reklam sayısı
+            totalAdReward: 0.0005, // Bir reklam oturumundan kazanılan USD miktarı
+            isAdPanelVisible: false,
+            // JsonBin'den çekilen tüm veriler
+            allUsers: {}, 
+            withdrawals: [] 
+        };
+
+        const elements = {
+            balanceAmount: document.getElementById('balanceAmount'),
+            referralCodeBox: document.getElementById('referralCodeBox'),
+            referralLink: document.getElementById('referralLink'),
+            adCountDisplay: document.getElementById('adCount'),
+            dailyAdCountDisplay: document.getElementById('dailyAdCount'),
+            adPanel: document.getElementById('adPanel'),
+            withdrawAmount: document.getElementById('withdrawAmount'),
+            walletAddress: document.getElementById('walletAddress'),
+            withdrawButton: document.getElementById('withdrawButton'),
+            adminPanel: document.getElementById('admin-view'),
+            withdrawalRequests: document.getElementById('withdrawalRequests'),
+            adminButton: document.getElementById('adminButton'),
+            trxPriceDisplay: document.getElementById('trxPrice'),
+            loadingScreen: document.getElementById('loading')
+        };
+        
+        // Element kısaltmaları
+        const referralCodeBox = elements.referralCodeBox;
+
+        // ********************************************
+        // * JSONBIN DATA HANDLERS           *
+        // ********************************************
+
+        async function fetchAllData() {
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+                // Bin ID ve Master Key ile verileri çek
+                const response = await fetch(JSONBIN_API_URL, {
                     method: 'GET',
                     headers: {
-                        'X-Master-Key': JSONBIN_MASTER_KEY
+                        'X-Master-Key': JSONBIN_API_KEY 
                     }
                 });
-
-                if (!response.ok) {
-                    const errorDetails = await response.text();
-                    // 401 hatası (Yetkisiz) alınıyorsa, Master Key veya ID yanlış demektir.
-                    console.error('JsonBin GET failed: Check JSONBIN_ID and MASTER_KEY!', response.status, errorDetails); 
-                    throw new Error(`JsonBin GET failed: Status ${response.status} - ${errorDetails}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP Hata! Durum: ${response.status}`);
+                
                 const data = await response.json();
                 return data.record;
             } catch (error) {
-                console.error('Error fetching data from JsonBin:', error.message, error); 
-                showStatus(`Sunucu bağlantı hatası. Master Key/ID'yi kontrol edin.`, 'error'); 
-                // Bağlantı hatasında boş, güvenli bir veri döndürülür
-                return { users: {}, withdrawals: [], stats: { totalUsers: 0, totalAds: 0, totalWithdrawals: 0, totalReferrals: 0 } };
+                console.error('JsonBin Veri Çekme Hatası:', error);
+                // Başarısız olursa varsayılan boş yapıyı döndür
+                showStatus('Veritabanına bağlanılamadı. Lütfen API/Bin ID\'yi kontrol edin.', 'error');
+                return { users: {}, withdrawals: [] };
             }
         }
 
-        async function saveDataToJsonBin(data) {
+        async function saveAllData(data) {
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+                // Verileri PUT (kaydet/güncelle) ile JsonBin'e gönder
+                const response = await fetch(JSONBIN_API_URL, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
+                        'X-Master-Key': JSONBIN_API_KEY, 
+                        'X-Bin-Versioning': 'false' // Versiyonlamayı kapatmak daha iyidir
                     },
                     body: JSON.stringify(data)
                 });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('JsonBin PUT failed: Check JSONBIN_ID and MASTER_KEY!', response.status, errorText);
-                    throw new Error(`JsonBin PUT failed: Status ${response.status} - ${errorText}`);
-                }
-
-                const result = await response.json();
-                return result;
+                if (!response.ok) throw new Error(`HTTP Hata! Durum: ${response.status}`);
+                console.log('Veriler JsonBin\'e kaydedildi.');
             } catch (error) {
-                console.error('Error saving data to JsonBin:', error.message, error);
-                showStatus(`Sunucuya kaydetme hatası. Master Key/ID'yi kontrol edin.`, 'error');
-                return null;
+                console.error('JsonBin Veri Kaydetme Hatası:', error);
+                showStatus('Veri Kaydetme Hatası! Lütfen tekrar deneyin.', 'error');
             }
         }
 
-        // Application state
-        const appState = {
-            balance: 0,
-            adCount: 0,
-            dailyAdCount: 0,
-            referralCount: 0,
-            referralEarnings: 0,
-            userId: null,
-            referralCode: null,
-            hasAppliedReferral: false,
-            isAdmin: false,
-            minWithdrawal: 0.10,
-            totalAdReward: 0.0005, // Total USD reward for 2 ads
-            referralReward: 0.01,
-            // Canlı fiyat çekilemezse kullanılacak GÜVENLİK FİYATI (FALLBACK)
-            tronPrice: 0.05, 
-            adCooldown: false,
-            cooldownTime: 30, // 30 seconds cooldown
-            currentAdIndex: 0,
-            totalAds: 2
-        };
-
-        // Admin user IDs
-        const adminUsers = ['8401848644', '7904032877'];
-
-        // DOM elements
-        const views = document.querySelectorAll('.view');
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const adCountDisplay = document.getElementById('adCountDisplay');
-        const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
-        const referralCountElement = document.getElementById('referralCount');
-        const referralEarnings = document.getElementById('referralEarnings');
-        const referralCodeBox = document.getElementById('referralCodeBox');
-        const shareReferralBtn = document.getElementById('shareReferralBtn');
-        const applyReferralBtn = document.getElementById('applyReferralBtn');
-        const referralInput = document.getElementById('referralInput');
-        const rewardedBtn = document.getElementById('rewardedBtn');
-        const adProgress = document.getElementById('adProgress');
-        const currentAd = document.getElementById('currentAd');
-        const adProgressFill = document.getElementById('adProgressFill');
-        const countdownTimer = document.getElementById('countdownTimer');
-        const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
-        const withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay');
-        const withdrawBtn = document.getElementById('withdrawBtn');
-        const paymentAddress = document.getElementById('paymentAddress');
-        const withdrawAmount = document.getElementById('withdrawAmount');
-        const adminHeaderBtn = document.getElementById('adminHeaderBtn');
-        const adminTotalUsers = document.getElementById('adminTotalUsers');
-        const adminTotalAds = document.getElementById('adminTotalAds');
-        const adminTotalWithdrawals = document.getElementById('adminTotalWithdrawals');
-        const adminTotalReferrals = document.getElementById('adminTotalReferrals');
-        const adminUserList = document.getElementById('adminUserList');
-        const withdrawRequestsList = document.getElementById('withdrawRequestsList');
-        const adminResetStatsBtn = document.getElementById('adminResetStatsBtn');
-        const adminClearDataBtn = document.getElementById('adminClearDataBtn');
-        const statusMessage = document.getElementById('statusMessage');
-        const tronPriceDisplay = document.getElementById('tronPriceDisplay');
-        const withdrawHistory = document.getElementById('withdrawHistory');
-        const referralHistoryList = document.getElementById('referralHistoryList');
+        async function saveUserSpecificData() {
+            // Sadece kullanıcının kendi verilerini appState'ten alıp allUsers objesine yazar ve kaydeder
+            appState.allUsers[appState.userId] = {
+                id: appState.userId,
+                balance: appState.balance,
+                referralCode: appState.referralCode,
+                adCount: appState.adCount,
+                dailyAdCount: appState.dailyAdCount,
+                lastAdReset: appState.lastAdReset,
+                isAdPanelVisible: appState.isAdPanelVisible
+            };
+            await saveAllData({ users: appState.allUsers, withdrawals: appState.withdrawals });
+        }
         
-        // --- CORE APPLICATION FUNCTIONS ---
+        // ********************************************
+        // * UTILITY & UI FUNCTIONS       *
+        // ********************************************
 
-        function updateDisplay() {
-            const balanceInTrx = appState.balance.toFixed(6);
-            balanceDisplay.textContent = `TRX ${balanceInTrx}`;
-            withdrawBalanceDisplay.textContent = `TRX ${balanceInTrx}`;
-            // Daily ad count is divided by 2 to show how many times the 2-ad sequence was completed
-            adCountDisplay.textContent = Math.floor(appState.adCount / appState.totalAds); 
-            dailyAdCountDisplay.textContent = Math.floor(appState.dailyAdCount / appState.totalAds); 
-
-            referralCountElement.textContent = appState.referralCount;
-            referralEarnings.textContent = `${appState.referralEarnings.toFixed(6)} TRX`;
-            referralCodeBox.textContent = appState.referralCode || 'N/A';
-            
-            // Canlı veya fallback fiyatı göster
-            tronPriceDisplay.textContent = `$${appState.tronPrice.toFixed(4)}`;
-            
-            // Update withdraw button text
-            if (appState.balance >= appState.minWithdrawal) {
-                mainWithdrawBtn.disabled = false;
-                mainWithdrawBtn.textContent = 'Withdraw Now';
-            } else {
-                mainWithdrawBtn.disabled = true;
-                mainWithdrawBtn.textContent = `Reach ${appState.minWithdrawal.toFixed(2)} TRX to Withdraw`;
-            }
-
-            if (appState.balance >= appState.minWithdrawal && paymentAddress.value && parseFloat(withdrawAmount.value) >= appState.minWithdrawal) {
-                withdrawBtn.disabled = false;
-            } else {
-                withdrawBtn.disabled = true;
-            }
-        }
-
-        async function updateAdminPanel() {
-            // Use serverData for admin stats
-            adminTotalUsers.textContent = Object.keys(serverData.users).length;
-            adminTotalAds.textContent = serverData.stats.totalAds;
-            adminTotalWithdrawals.textContent = serverData.withdrawals.filter(w => w.status === 'completed').length;
-            adminTotalReferrals.textContent = serverData.stats.totalReferrals;
-
-            // User List (Simplified for brevity, assumes data exists in serverData)
-            adminUserList.innerHTML = '';
-            for (const userId in serverData.users) {
-                const user = serverData.users[userId];
-                const userItem = document.createElement('div');
-                userItem.className = 'admin-user-item';
-                userItem.innerHTML = `
-                    <div class="admin-user-info">
-                        <div class="admin-user-id">ID: ${user.id}</div>
-                        <div class="admin-user-balance">Balance: ${user.balance ? user.balance.toFixed(6) : '0.000000'} TRX</div>
-                        <div class="admin-user-date">Ads Watched: ${user.adCount || 0}</div>
-                    </div>
-                    <div class="admin-user-actions">
-                        <button class="admin-action-btn" onclick="window.adminViewUser('${user.id}')">View</button>
-                    </div>
-                `;
-                adminUserList.appendChild(userItem);
-            }
-            
-            // Withdrawal Requests (Simplified for brevity, uses serverData)
-            withdrawRequestsList.innerHTML = '';
-            const pendingRequests = serverData.withdrawals.filter(w => w.status === 'pending');
-
-            if (pendingRequests.length === 0) {
-                withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">No withdrawal requests.</p>';
-            } else {
-                pendingRequests.forEach(request => {
-                    const requestItem = document.createElement('div');
-                    requestItem.className = 'withdraw-request-item';
-                    requestItem.innerHTML = `
-                        <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">User ID: ${request.userId}</div>
-                            <div class="withdraw-request-details">Amount: ${request.amount.toFixed(6)} TRX | Status: ${request.status}</div>
-                            <div class="withdraw-request-address" onclick="navigator.clipboard.writeText('${request.address}'); showStatus('Address copied!', 'info');">Address: ${request.address}</div>
-                            <div class="withdraw-request-date">Date: ${new Date(request.timestamp).toLocaleString()}</div>
-                        </div>
-                        <div class="withdraw-request-actions">
-                            <button class="withdraw-action-btn approve" onclick="window.adminApproveWithdrawal('${request.id}')">Approve</button>
-                            <button class="withdraw-action-btn reject" onclick="window.adminRejectWithdrawal('${request.id}')">Reject</button>
-                        </div>
-                    `;
-                    withdrawRequestsList.appendChild(requestItem);
-                });
-            }
-        }
-
-        async function applyReward(trxEquivalent) {
-            if (!appState.userId) return;
-
-            // 1. Update user data in global serverData
-            if (!serverData.users[appState.userId]) {
-                await initUserInBin();
-            }
-
-            const user = serverData.users[appState.userId];
-            user.balance = (user.balance || 0) + trxEquivalent;
-            user.adCount = (user.adCount || 0) + appState.totalAds;
-            user.dailyAdCount = (user.dailyAdCount || 0) + appState.totalAds;
-            
-            // 2. Update global stats in serverData
-            serverData.stats.totalAds = (serverData.stats.totalAds || 0) + appState.totalAds;
-            
-            // 3. Update appState for immediate display update
-            appState.balance = user.balance;
-            appState.adCount = user.adCount;
-            appState.dailyAdCount = user.dailyAdCount;
-
-            // 4. Save to Jsonbin and update display
-            updateDisplay();
-            updateAdminPanel();
-            await saveDataToJsonBin(serverData);
-
-            showStatus(`${trxEquivalent.toFixed(6)} TRX added to your balance!`, 'success');
-        }
-
-        function startCooldown() {
-            appState.adCooldown = true;
-            rewardedBtn.disabled = true;
-            countdownTimer.style.display = 'block';
-            let timeLeft = appState.cooldownTime;
-
-            const timer = setInterval(() => {
-                countdownTimer.textContent = `Next ad in: ${timeLeft}s`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
-                    clearInterval(timer);
-                    appState.adCooldown = false;
-                    rewardedBtn.disabled = false;
-                    countdownTimer.style.display = 'none';
-                    showStatus('Ad is ready! Click to earn.', 'info');
-                }
-            }, 1000);
+        function generateReferralCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
         function showStatus(message, type = 'info') {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
-            clearTimeout(statusMessage.timer);
-            statusMessage.timer = setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 3000);
+            // Telegram WebApp uyarısı
+            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                Telegram.WebApp.showAlert(message);
+            } else {
+                alert(message);
+            }
         }
 
-        // --- CANLI FİYAT ÇEKME FONKSİYONU ---
         async function fetchTronPrice() {
-            const fallbackPrice = 0.05; // Güvenlik (Fallback) fiyatı
             try {
+                // CoinGecko'dan anlık TRX fiyatını çeker
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
-                if (!response.ok) {
-                     // API'dan 200 harici bir kod gelirse hata fırlat
-                    throw new Error('Coingecko API failed with status ' + response.status);
-                }
                 const data = await response.json();
-                const price = data.tron.usd;
-                
-                if (price > 0.0001) { // Fiyatın geçerli bir değer olduğunu kontrol et
-                    appState.tronPrice = price; // Canlı fiyatı ata
-                    tronPriceDisplay.textContent = `$${price.toFixed(4)}`; // UI'ı güncelle
-                    showStatus(`TRON fiyatı güncellendi: $${price.toFixed(4)}`, 'info');
-                    return;
-                }
-                
-                // Fiyat geçerli değilse fallback kullan
-                throw new Error('Invalid price data received from CoinGecko.');
-
+                appState.tronPrice = data.tron.usd;
+                elements.trxPriceDisplay.textContent = `1 TRX = $${appState.tronPrice.toFixed(4)}`;
             } catch (error) {
-                console.warn('Could not fetch live TRON price. Using static price: $' + fallbackPrice, error);
-                // API hatasında veya geçersiz veride güvenlik fiyatını kullan
-                appState.tronPrice = fallbackPrice; 
-                tronPriceDisplay.textContent = `$${fallbackPrice.toFixed(4)}`; 
-                showStatus('Canlı TRON fiyatı güncellenemedi. Sabit fiyat kullanılıyor.', 'warning');
+                console.error('TRX fiyatı çekilemedi:', error);
+                showStatus('TRX fiyatı yüklenemedi. Varsayılan $0.12 kullanılıyor.', 'warning');
             }
         }
-        // --- SON ---
 
-        async function initUserInBin() {
-            serverData.users[appState.userId] = {
-                id: appState.userId,
-                balance: 0,
-                adCount: 0,
-                dailyAdCount: 0,
-                referralCount: 0,
-                referralEarnings: 0,
-                referralCode: appState.userId,
-                hasAppliedReferral: false,
-                joinedDate: new Date().toISOString(),
-                lastDailyReset: new Date().getTime()
-            };
-            serverData.stats.totalUsers = Object.keys(serverData.users).length;
-            await saveDataToJsonBin(serverData);
-        }
-
-        async function initApp() {
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-                appState.userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
-            } else {
-                // Fallback for testing outside Telegram Mini App
-                appState.userId = '0000000000'; // Test User ID
-            }
-            
-            // 1. Canlı TRON Fiyatını çek
-            await fetchTronPrice();
-            
-            // 2. Fetch all data from Jsonbin
-            serverData = await fetchDataFromJsonBin();
-
-            // 3. Check for daily reset for the current user
-            const now = new Date().getTime();
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            
-            if (!serverData.users[appState.userId]) {
-                // Brand new user to Jsonbin
-                await initUserInBin();
-            } else {
-                const user = serverData.users[appState.userId];
-                // Check for daily reset
-                if (now - (user.lastDailyReset || 0) > twentyFourHours) {
-                    user.dailyAdCount = 0;
-                    user.lastDailyReset = now;
-                    // Daily reset gerekiyorsa Jsonbin'e kaydet
-                    await saveDataToJsonBin(serverData);
-                }
-            }
-            
-            // 4. Load user-specific state from serverData to appState
-            const user = serverData.users[appState.userId];
-            // Jsonbin'den veri gelmemişse (401 hatası gibi) user değişkeni boş kalabilir, kontrol et
-            if (user) { 
-                appState.balance = user.balance || 0;
-                appState.adCount = user.adCount || 0;
-                appState.dailyAdCount = user.dailyAdCount || 0;
-                appState.referralCount = user.referralCount || 0;
-                appState.referralEarnings = user.referralEarnings || 0;
-                appState.referralCode = user.referralCode || appState.userId;
-                appState.hasAppliedReferral = user.hasAppliedReferral || false;
-            }
-
-
-            // 5. Check admin status and update button visibility
-            if (adminUsers.includes(appState.userId)) {
-                appState.isAdmin = true;
-                adminHeaderBtn.style.display = 'flex';
-            }
-
-            // 6. Initial display and admin panel update
-            updateDisplay();
-            updateAdminPanel();
-        }
-
-        // --- EVENT LISTENERS (MODIFIED) ---
-
-        // Navigation
-        navButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetViewId = btn.getAttribute('data-view');
-                views.forEach(view => {
-                    view.style.display = 'none';
-                });
-                document.getElementById(targetViewId).style.display = 'block';
-                navButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                updateDisplay();
-                if (targetViewId === 'admin-view' && appState.isAdmin) {
-                    updateAdminPanel();
-                }
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.style.display = 'none';
             });
-        });
+            document.getElementById(viewId).style.display = 'block';
 
-        // Rewarded Ad Button Logic (Modified for 2 sequential ads)
-        rewardedBtn.addEventListener('click', async () => {
-            if (appState.adCooldown) {
-                showStatus('Ad cooldown active. Please wait.', 'info');
-                return;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Aktif navigasyon butonunu bul ve active sınıfı ekle
+            const navButtons = document.querySelectorAll('.footer-nav button');
+            if (viewId === 'home-view' || viewId === 'ad-panel') {
+                 navButtons[0].classList.add('active'); // Home butonu
+            } else if (viewId === 'referral-view') {
+                 navButtons[1].classList.add('active'); // Refer butonu
+                 document.getElementById('home-view').style.display = 'block'; // Navigasyon butonu home view içinde olmadığı için
+            } else if (viewId === 'withdraw-view') {
+                 navButtons[2].classList.add('active'); // Withdraw butonu
+                 document.getElementById('home-view').style.display = 'block';
+            } else if (viewId === 'about-view') {
+                 navButtons[3].classList.add('active'); // About butonu
+            } else if (viewId === 'admin-view') {
+                // Admin butonu navigasyonda değil
             }
-
-            if (typeof window.showAdexora !== 'function') {
-                showStatus('Ad SDK not loaded. Try again shortly.', 'error');
-                return;
+            
+            // Eğer çekim veya reklam paneli açıksa, home view'i göster ama panelin kendisini göster
+            if (viewId === 'withdraw-view' || viewId === 'ad-panel') {
+                document.getElementById('home-view').style.display = 'block';
             }
+        }
 
-            rewardedBtn.disabled = true;
-            rewardedBtn.classList.add('btn-loading');
-            adProgress.style.display = 'block';
+        function updateUI() {
+            const balanceInTRX = appState.balance / appState.tronPrice;
+            
+            elements.balanceAmount.textContent = `${appState.balance.toFixed(4)} USD (${balanceInTRX.toFixed(2)} TRX)`;
+            elements.adCountDisplay.textContent = appState.adCount;
+            elements.dailyAdCountDisplay.textContent = `${appState.dailyAdCount}/10`;
+            // Ref kodu düzeltmesi: Veriler yüklendikten sonra kodu göster
+            referralCodeBox.textContent = appState.referralCode; 
+            
+            // Referans linki
+            const botUsername = (Telegram.WebApp && Telegram.WebApp.initDataUnsafe.chat_id) ? 'YOUR_BOT_USERNAME' : 'YOUR_BOT_USERNAME'; // Buraya botunuzun kullanıcı adını yazın
+            const refLink = `https://t.me/${botUsername}?start=${appState.referralCode}`;
+            elements.referralLink.href = refLink;
+            elements.referralLink.textContent = refLink;
 
-            try {
-                let adWatchCount = 0;
+            // Reklam/Çekim paneli görünürlüğünü güncelle
+            if (appState.isAdPanelVisible) {
+                elements.adPanel.style.display = 'flex';
+                elements.withdrawButton.style.display = 'none';
+                document.getElementById('withdraw-view').style.display = 'none';
                 
-                while (adWatchCount < appState.totalAds) {
-                    adWatchCount++;
-                    appState.currentAdIndex = adWatchCount;
-                    currentAd.textContent = appState.currentAdIndex;
-                    adProgressFill.style.width = `${(adWatchCount / appState.totalAds) * 100}%`;
-                    
-                    showStatus(`Watching ad ${adWatchCount}/${appState.totalAds}...`, 'info');
-
-                    // --- ADEXORA CALL ---
-                    await new Promise((resolve, reject) => {
-                        window.showAdexora()
-                            .then(resolve)
-                            .catch(e => {
-                                console.error('Adexora Error:', e);
-                                // Reject on error to fail the reward process
-                                reject('Ad watch failed or user closed ad.');
-                            });
-                    });
-                    // --- END ADEXORA CALL ---
+            } else {
+                elements.adPanel.style.display = 'none';
+                elements.withdrawButton.style.display = 'flex';
+                
+                // Eğer navigasyon çubuğundan Withdraw seçilmişse sadece çekim panelini göster
+                const withdrawNavActive = document.querySelector('.footer-nav button:nth-child(3)').classList.contains('active');
+                if (withdrawNavActive) {
+                    document.getElementById('withdraw-view').style.display = 'block';
+                } else {
+                    document.getElementById('withdraw-view').style.display = 'none';
                 }
-
-                // --- ALL ADS WATCHED, APPLY REWARD ---
-                
-                // 1. Calculate TRX Equivalent (CANLI FİYAT ÜZERİNDEN HESAPLAMA)
-                // Ödül hesaplamadan önce canlı fiyatı tekrar çek.
-                await fetchTronPrice(); 
-                let trxEquivalent = appState.totalAdReward / appState.tronPrice; 
-
-                // 2. Apply Reward and Save to Jsonbin
-                await applyReward(trxEquivalent);
-
-                // 3. Start Cooldown
-                startCooldown();
-
-            } catch (e) {
-                showStatus(`Error: Could not finish ad sequence. (${e.message || e})`, 'error');
-            } finally {
-                rewardedBtn.disabled = false;
-                rewardedBtn.classList.remove('btn-loading');
-                adProgress.style.display = 'none';
-                appState.currentAdIndex = 0;
-                adProgressFill.style.width = '0%';
             }
-        });
+        }
+        
+        function checkDailyReset() {
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            if (Date.now() - appState.lastAdReset > twentyFourHours) {
+                appState.dailyAdCount = 0;
+                appState.lastAdReset = Date.now();
+                saveUserSpecificData(); // Güncelleme sonrası kaydet
+            }
+        }
 
+        // ********************************************
+        // * MAIN LOGIC                  *
+        // ********************************************
 
-        // Other event listeners (Simplified stubs for non-core logic)
-        mainWithdrawBtn.addEventListener('click', () => {
-            document.querySelector('.nav-btn[data-view="withdraw-view"]').click();
-        });
+        window.startAdSession = function() {
+            if (appState.dailyAdCount >= 10) {
+                showStatus('Günlük reklam limitinize ulaştınız (10 reklam). Lütfen yarın tekrar deneyin.', 'warning');
+                return;
+            }
 
-        withdrawBtn.addEventListener('click', async () => {
-            // Simplified withdrawal logic using serverData
-            const address = paymentAddress.value;
-            const amount = parseFloat(withdrawAmount.value);
+            // Reklam oturumunu başlat
+            if (window.Adexora && window.Adexora.startAdSession) {
+                window.Adexora.startAdSession({
+                    adCount: appState.totalAds,
+                    adReward: appState.totalAdReward,
+                    onComplete: completeAdSession,
+                    onFail: () => showStatus('Reklam yüklenemedi veya bir hata oluştu.', 'error')
+                });
 
-            if (!address || !address.startsWith('T') || amount < appState.minWithdrawal || amount > appState.balance) {
-                showStatus('Invalid address or amount.', 'error');
+                showStatus('Reklamlar yükleniyor...', 'info');
+            } else {
+                showStatus('Adexora SDK yüklenemedi. Test için ödül hemen eklendi.', 'warning');
+                completeAdSession(); // SDK yüklenmezse ödülü ekleyerek test etme imkanı
+            }
+        };
+
+        function completeAdSession() {
+            // Reklam oturumundan kazanılan USD miktarı
+            const rewardInUSD = appState.totalAdReward; 
+            
+            // Reklam izleme ödülü
+            // DÜZELTME: USD bazlı ödülü, USD bazlı bakiyeye ekle
+            appState.balance += rewardInUSD; 
+            
+            appState.adCount += appState.totalAds;
+            appState.dailyAdCount += appState.totalAds;
+
+            // Referans (Ref) ödülü kontrolü
+            const urlParams = new URLSearchParams(Telegram.WebApp.initData || '');
+            const refCode = urlParams.get('start');
+            
+            if (refCode && refCode !== appState.referralCode) {
+                const referrerId = Object.keys(appState.allUsers).find(id => appState.allUsers[id].referralCode === refCode);
+                
+                if (referrerId && referrerId !== appState.userId) {
+                    const referralReward = rewardInUSD * REFERRAL_REWARD_PERCENTAGE;
+                    
+                    // Yönlendiren kullanıcının bakiyesini güncelle
+                    appState.allUsers[referrerId].balance = (appState.allUsers[referrerId].balance || 0) + referralReward;
+                    
+                    showStatus(`Tebrikler! ${refCode} kodunu kullanan bir kullanıcı reklam izledi. Size $${referralReward.toFixed(4)} eklendi.`, 'success');
+                }
+            }
+
+            // Verileri JsonBin'e kaydet
+            saveUserSpecificData();
+            
+            showStatus(`Tebrikler! $${rewardInUSD.toFixed(4)} kazandınız.`, 'success');
+            updateUI();
+        }
+
+        window.toggleAdPanel = function() {
+            // Eğer çekim/reklam paneli kapalıysa aç, açıksa kapat
+            appState.isAdPanelVisible = !appState.isAdPanelVisible; 
+            updateUI();
+            saveUserSpecificData();
+        };
+
+        window.copyReferralCode = function() {
+            navigator.clipboard.writeText(appState.referralCode).then(() => {
+                showStatus('Referans kodu kopyalandı: ' + appState.referralCode, 'info');
+            }).catch(() => {
+                 showStatus('Kopyalama başarısız oldu.', 'error');
+            });
+        };
+
+        window.copyReferralLink = function() {
+            const refLink = elements.referralLink.href;
+            navigator.clipboard.writeText(refLink).then(() => {
+                showStatus('Referans linki kopyalandı.', 'info');
+            }).catch(() => {
+                 showStatus('Kopyalama başarısız oldu.', 'error');
+            });
+        };
+
+        window.approveWithdrawal = async function() {
+            const amount = parseFloat(elements.withdrawAmount.value);
+            const walletAddress = elements.walletAddress.value.trim();
+
+            if (isNaN(amount) || amount <= 0 || amount > appState.balance) {
+                showStatus(`Geçersiz çekim miktarı. Mevcut bakiyeniz: $${appState.balance.toFixed(4)}`, 'error');
+                return;
+            }
+            if (amount < MIN_WITHDRAWAL) {
+                 showStatus(`Minimum çekim limiti $${MIN_WITHDRAWAL.toFixed(2)}'dır.`, 'error');
+                 return;
+            }
+            if (!walletAddress || walletAddress.length < 10) {
+                showStatus('Geçerli bir TRC20/TRX adresi giriniz.', 'error');
                 return;
             }
 
             const newWithdrawal = {
                 id: Date.now().toString(),
                 userId: appState.userId,
+                username: appState.username,
                 amount: amount,
-                address: address,
-                timestamp: new Date().toISOString(),
+                address: walletAddress,
+                date: new Date().toLocaleString(),
                 status: 'pending'
             };
 
-            serverData.withdrawals.push(newWithdrawal);
-            const user = serverData.users[appState.userId];
-            user.balance -= amount;
-            appState.balance = user.balance;
+            // Bakiyeden düş
+            appState.balance -= amount;
+            
+            // Yeni çekim isteğini appState.withdrawals'a ekle
+            appState.withdrawals.push(newWithdrawal);
+            
+            // Verileri JsonBin'e kaydet
+            await saveAllData({ users: appState.allUsers, withdrawals: appState.withdrawals });
+            
+            // Kullanıcının kendi verilerini de kaydet
+            await saveUserSpecificData();
 
-            await saveDataToJsonBin(serverData);
-            updateDisplay();
-            showStatus('Withdrawal request submitted!', 'success');
-        });
+            updateUI();
+            showStatus(`Çekim isteği oluşturuldu. $${amount.toFixed(4)} bakiyenizden düşüldü.`, 'success');
+        };
 
-        // Admin functions (accessible via window)
+        // ********************************************
+        // * ADMIN PANEL LOGIC            *
+        // ********************************************
+
+        function updateAdminPanel() {
+            elements.withdrawalRequests.innerHTML = '';
+            
+            // Sadece beklemede olanları göster
+            const pendingWithdrawals = appState.withdrawals.filter(w => w.status === 'pending');
+
+            if (pendingWithdrawals.length === 0) {
+                elements.withdrawalRequests.innerHTML = '<p>Bekleyen çekim isteği yok.</p>';
+                return;
+            }
+
+            pendingWithdrawals.forEach(withdrawal => {
+                const withdrawalElement = document.createElement('div');
+                withdrawalElement.className = 'withdraw-request-item';
+                withdrawalElement.innerHTML = `
+                    <div class="withdraw-request-info">
+                        <p class="withdraw-request-user">Kullanıcı: ${withdrawal.username} (${withdrawal.userId})</p>
+                        <p class="withdraw-request-details">Miktar: <strong>$${withdrawal.amount.toFixed(4)}</strong> (${(withdrawal.amount / appState.tronPrice).toFixed(2)} TRX)</p>
+                        <p class="withdraw-request-address" onclick="navigator.clipboard.writeText('${withdrawal.address}'); showStatus('Adres kopyalandı.', 'info');">
+                            Adres: <code>${withdrawal.address}</code>
+                        </p>
+                        <p class="withdraw-request-date">Tarih: ${withdrawal.date}</p>
+                    </div>
+                    <div class="withdraw-request-actions">
+                        <button onclick="adminApproveWithdrawal('${withdrawal.id}')" class="withdraw-action-btn approve">Onayla</button>
+                        <button onclick="adminRejectWithdrawal('${withdrawal.id}')" class="withdraw-action-btn reject">Reddet</button>
+                    </div>
+                `;
+                elements.withdrawalRequests.appendChild(withdrawalElement);
+            });
+        }
+
         window.adminApproveWithdrawal = async function(withdrawalId) {
-            const withdrawalIndex = serverData.withdrawals.findIndex(w => w.id === withdrawalId);
+            const withdrawalIndex = appState.withdrawals.findIndex(w => w.id === withdrawalId);
             
             if (withdrawalIndex !== -1) {
-                serverData.withdrawals[withdrawalIndex].status = 'completed';
-                await saveDataToJsonBin(serverData);
+                appState.withdrawals[withdrawalIndex].status = 'completed';
+                // Verileri JsonBin'e kaydet
+                await saveAllData({ users: appState.allUsers, withdrawals: appState.withdrawals });
                 updateAdminPanel();
-                showStatus('Withdrawal request approved.', 'success');
+                showStatus('Çekim isteği onaylandı.', 'success');
             }
         };
 
         window.adminRejectWithdrawal = async function(withdrawalId) {
-            const withdrawalIndex = serverData.withdrawals.findIndex(w => w.id === withdrawalId);
+            const withdrawalIndex = appState.withdrawals.findIndex(w => w.id === withdrawalId);
             
             if (withdrawalIndex !== -1) {
-                const withdrawal = serverData.withdrawals[withdrawalIndex];
+                const withdrawal = appState.withdrawals[withdrawalIndex];
                 
-                // Return balance
-                if (serverData.users[withdrawal.userId]) {
-                    serverData.users[withdrawal.userId].balance = (serverData.users[withdrawal.userId].balance || 0) + withdrawal.amount;
+                // Reddedilen miktarı kullanıcının bakiyesine geri yükle
+                if (appState.allUsers[withdrawal.userId]) {
+                    appState.allUsers[withdrawal.userId].balance = (appState.allUsers[withdrawal.userId].balance || 0) + withdrawal.amount;
                 }
                 
-                serverData.withdrawals.splice(withdrawalIndex, 1); // Remove the request
+                // Çekim isteğini listeden kaldır
+                appState.withdrawals.splice(withdrawalIndex, 1);
                 
-                await saveDataToJsonBin(serverData);
+                // Verileri JsonBin'e kaydet
+                await saveAllData({ users: appState.allUsers, withdrawals: appState.withdrawals });
+                
+                // Eğer bakiye iadesi bu kullanıcıya aitse UI'ı güncelle
+                if (appState.userId === withdrawal.userId) {
+                    appState.balance += withdrawal.amount;
+                    updateUI();
+                }
+
                 updateAdminPanel();
-                showStatus('Withdrawal request rejected and balance returned.', 'success');
+                showStatus('Çekim isteği reddedildi ve bakiye iade edildi.', 'success');
             }
         };
 
-        // Placeholder for admin view user
-        window.adminViewUser = function(userId) {
-            const user = serverData.users[userId];
-            if (user) {
-                showStatus(`User ${userId}: Balance ${user.balance.toFixed(6)} TRX, Ads: ${user.adCount}`, 'info');
-            }
-        };
+        // ********************************************
+        // * INITIALIZATION               *
+        // ********************************************
 
-        // Admin Panel Button Listener
-        adminHeaderBtn.addEventListener('click', () => {
-             if (appState.isAdmin) {
-                document.querySelector('.nav-btn[data-view="admin-view"]').click();
-             } else {
-                showStatus('Access Denied: You are not an admin.', 'error');
-             }
-        });
+        async function loadUserData() {
+            // Tüm veriyi JsonBin'den çek
+            const allData = await fetchAllData();
+            appState.allUsers = allData.users || {};
+            appState.withdrawals = allData.withdrawals || [];
+            
+            const userData = appState.allUsers[appState.userId];
 
-        // Admin Panel - Reset Stats Button (Example of Admin Action)
-        adminResetStatsBtn.addEventListener('click', async () => {
-            if (confirm('Are you sure you want to reset all global statistics? This cannot be undone.')) {
-                serverData.stats = { totalUsers: Object.keys(serverData.users).length, totalAds: 0, totalWithdrawals: 0, totalReferrals: 0 };
-                await saveDataToJsonBin(serverData);
-                updateAdminPanel();
-                showStatus('Global statistics have been reset.', 'success');
-            }
-        });
-
-        // Admin Panel - Clear All Data Button (Example of Admin Action)
-        adminClearDataBtn.addEventListener('click', async () => {
-            if (confirm('DİKKAT! Tüm kullanıcı verilerini, çekim isteklerini ve istatistikleri silmek istediğinizden emin misiniz? BU İŞLEM GERİ ALINAMAZ.')) {
-                serverData = { 
-                    users: {}, 
-                    withdrawals: [], 
-                    stats: { totalUsers: 0, totalAds: 0, totalWithdrawals: 0, totalReferrals: 0 } 
+            if (userData) {
+                // Mevcut kullanıcı verilerini appState'e yükle
+                appState.balance = userData.balance || 0;
+                appState.referralCode = userData.referralCode;
+                appState.adCount = userData.adCount || 0;
+                appState.dailyAdCount = userData.dailyAdCount || 0;
+                appState.lastAdReset = userData.lastAdReset;
+                appState.isAdPanelVisible = userData.isAdPanelVisible;
+            } else {
+                // Yeni kullanıcı oluştur
+                appState.referralCode = generateReferralCode();
+                appState.allUsers[appState.userId] = {
+                    id: appState.userId,
+                    balance: 0,
+                    referralCode: appState.referralCode,
+                    adCount: 0,
+                    dailyAdCount: 0,
+                    lastAdReset: Date.now(),
+                    isAdPanelVisible: false
                 };
-                await saveDataToJsonBin(serverData);
-                // Yeniden yükleme veya initApp çağrısı daha güvenli olabilir
-                window.location.reload(); 
-                // Veya:
-                // await initApp();
-                showStatus('Tüm uygulama verileri temizlendi.', 'success');
+                // Yeni kullanıcıyı kaydet
+                await saveAllData({ users: appState.allUsers, withdrawals: appState.withdrawals });
             }
-        });
 
-        // Initialize application on load
-        window.addEventListener('load', initApp);
+            checkDailyReset();
+            
+            // UI'ı sadece veriler yüklendikten sonra güncelle
+            updateUI();
+            
+            // Admin panelini sadece veriler yüklendikten sonra güncelle
+            if (appState.isAdmin) {
+                updateAdminPanel();
+            }
+            
+            // Yükleme ekranını kaldır ve uygulamayı göster
+            elements.loadingScreen.style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+        }
+
+        function initApp() {
+            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                
+                // Kullanıcı ID'sini ve Kullanıcı Adını al
+                appState.userId = Telegram.WebApp.initDataUnsafe.user.id.toString() || 'guest_user';
+                appState.username = Telegram.WebApp.initDataUnsafe.user.username || appState.userId;
+            } else {
+                // Tarayıcı testi için sahte ID
+                appState.userId = 'test_user_id';
+            }
+
+            // Admin kontrolü
+            if (ADMIN_USER_IDS.includes(appState.userId)) {
+                appState.isAdmin = true;
+                elements.adminButton.style.display = 'flex';
+                elements.adminPanel.style.display = 'block';
+            }
+
+            fetchTronPrice();
+            loadUserData(); // Veriyi çek ve uygulamayı başlat
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
