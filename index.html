@@ -145,7 +145,7 @@
         const REFERRAL_BONUS_REFEREE_USD = 0.001;
         const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
         const TELEGRAM_CHAT_ID = "-1002783990004";
-        const ADMIN_TELEGRAM_ID = "7904032877"; // Kendi Telegram ID'niz olmalı
+        const ADMIN_TELEGRAM_ID = "7904032877"; 
         const ADEXORA_AD_FUNCTION_NAME = 'Adexora.showAd'; 
         const FALLBACK_TRX_PRICE = 0.12;
         
@@ -158,7 +158,7 @@
         let profileNameDisplay, userPointsDisplay, adsWatchedTodayEl, adsLeftTodayEl, totalAdsWatchedEl, bottomNavItems;
         const fullAppContainer = document.getElementById('fullAppContainer');
         const mainContent = document.getElementById('mainContent');
-        const loadingScreen = document.getElementById('app-loading-screen'); // loadingScreen'i buraya taşıdık
+        const loadingScreen = document.getElementById('app-loading-screen');
 
         // --- FIREBASE BAŞLATMA VE BAĞLANTI (Kendi Yapılandırmanız) ---
         const firebaseConfig = {
@@ -172,7 +172,6 @@
             measurementId: "G-WG3ETVHC78"
         };
 
-        // Firebase'i Başlat ve Firestore bağlantısını oluştur
         firebase.initializeApp(firebaseConfig); 
         const db = firebase.firestore();
         const usersCollection = db.collection('users');
@@ -280,11 +279,8 @@
         }
 
         async function loadUserState() {
-            // TWA ortam kontrolü
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                // Eğer TWA ortamı yoksa, kullanıcıyı Telegram'da açmaya yönlendir
                 loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">Bu uygulama sadece Telegram Mini Uygulaması içinde çalışır.</p>`;
-                console.error("Not a TWA environment.");
                 return false;
             }
             
@@ -318,7 +314,6 @@
                     };
                 }
 
-                // Günlük Sıfırlama Mantığı
                 const today = new Date().toDateString();
                 if (currentUser.lastAdWatchDate !== today) {
                     currentUser.adsWatchedToday = 0;
@@ -344,7 +339,7 @@
         function updateUI() {
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             
-            if (!profileNameDisplay || !userPointsDisplay) return; // DOM kontrolü
+            if (!profileNameDisplay || !userPointsDisplay) return;
 
             profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
             const editNameBtn = document.getElementById('editNameBtn');
@@ -377,10 +372,379 @@
             else if (pageId === 'referral') renderReferralPage();
             else if (pageId === 'withdraw') renderWithdrawPage();
 
-            updateUI(); // Her sayfa değişiminde UI güncellensin
+            updateUI(); 
         }
         
-        // *renderHomePage, renderReferralPage, renderWithdrawPage, handleWatchDailyAd, handleSubmitWithdrawal, toggleTheme, promptForNewName, Admin Panel Fonksiyonları (fetchAdminUsers, renderAdminUsersTable, deductAdminBalance, renderAdminPanel)* // yukarıdaki koddaki gibi kalacaktır. Yer kazanmak için bu kısmı tekrarlamıyorum.
+        // --- PAGE RENDER FUNCTIONS ---
+        
+        function renderHomePage() {
+            mainContent.innerHTML = `
+                <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ads</h2>
+                <div class="task-card">
+                    <p class="task-description">
+                        Watch one advertisement daily and earn **${USD_PER_AD.toFixed(3)}$** (approx. ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX). You have **${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}** ads left today.
+                    </p>
+                    <button class="btn btn-primary" id="watchDailyAdBtn">
+                        Watch Ad & Earn ${USD_PER_AD.toFixed(3)}$
+                    </button>
+                </div>
+
+                <h2 class="section-title"><i class="fas fa-trophy"></i> Rewards & Bonus</h2>
+                <div class="task-card">
+                    <p class="task-description">
+                        Invite more users to increase your earnings! Get ${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}$ for every referral.
+                    </p>
+                    <button class="btn btn-secondary" onclick="navigateTo('referral')">
+                        <i class="fas fa-users"></i> Go to Referral
+                    </button>
+                </div>
+            `;
+            document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
+        }
+
+        function renderReferralPage() {
+            const botUsername = 'TronAdsFaucetBot'; 
+            const referralLink = `https://t.me/share/url?url=https://t.me/${botUsername}?start=${currentUser.referralCode}&text=⚡ TronAdsFaucet ile her gün reklam izleyerek kolayca TRX kazan! Hemen katılmak için linke tıkla:`;
+
+            const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
+            const earnedUSD = referredUsersCount * REFERRAL_BONUS_REFERRER_USD;
+            const earnedTRX = convertUSDToTRX(earnedUSD).toFixed(4);
+
+            mainContent.innerHTML = `
+                <h2 class="section-title"><i class="fas fa-share-alt"></i> Refer & Earn</h2>
+                <div class="task-card">
+                    <p class="task-description">
+                        Invite friends and earn **${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}$** (approx. ${convertUSDToTRX(REFERRAL_BONUS_REFERRER_USD).toFixed(5)} TRX) for each successful referral. They get **${REFERRAL_BONUS_REFEREE_USD.toFixed(3)}$** bonus!
+                    </p>
+                    <div class="referral-container">
+                        <label class="input-label" style="font-size: 1rem; color: var(--primary-color);"><i class="fas fa-link"></i> Your Share Link</label>
+                        <div class="referral-input-group">
+                            <input type="text" id="referralLinkDisplay" class="referral-input" value="${referralLink}" readonly>
+                            <button class="copy-btn" id="copyReferralLinkBtn">Copy</button>
+                        </div>
+                        <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
+                            <i class="fas fa-paper-plane"></i> Share Now
+                        </button>
+                    </div>
+                    <div class="referral-stats stats-display" style="border-top: none; padding-top: 0; margin-top: 0;">
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
+                            <div class="stat-label">Total Referrals</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: var(--secondary-color);">${earnedTRX}</div>
+                            <div class="stat-label">Earned TRX</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('copyReferralLinkBtn')?.addEventListener('click', () => { copyToClipboard(document.getElementById('referralLinkDisplay').value, 'Link copied!'); });
+            document.getElementById('shareReferralLinkBtn')?.addEventListener('click', () => { window.open(referralLink, '_blank'); });
+        }
+
+        function renderWithdrawPage() {
+            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
+            const minWithdrawTRX = WITHDRAW_MIN_TRX;
+
+            mainContent.innerHTML = `
+                <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Withdrawal</h2>
+                <div class="task-card">
+                    <p class="task-description" style="margin-bottom: 5px;">
+                        Your current balance: <strong style="color: var(--primary-color);">${currentBalanceTRX.toFixed(4)} TRX</strong> (Price: $${currentTRXPrice.toFixed(4)})
+                    </p>
+                    <p class="task-description">
+                        Minimum withdrawal amount is **${minWithdrawTRX.toFixed(2)} TRX**.
+                    </p>
+
+                    <form id="withdrawalForm">
+                        <div class="input-group">
+                            <label for="amountTRX" class="input-label">Amount (TRX)</label>
+                            <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="walletAddress" class="input-label">TRX (TRC20) Wallet Address</label>
+                            <input type="text" id="walletAddress" class="input-field" placeholder="T..." required>
+                        </div>
+                        
+                        <div id="withdrawalMessage" class="error-message" style="display:none;"></div>
+
+                        <button type="submit" class="btn btn-primary" id="submitWithdrawalBtn">
+                            <i class="fas fa-paper-plane"></i> Request Withdrawal
+                        </button>
+                    </form>
+                </div>
+            `;
+            document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
+        }
+
+        // --- HANDLERS ---
+
+        async function handleWatchDailyAd() {
+            if (currentUser.adsWatchedToday < ADS_PER_DAY_LIMIT) {
+                const adCallback = async () => {
+                    currentUser.balanceUSD += USD_PER_AD;
+                    currentUser.adsWatchedToday += 1;
+                    currentUser.totalAdsWatchedLifetime += 1;
+                    
+                    const saved = await saveUserState(); 
+                    if (saved) {
+                        updateUI();
+                        showToast(`+${USD_PER_AD.toFixed(3)}$ (${convertUSDToTRX(USD_PER_AD).toFixed(4)} TRX) earned!`);
+                        sendToTelegram(`✅ *Ad Watched:* User \`${escapeMarkdown(currentUser.name)}\` (${currentUser.telegramId || 'N/A'}) earned $${USD_PER_AD.toFixed(3)} / ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX.`, true);
+                    }
+                };
+                
+                const errorCallback = () => {
+                    showToast("Ad closed or failed. Please try again.", 4000);
+                };
+                
+                if (window[ADEXORA_AD_FUNCTION_NAME]) {
+                    window[ADEXORA_AD_FUNCTION_NAME](adCallback, errorCallback);
+                } else {
+                    showToast("Ad system not ready. Simulating earnings...", 3000);
+                    await adCallback();
+                }
+            } else {
+                showToast("Daily limit reached!", 3000);
+            }
+        }
+
+        function handleSubmitWithdrawal(e) {
+            e.preventDefault();
+            const amountTRX = parseFloat(document.getElementById('amountTRX').value);
+            const account = document.getElementById('walletAddress').value.trim();
+            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
+            const withdrawalMessageEl = document.getElementById('withdrawalMessage');
+            
+            withdrawalMessageEl.style.display = 'none';
+
+            if (amountTRX < WITHDRAW_MIN_TRX) {
+                withdrawalMessageEl.textContent = `Minimum çekim ${WITHDRAW_MIN_TRX.toFixed(2)} TRX'tir.`;
+                withdrawalMessageEl.style.display = 'block';
+                return;
+            }
+
+            if (amountTRX > currentBalanceTRX) {
+                withdrawalMessageEl.textContent = `Yetersiz bakiye. Mevcut: ${currentBalanceTRX.toFixed(4)} TRX.`;
+                withdrawalMessageEl.style.display = 'block';
+                return;
+            }
+
+            if (!/^T[A-Za-z1-9]{33}$/.test(account)) {
+                withdrawalMessageEl.textContent = 'Lütfen geçerli bir TRX (TRC20) cüzdan adresi girin.';
+                withdrawalMessageEl.style.display = 'block';
+                return;
+            }
+
+            const amountUSD = amountTRX * currentTRXPrice;
+
+            window.Telegram.WebApp.showConfirm(`Confirm withdrawal of ${amountTRX.toFixed(4)} TRX to ${account}?`, async (isConfirmed) => {
+                if (isConfirmed) {
+                    const withdrawalDetails = `
+🚨 *𝗡𝗘𝗪 𝗧𝗥𝗫 𝗪𝗜𝗧𝗛𝗗𝗥𝗔𝗪𝗔𝗟 𝗥𝗘𝗤𝗨𝗘𝗦𝗧* 🚨
+----------------------------------------
+👤 *𝗨𝘀𝗲𝗿 𝗡𝗮𝗺𝗲:* \`${escapeMarkdown(currentUser.name)}\`
+🆔 *𝗧𝗚 𝗨𝘀𝗲𝗿 𝗜𝗗:* \`${currentUser.telegramId || 'N/A'}\`
+💵 *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗨𝗦𝗗):* $${amountUSD.toFixed(4)}
+⚡ *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗧𝗥𝗫):* ${amountTRX.toFixed(4)}
+🏦 *𝗧𝗥𝗫 𝗪𝗮𝗹𝗹𝗲𝘁:* \`${escapeMarkdown(account)}\`
+----------------------------------------
+⚖️ 𝗖𝘂𝗿𝗿𝗲𝗻𝘁 𝗧𝗥𝗫 𝗣𝗿𝗶𝗰𝗲: $${currentTRXPrice.toFixed(4)}
+📈 𝗔𝗱𝘀 𝗪𝗮𝘁𝗰𝗵𝗲𝗱: ${currentUser.totalAdsWatchedLifetime}
+🛠️ *𝗔𝗱𝗺𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻:* [Verify & Send TRX](tg://user?id=${ADMIN_TELEGRAM_ID})
+----------------------------------------
+                    `;
+                    
+                    sendToTelegram(withdrawalDetails, false); 
+
+                    currentUser.balanceUSD -= amountUSD; 
+                    const saved = await saveUserState(); 
+
+                    if (saved) {
+                        updateUI();
+                        document.getElementById('amountTRX').value = '';
+                        document.getElementById('walletAddress').value = '';
+                        mainContent.innerHTML = `
+                            <div class="task-card" style="text-align: center;">
+                                <h2 style="color: #4CAF50;"><i class="fas fa-check-circle"></i> Request Sent!</h2>
+                                <p style="margin: 20px 0;">Your withdrawal request for **${amountTRX.toFixed(4)} TRX** has been successfully submitted. Your balance has been updated. The Admin will process the payment soon.</p>
+                                <button class="btn btn-secondary" onclick="navigateTo('home')" style="width: auto;"><i class="fas fa-home"></i> Go Home</button>
+                            </div>
+                        `;
+                    } else {
+                        currentUser.balanceUSD += amountUSD;
+                        showToast("Kayıt hatası nedeniyle çekim isteği iptal edildi. Tekrar deneyin.", 6000);
+                        updateUI();
+                    }
+                }
+            });
+        }
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        }
+
+        function promptForNewName() {
+            window.Telegram.WebApp.showPopup({
+                title: 'Update Name',
+                message: 'Enter your new name:',
+                buttons: [{ id: 'ok', type: 'default', text: 'Save' }, { id: 'cancel', type: 'cancel', text: 'Cancel' }]
+            }, (buttonId) => {
+                if (buttonId === 'ok') {
+                    const name = document.querySelector('.popup-with-input input')?.value;
+                    if (name && name.trim().length > 0) {
+                        currentUser.name = name.trim();
+                        saveUserState();
+                        updateUI();
+                        showToast("Name updated!");
+                    }
+                }
+            });
+        }
+        
+        // --- ADMIN PANEL FUNCTIONS ---
+        
+        function showAdminMessage(msg, type = 'warning') {
+            const msgEl = document.getElementById('adminMessage');
+            if (msgEl) {
+                msgEl.textContent = msg;
+                msgEl.className = '';
+                msgEl.classList.add('admin-message', `admin-${type}`);
+                msgEl.style.display = 'block';
+                setTimeout(() => msgEl.style.display = 'none', 5000);
+            }
+        }
+
+        async function fetchAdminUsers() {
+            document.getElementById('adminLoading')?.style.display = 'block';
+            document.getElementById('userTable')?.style.display = 'none';
+            
+            try {
+                const snapshot = await usersCollection.get();
+                adminUsersData = {}; 
+                
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    adminUsersData[doc.id] = { telegramId: doc.id, ...user }; 
+                });
+
+                renderAdminUsersTable(adminUsersData);
+                document.getElementById('adminLoading').style.display = 'none';
+                document.getElementById('userTable').style.display = 'table';
+                showAdminMessage("Veriler Firebase'den başarıyla yüklendi.", 'success');
+
+            } catch (error) {
+                console.error("Firebase Veri Çekme Hatası:", error);
+                showAdminMessage(`Veri çekilemedi: ${error.message}. Firebase kurallarınızı kontrol edin.`, 'error');
+                document.getElementById('adminLoading').style.display = 'none';
+            }
+        }
+
+        function renderAdminUsersTable(users) {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            
+            const userList = Object.values(users).map(user => ({ deviceId: user.telegramId, ...user }));
+
+            if (userList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Hiç kullanıcı bulunamadı.</td></tr>';
+                return;
+            }
+
+            userList.forEach(user => {
+                const balanceTRX = convertUSDToTRX(user.balanceUSD || 0);
+                const referredCount = user.referredUsers ? user.referredUsers.length : 0;
+                const userId = user.telegramId || user.deviceId;
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${userId}</td>
+                    <td>
+                        <strong>${user.name || 'Anonim'}</strong><br>
+                        ${user.telegramId ? `<a href="tg://user?id=${user.telegramId}" target="_blank">${user.telegramId}</a>` : 'N/A'}
+                    </td>
+                    <td>
+                        <span class="balance">${balanceTRX.toFixed(4)} TRX</span><br>
+                        <span class="usd-val">(${(user.balanceUSD || 0).toFixed(4)})</span>
+                    </td>
+                    <td>${user.totalAdsWatchedLifetime || 0}</td>
+                    <td>${referredCount}</td>
+                    <td>
+                        <button class="btn-action" onclick="deductAdminBalance('${userId}', ${user.balanceUSD || 0})">
+                            <i class="fas fa-minus"></i> Bakiye Düş
+                        </button>
+                    </td>
+                `;
+            });
+        }
+
+        async function deductAdminBalance(userId, currentUSD) {
+            const deductionTRX = parseFloat(prompt(`Kullanıcı ID: ${userId}\nTRX bakiyesi: ${convertUSDToTRX(currentUSD).toFixed(4)} TRX\n\nKaç TRX düşmek istersiniz (Ödeme miktarını girin):`));
+            
+            if (isNaN(deductionTRX) || deductionTRX <= 0) {
+                showAdminMessage("Geçerli bir TRX miktarı girin.", 'warning');
+                return;
+            }
+
+            const deductionUSD = deductionTRX * currentTRXPrice;
+            const newUSD = currentUSD - deductionUSD;
+
+            if (newUSD < 0) {
+                showAdminMessage("Kullanıcının bakiyesi eksiye düşüyor. İşlem iptal edildi.", 'error');
+                return;
+            }
+
+            try {
+                const userRef = usersCollection.doc(userId);
+                await userRef.update({ balanceUSD: newUSD });
+                
+                if (adminUsersData[userId]) {
+                    adminUsersData[userId].balanceUSD = newUSD;
+                }
+                
+                showAdminMessage(`Başarılı: ${deductionTRX.toFixed(4)} TRX düşüldü. Yeni bakiye: ${convertUSDToTRX(newUSD).toFixed(4)} TRX`, 'success');
+                fetchAdminUsers(); 
+            } catch (error) {
+                 console.error("Firebase Güncelleme Hatası:", error);
+                 showAdminMessage(`Veri Firebase'e kaydedilemedi: ${error.message}.`, 'error');
+            }
+        }
+        
+        function renderAdminPanel() {
+            document.getElementById('mainAppContent').style.display = 'none';
+            
+            document.getElementById('adminPanelContent').innerHTML = `
+                <div class="admin-container">
+                    <h1><i class="fas fa-user-shield"></i> TronAdsFaucet Yönetici Paneli</h1>
+                    <p>TRX/USD Fiyatı: <strong>$${currentTRXPrice.toFixed(4)}</strong></p>
+                    <button id="refreshBtn" class="btn-action"><i class="fas fa-sync-alt"></i> Verileri Yenile</button>
+                    
+                    <div id="adminMessage" class="admin-message admin-warning" style="display: none;"></div>
+
+                    <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Kullanıcı verileri Firebase'den yükleniyor...</div>
+
+                    <table id="userTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>TG ID / Key</th>
+                                <th>Telegram ID / İsim</th>
+                                <th>Bakiye (TRX / USD)</th>
+                                <th>Toplam İzlenen Reklam</th>
+                                <th>Referanslar</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('adminPanelContent').style.display = 'block';
+            document.getElementById('refreshBtn')?.addEventListener('click', fetchAdminUsers);
+            fetchAdminUsers();
+        }
+
 
         // --- INITIALIZATION ---
 
@@ -392,7 +756,6 @@
             await fetchTRXPrice();
 
             if (isAdminPanel) {
-                // Admin Panel Kontrolü
                 if (urlParams.get('adminid') === ADMIN_TELEGRAM_ID) {
                     renderAdminPanel();
                     document.body.style.backgroundColor = '#f4f7f9';
@@ -409,14 +772,13 @@
             try {
                 if (window.Telegram && Telegram.WebApp) Telegram.WebApp.expand();
 
-                const loaded = await loadUserState(); // Firebase yüklenmesini BEKLE
+                const loaded = await loadUserState(); 
                 
                 if (!loaded) {
-                    // loadUserState içinde hata mesajı gösterildi.
                     return; 
                 }
                 
-                // DOM elementlerini atarken, elementlerin varlığını kontrol et
+                // DOM elementlerini ata
                 profileNameDisplay = document.getElementById('profileNameDisplay');
                 userPointsDisplay = document.getElementById('userPointsDisplay');
                 adsWatchedTodayEl = document.getElementById('adsWatchedToday');
@@ -449,27 +811,6 @@
                 loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">**Kritik Hata:** Uygulama yüklenemedi. Konsolu kontrol edin.</p><p style="color:#333;">${error.message}</p>`;
             }
         });
-        
-        // ******************************************************
-        // DİKKAT: Eksik fonksiyonların (renderHomePage, handleWatchDailyAd vb.) kodları 
-        // önceki yanıtta verdiğim gibidir. Onları HTML dosyanızın bu <script> bloğuna 
-        // eklediğinizden emin olun. (Yer kazanmak için bu yanıtta tekrarlanmamıştır.)
-        // ******************************************************
-
-        // *** ÖNCEKİ YANITLARDAN EKLENMESİ GEREKEN FONKSİYONLAR ***
-        // function renderHomePage() { ... }
-        // function renderReferralPage() { ... }
-        // function renderWithdrawPage() { ... }
-        // async function handleWatchDailyAd() { ... }
-        // function handleSubmitWithdrawal(e) { ... }
-        // function promptForNewName() { ... }
-        // function renderAdminPanel() { ... }
-        // function fetchAdminUsers() { ... }
-        // function renderAdminUsersTable(users) { ... }
-        // async function deductAdminBalance(userId, currentUSD) { ... }
-        // function showAdminMessage(msg, type = 'warning') { ... }
-        
-        // ******************************************************
     </script>
 </body>
 </html>
