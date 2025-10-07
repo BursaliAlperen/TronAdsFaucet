@@ -1,2394 +1,503 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TronAdsFaucet - Watch Ads, Earn TRON</title>
+
+    <title>Earning Technology</title>
+
     
-    <!-- TMA SDK -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
-    
-    <!-- Adexora SDK -->
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 1. Monetage SDK Script -->
+
+    <script src='//libtl.com/sdk.js' data-zone='9459352' data-sdk='show_9459352'></script>
+
+
+
+    <!-- 2. Telegram Web App Script -->
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+
 
     <style>
-        :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #1e293b;
-            --tg-theme-button-color: #d62939;
-            --tg-theme-button-text-color: #ffffff;
-            --tg-theme-hint-color: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #d62939;
-            --secondary-bg-color: #f8fafc;
-            --border-color: #e2e8f0;
-            --accent-color: #d62939;
-            --gradient-primary: linear-gradient(135deg, #d62939 0%, #b71c1c 100%);
-            --gradient-secondary: linear-gradient(135deg, #d62939 0%, #9c1c1c 100%);
-            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            --shadow: 0 10px 25px rgba(214, 41, 57, 0.15);
-            --shadow-light: 0 5px 15px rgba(214, 41, 57, 0.1);
-            --radius: 16px;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* CSS Code (No changes needed here) */
+
+        :root {
+
+            --tg-theme-bg-color: #121212; --tg-theme-text-color: #e0e0e0; --tg-theme-button-color: #007bff;
+
+            --tg-theme-button-text-color: #ffffff; --tg-theme-hint-color: #8a8a8a; --success-color: #28a745;
+
+            --warning-color: #ffc107; --danger-color: #dc3545; --secondary-bg-color: #1e1e1e; --border-color: #333333;
+
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            line-height: 1.6;
-            overflow-x: hidden;
+
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0;
+
+            padding: 20px 15px 90px 15px; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color);
+
+            display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 100vh; box-sizing: border-box;
+
         }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px 15px 100px 15px;
-        }
+        .container { width: 100%; max-width: 500px; }
 
-        .view {
-            display: none;
-            width: 100%;
-            animation: fadeInUp 0.5s ease-out;
-        }
+        .view { display: none; width: 100%; animation: fadeIn 0.3s ease-in-out; }
 
-        #home-view {
-            display: block;
-        }
+        #home-view { display: block; }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        .header { margin-bottom: 25px; }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; color: #ffffff; }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
+        .header p { color: var(--tg-theme-hint-color); font-size: 16px; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* Header Styles */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .logo-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .logo {
-            width: 70px;
-            height: 70px;
-            background: var(--gradient-primary);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .logo i {
-            font-size: 32px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(90deg, #d62939, #b71c1c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: var(--tg-theme-hint-color);
-            font-size: 16px;
-        }
-
-        .admin-header-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--gradient-warning);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 15px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: var(--shadow-light);
-            transition: var(--transition);
-        }
-
-        .admin-header-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow);
-        }
-
-        /* Card Styles */
         .card {
-            background: var(--gradient-card);
-            padding: 25px;
-            border-radius: var(--radius);
-            margin-bottom: 25px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(214, 41, 57, 0.2);
-        }
+            background-color: var(--secondary-bg-color); padding: 25px; border-radius: 16px; margin-bottom: 25px;
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--gradient-primary);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color);
+
         }
 
         .card h2 {
-            margin: 0 0 15px 0;
-            font-size: 16px;
-            color: var(--tg-theme-hint-color);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+            margin: 0 0 12px 0; font-size: 16px; color: var(--tg-theme-hint-color); font-weight: 500;
+
+            text-transform: uppercase; letter-spacing: 0.5px;
+
         }
 
-        .card h2 i {
-            color: var(--accent-color);
-        }
+        .balance-amount { font-size: 42px; font-weight: 700; color: #ffffff; margin-bottom: 10px; }
 
-        /* Balance Styles */
-        .balance-amount {
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 10px;
-            text-align: center;
-            background: linear-gradient(90deg, #d62939, #b71c1c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulse 2s infinite;
-        }
+        .ad-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center; }
 
-        /* Grid Styles */
-        .ad-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            text-align: center;
-        }
+        .ad-info-item h3 { font-size: 20px; font-weight: 600; margin: 0 0 5px 0; color: #ffffff; }
 
-        .ad-info-item {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-        }
+        .ad-info-item p { font-size: 14px; color: var(--tg-theme-hint-color); margin: 0; }
 
-        .ad-info-item:hover {
-            background: rgba(214, 41, 57, 0.1);
-            transform: translateY(-3px);
-        }
+        .ad-buttons { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
 
-        .ad-info-item h3 {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0 0 5px 0;
-            color: var(--tg-theme-text-color);
-        }
-
-        .ad-info-item p {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color);
-            margin: 0;
-        }
-
-        /* Button Styles */
         .btn {
-            width: 100%;
-            padding: 18px;
-            font-size: 18px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: var(--shadow-light);
+
+            width: 100%; padding: 16px; font-size: 18px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;
+
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+
+            background: linear-gradient(145deg, var(--tg-theme-button-color), #0056b3); color: var(--tg-theme-button-text-color);
+
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.5s;
-        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3); }
 
-        .btn:hover::before {
-            left: 100%;
-        }
+        .btn:active { transform: scale(0.98); }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow);
-        }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+        #mainWithdrawBtn { background: linear-gradient(145deg, var(--success-color), #1e7e34); box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); }
 
-        .btn-primary {
-            background: var(--gradient-primary);
-            color: var(--tg-theme-button-text-color);
-        }
+        #mainWithdrawBtn:disabled { background: #555; box-shadow: none; }
 
-        .btn-success {
-            background: var(--gradient-success);
-            color: var(--tg-theme-button-text-color);
-        }
-
-        .btn-warning {
-            background: var(--gradient-warning);
-            color: var(--tg-theme-button-text-color);
-        }
-
-        .btn:disabled {
-            background: #cbd5e1;
-            color: #64748b;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .btn:disabled:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn:disabled::before {
-            display: none;
-        }
-
-        .ad-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        /* Loading Button */
-        .btn-loading {
-            position: relative;
-            pointer-events: none;
-        }
-
-        .btn-loading::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin-left: -10px;
-            margin-top: -10px;
-            border: 2px solid transparent;
-            border-top: 2px solid #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Status Message */
         .status-message {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 480px;
-            padding: 15px 20px;
-            border-radius: 12px;
-            font-weight: 500;
-            display: none;
-            animation: slideInUp 0.3s ease-out;
-            z-index: 1000;
-            box-sizing: border-box;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-            border-left: 4px solid;
-            color: var(--tg-theme-text-color);
+
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 480px;
+
+            padding: 12px 15px; border-radius: 10px; font-weight: 500; display: none; animation: fadeIn 0.3s;
+
+            z-index: 1000; box-sizing: border-box;
+
         }
 
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
+        .success { display: block; background-color: rgba(40, 167, 69, 0.25); border-left: 5px solid var(--success-color); color: var(--success-color); }
 
-        .success {
-            display: block;
-            border-left-color: var(--success-color);
-        }
+        .error { display: block; background-color: rgba(220, 53, 69, 0.25); border-left: 5px solid var(--danger-color); color: var(--danger-color); }
 
-        .error {
-            display: block;
-            border-left-color: var(--danger-color);
-        }
+        .info { display: block; background-color: rgba(0, 123, 255, 0.25); border-left: 5px solid var(--tg-theme-button-color); color: #008cff; }
 
-        .info {
-            display: block;
-            border-left-color: var(--tg-theme-button-color);
-        }
-
-        /* Footer Navigation */
         .footer-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--secondary-bg-color);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(214, 41, 57, 0.1);
-            border-top: 1px solid var(--border-color);
-            z-index: 999;
-            backdrop-filter: blur(10px);
+
+            position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--secondary-bg-color); display: flex;
+
+            justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+
+            border-top: 1px solid var(--border-color); z-index: 999;
+
         }
 
         .nav-btn {
-            background: none;
-            border: none;
-            color: var(--tg-theme-hint-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 8px 15px;
-            border-radius: 12px;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--gradient-primary);
-            opacity: 0;
-            transition: var(--transition);
-            z-index: -1;
-        }
-
-        .nav-btn.active {
-            color: white;
-        }
-
-        .nav-btn.active::before {
-            opacity: 1;
-        }
-
-        .nav-btn:hover:not(.active) {
-            color: var(--tg-theme-text-color);
-            transform: translateY(-3px);
-        }
-
-        .nav-btn .icon {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .nav-btn.active .icon {
-            animation: bounce 0.5s;
-        }
-
-        /* Input Styles */
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--tg-theme-hint-color);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .input-group input, .input-group textarea, .input-group select {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.8);
-            color: var(--tg-theme-text-color);
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: var(--transition);
-        }
-
-        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color);
-            box-shadow: 0 0 0 3px rgba(214, 41, 57, 0.2);
-            background: rgba(255, 255, 255, 1);
-        }
-
-        /* Referral Styles */
-        .referral-input-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(214, 41, 57, 0.05);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .referral-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .referral-input-group input {
-            flex: 1;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.8);
-            color: var(--tg-theme-text-color);
-        }
-
-        .referral-input-group button {
-            padding: 14px 20px;
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .referral-input-group button:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-light);
-        }
-
-        .referral-code-box {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px dashed var(--tg-theme-hint-color);
-            margin-top: 15px;
-            cursor: pointer;
-            color: var(--tg-theme-text-color);
-            transition: var(--transition);
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            letter-spacing: 1px;
-            animation: fadeInUp 0.5s ease-out;
-            word-break: break-all;
-        }
-
-        .referral-code-box:hover {
-            background: rgba(214, 41, 57, 0.1);
-            border-color: var(--accent-color);
-            transform: translateY(-3px);
-        }
-
-        /* Referral Share Button */
-        .referral-share-btn {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-            box-shadow: var(--shadow-light);
-        }
-
-        .referral-share-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow);
-        }
-
-        /* Chart Styles */
-        .chart-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(214, 41, 57, 0.05);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .chart-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--tg-theme-text-color);
-        }
-
-        .chart-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--success-color);
-        }
-
-        .chart-change {
-            font-size: 14px;
-            font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
-
-        .chart-change.positive {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success-color);
-        }
-
-        .chart-change.negative {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger-color);
-        }
-
-        .chart-placeholder {
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 10px;
-            color: var(--tg-theme-hint-color);
-            font-size: 14px;
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .chart-placeholder:hover {
-            background: rgba(214, 41, 57, 0.1);
-        }
-
-        .chart-info {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        /* TRX Chart Canvas */
-        #trxChartCanvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-        }
-
-        /* Admin Styles */
-        .admin-stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .admin-stat-card {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-            transition: var(--transition);
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .admin-stat-card:hover {
-            background: rgba(214, 41, 57, 0.1);
-            transform: translateY(-3px);
-        }
-
-        .admin-stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 5px;
-        }
-
-        .admin-stat-label {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            text-transform: uppercase;
-        }
-
-        .admin-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .admin-control-btn {
-            padding: 14px;
-            background: var(--gradient-warning);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .admin-control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-light);
-        }
-
-        .admin-control-btn.danger {
-            background: var(--gradient-secondary);
-        }
-
-        /* Admin User List */
-        .admin-user-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-
-        .admin-user-item {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: var(--transition);
-        }
-
-        .admin-user-item:hover {
-            background: rgba(214, 41, 57, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .admin-user-info {
-            flex: 1;
-        }
-
-        .admin-user-id {
-            font-weight: bold;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 5px;
-        }
-
-        .admin-user-balance {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            margin-bottom: 3px;
-        }
-
-        .admin-user-date {
-            font-size: 11px;
-            color: var(--tg-theme-hint-color);
-        }
 
-        .admin-user-actions {
-            display: flex;
-            gap: 5px;
-        }
-
-        .admin-action-btn {
-            padding: 6px 10px;
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .admin-action-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Withdraw Requests */
-        .withdraw-requests-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-
-        .withdraw-request-item {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 10px;
-            transition: var(--transition);
-        }
-
-        .withdraw-request-item:hover {
-            background: rgba(214, 41, 57, 0.1);
-            transform: translateY(-2px);
-        }
+            background: none; border: none; color: var(--tg-theme-hint-color); display: flex; flex-direction: column;
 
-        .withdraw-request-info {
-            margin-bottom: 10px;
-        }
+            align-items: center; font-size: 12px; font-weight: 500; cursor: pointer; padding: 5px 15px;
 
-        .withdraw-request-user {
-            font-weight: bold;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 5px;
-        }
+            border-radius: 12px; transition: color 0.2s, background-color 0.2s;
 
-        .withdraw-request-details {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            margin-bottom: 3px;
         }
 
-        .withdraw-request-address {
-            font-size: 11px;
-            color: var(--tg-theme-hint-color);
-            background: rgba(214, 41, 57, 0.1);
-            padding: 8px;
-            border-radius: 6px;
-            margin: 5px 0;
-            cursor: pointer;
-            transition: var(--transition);
-            word-break: break-all;
-        }
+        .nav-btn.active { color: var(--tg-theme-button-color); }
 
-        .withdraw-request-address:hover {
-            background: rgba(214, 41, 57, 0.2);
-        }
+        .nav-btn:hover:not(.active) { color: #ffffff; }
 
-        .withdraw-request-date {
-            font-size: 11px;
-            color: var(--tg-theme-hint-color);
-        }
+        .nav-btn .icon { width: 28px; height: 28px; margin-bottom: 4px; }
 
-        .withdraw-request-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .input-group { margin-bottom: 20px; text-align: left; }
 
-        .withdraw-action-btn {
-            padding: 8px 12px;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--tg-theme-hint-color); font-size: 14px; font-weight: 500; }
 
-        .withdraw-action-btn.approve {
-            background: var(--gradient-success);
-        }
+        .input-group input {
 
-        .withdraw-action-btn.reject {
-            background: var(--gradient-secondary);
-        }
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);
 
-        .withdraw-action-btn:hover {
-            transform: translateY(-2px);
-        }
+            background-color: #333; color: var(--tg-theme-text-color); font-size: 16px; box-sizing: border-box;
 
-        /* Referral History */
-        .referral-history {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 15px;
         }
 
-        .referral-history-item {
-            background: rgba(214, 41, 57, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 10px;
-            transition: var(--transition);
-        }
+        .input-group input:focus { outline: none; border-color: var(--tg-theme-button-color); box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); }
 
-        .referral-history-item:hover {
-            background: rgba(214, 41, 57, 0.1);
-            transform: translateY(-2px);
-        }
+        #referralLink {
 
-        .referral-history-user {
-            font-weight: bold;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 5px;
-        }
+            background-color: #111; padding: 15px; border-radius: 10px; word-wrap: break-word;
 
-        .referral-history-date {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-        }
+            border: 1px dashed var(--tg-theme-hint-color); margin-top: 15px; cursor: pointer; color: #e0e0e0;
 
-        .referral-history-bonus {
-            font-size: 14px;
-            color: var(--success-color);
-            font-weight: bold;
-        }
+            transition: background-color 0.2s; text-align: left;
 
-        /* About Styles */
-        .about-section {
-            margin-bottom: 20px;
         }
 
-        .about-section h3 {
-            color: var(--tg-theme-text-color);
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
+        #referralLink:hover { background-color: #2a2a2a; }
 
-        .about-section p {
-            color: var(--tg-theme-hint-color);
-            line-height: 1.6;
-        }
+        .admin-panel {
 
-        /* Countdown Timer */
-        .countdown-timer {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color);
-            text-align: center;
-            margin-top: 10px;
-            font-weight: 500;
-        }
+            display: none; margin-top: 30px; padding: 15px; border: 1px solid var(--warning-color);
 
-        /* Ad Progress */
-        .ad-progress {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 14px;
-            color: var(--tg-theme-hint-color);
-        }
+            border-radius: 10px; background-color: rgba(255, 193, 7, 0.1);
 
-        .ad-progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(214, 41, 57, 0.1);
-            border-radius: 3px;
-            margin-top: 5px;
-            overflow: hidden;
         }
 
-        .ad-progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
+        .admin-panel h3 { color: var(--warning-color); margin-top: 0; }
 
-        /* Responsive Design */
-        @media (max-width: 480px) {
-            .container {
-                padding: 15px 10px 90px 10px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .balance-amount {
-                font-size: 36px;
-            }
-            
-            .btn {
-                padding: 16px;
-                font-size: 16px;
-            }
-            
-            .footer-nav {
-                padding: 10px 0;
-            }
-            
-            .nav-btn {
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-        }
     </style>
+
 </head>
+
 <body>
+
+<script type='text/javascript' src='//pl26604097.profitableratecpm.com/0f/56/94/0f5694f9b53dd9db6b20e82218735b99.js'></script>
+
     <div class="container">
-        <!-- Home View -->
+
+        <!-- Home / Task View -->
+
         <div id="home-view" class="view">
-            <div class="header">
-                <div class="logo-container">
-                    <div class="logo">
-                        <i class="fas fa-ad"></i>
-                    </div>
-                </div>
-                <h1>TronAdsFaucet</h1>
-                <p>Watch Ads and Earn TRON</p>
-                <button class="admin-header-btn" id="adminHeaderBtn" style="display: none;">
-                    <i class="fas fa-cog"></i>
-                    Admin
-                </button>
-            </div>
-            
-            <!-- TRON Price Section -->
+
+            <div class="header"><h1>Earning Technology</h1><p>Watch Ads and Earn USDT</p></div>
+
             <div class="card">
-                <h2><i class="fas fa-chart-line"></i> TRON Price</h2>
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <div class="chart-title">TRON (TRX)</div>
-                        <div class="chart-price" id="tronPrice">Loading...</div>
-                    </div>
-                    <div class="chart-change-container">
-                        <span class="chart-change" id="tronChange">24h: 0.00%</span>
-                    </div>
-                    <div class="chart-placeholder" id="tronChart">
-                        <canvas id="trxChartCanvas"></canvas>
-                    </div>
-                    <div class="chart-info">
-                        Real-time data from CoinGecko
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Balance Card -->
-            <div class="card">
-                <h2><i class="fas fa-wallet"></i> Current Balance</h2>
-                <div class="balance-amount" id="balanceDisplay">TRX 0.00</div>
+
+                <h2>Current Balance</h2>
+
+                <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
+
                 <div class="ad-info-grid">
-                    <div class="ad-info-item">
-                        <h3 id="adCountDisplay">0</h3>
-                        <p>Total Ads Watched</p>
-                    </div>
-                    <div class="ad-info-item">
-                        <h3 id="dailyAdCountDisplay">0</h3>
-                        <p>Today's Ads</p>
-                    </div>
+
+                    <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
+
+                    <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 1000</h3><p>Today's Ads</p></div>
+
                 </div>
+
             </div>
-            
-            <!-- Ad Button -->
-            <div class="ad-buttons">
-                <button class="btn btn-primary" id="rewardedBtn">
-                    <i class="fas fa-play-circle"></i>
-                    Watch 2 Ads (+0.001$)
-                </button>
-                <div class="ad-progress" id="adProgress" style="display: none;">
-                    <div>Watching ads: <span id="currentAd">1</span>/2</div>
-                    <div class="ad-progress-bar">
-                        <div class="ad-progress-fill" id="adProgressFill" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="countdown-timer" id="countdownTimer" style="display: none;"></div>
-            </div>
-            
-            <!-- Withdraw Button -->
-            <button class="btn btn-success" id="mainWithdrawBtn" disabled>
-                <i class="fas fa-money-bill-wave"></i>
-                Reach 0.10 TRX to Withdraw
-            </button>
+
+            <div class="ad-buttons"><button class="btn" id="rewardedBtn">Watch Ad (+0.01 USDT)</button></div>
+
+            <button class="btn" id="mainWithdrawBtn" disabled>Reach 10.00 USDT to Withdraw</button>
+
         </div>
+
+
 
         <!-- Withdraw View -->
+
         <div id="withdraw-view" class="view">
-            <div class="header">
-                <h1>Withdraw</h1>
-                <p>Claim your earnings</p>
-            </div>
-            
+
+            <div class="header"><h1>Withdraw</h1><p>Request your earnings</p></div>
+
             <div class="card">
-                <h2><i class="fas fa-wallet"></i> Your Balance</h2>
-                <div class="balance-amount" id="withdrawBalanceDisplay">TRX 0.00</div>
-                <p style="color: var(--tg-theme-hint-color); margin-top: 15px; text-align: center;">
-                    Minimum withdrawal amount is 0.10 TRX.
-                </p>
+
+                <h2>Your Balance</h2>
+
+                <div class="balance-amount" id="withdrawBalanceDisplay">USDT 0.00</div>
+
+                <p style="color: var(--tg-theme-hint-color); margin-top: 15px;">Minimum withdrawal is 10.00 USDT.</p>
+
             </div>
-            
+
             <div class="card">
-                <h2><i class="fas fa-money-check"></i> Payment Details</h2>
+
+                <h2>Payment Details</h2>
+
                 <div class="input-group">
-                    <label for="paymentAddress"><i class="fas fa-address-card"></i> Your TRON Wallet Address</label>
-                    <input type="text" id="paymentAddress" placeholder="T... (TRON Address)">
-                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
-                        Enter your TRON (TRC20) address. Must start with T.
-                    </p>
+
+                    <label for="paymentAddress">Your USDT Wallet Address (TRC20)</label>
+
+                    <input type="text" id="paymentAddress" placeholder="e.g., T... (TRC20 Address)">
+
                 </div>
-                
-                <div class="input-group">
-                    <label for="withdrawAmount"><i class="fas fa-coins"></i> Amount to Withdraw (TRX)</label>
-                    <input type="number" id="withdrawAmount" placeholder="0.10">
-                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
-                        Minimum: 0.10 TRX
-                    </p>
-                </div>
-                
-                <button class="btn btn-success" id="withdrawBtn" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Withdrawal Request
-                </button>
+
+                <button class="btn" id="finalWithdrawBtn" disabled>Withdraw</button>
+
             </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-history"></i> Withdrawal History</h2>
-                <div id="withdrawHistory">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        You don't have any withdrawal requests yet.
-                    </p>
-                </div>
-            </div>
+
         </div>
+
+        
 
         <!-- Referral View -->
+
         <div id="referral-view" class="view">
-            <div class="header">
-                <h1>Invite Friends</h1>
-                <p>Invite your friends and earn bonuses</p>
-            </div>
-            
+
+            <div class="header"><h1>Referrals</h1><p>Invite friends and earn more!</p></div>
+
             <div class="card">
-                <h2><i class="fas fa-user-plus"></i> Your Referral Info</h2>
+
+                <h2>Your Referral Stats</h2>
+
                 <div class="ad-info-grid">
-                    <div class="ad-info-item">
-                        <h3 id="referralCount">0</h3>
-                        <p>Invited</p>
-                    </div>
-                    <div class="ad-info-item">
-                        <h3 id="referralEarnings">0 TRX</h3>
-                        <p>Total Earnings</p>
-                    </div>
+
+                    <div class="ad-info-item"><h3 id="referralCountDisplay">0</h3><p>Total Referrals</p></div>
+
+                    <div class="ad-info-item"><h3 id="referralBonusDisplay">USDT 0.00</h3><p>Referral Earnings</p></div>
+
                 </div>
-                
-                <div class="referral-code-box" id="referralCodeBox">
-                    Loading...
-                </div>
-                
-                <button class="referral-share-btn" id="shareReferralBtn">
-                    <i class="fas fa-share-alt"></i>
-                    Share Referral Code
-                </button>
+
             </div>
-            
+
             <div class="card">
-                <h2><i class="fas fa-gift"></i> Invite Your Friend</h2>
-                <p style="margin-bottom: 15px; color: var(--tg-theme-hint-color);">
-                    Invite your friends and earn <strong>0.01$</strong> bonus for each!
-                </p>
-                
-                <div class="referral-input-container">
-                    <h3 style="margin-bottom: 10px; color: var(--tg-theme-text-color);">Enter Referral Code</h3>
-                    <p style="font-size: 14px; color: var(--tg-theme-hint-color); margin-bottom: 10px;">
-                        Enter a friend's referral code to get a bonus.
-                    </p>
-                    <div class="referral-input-group">
-                        <input type="text" id="referralInput" placeholder="Enter referral code">
-                        <button id="applyReferralBtn">Apply</button>
-                    </div>
-                </div>
+
+                <h2>Your Referral Link</h2>
+
+                <p>Share this link with your friends. You get 0.5 USDT for each verified friend who joins!</p>
+
+                <p id="referralLink" title="Click to copy"></p>
+
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px;">Note: Referral rewards require backend processing and will be credited to your balance after verification.</p>
+
             </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-list"></i> Referral History</h2>
-                <div id="referralHistoryList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                        You don't have any referral history yet.
-                    </p>
-                </div>
-            </div>
+
         </div>
 
-        <!-- About View -->
-        <div id="about-view" class="view">
-            <div class="header">
-                <h1>About</h1>
-                <p>Learn more about TronAdsFaucet</p>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-info-circle"></i> How It Works</h2>
-                <div class="about-section">
-                    <h3>1. Watch Ads</h3>
-                    <p>Watch ads and earn TRON cryptocurrency. Each ad gives you 0.0005$ worth of TRON.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>2. Invite Friends</h3>
-                    <p>Invite your friends and earn 0.01$ bonus for each friend who joins using your referral code.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>3. Withdraw Earnings</h3>
-                    <p>Withdraw your earnings to your TRON wallet when you reach the minimum amount of 0.10 TRX.</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-question-circle"></i> FAQ</h2>
-                <div class="about-section">
-                    <h3>How many ads can I watch per day?</h3>
-                    <p>There's no daily limit! You can watch ads as many times as you want.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>What is the minimum withdrawal amount?</h3>
-                    <p>The minimum withdrawal amount is 0.10 TRX.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>How long do withdrawals take?</h3>
-                    <p>Withdrawal requests are processed within 24-48 hours.</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-shield-alt"></i> Privacy & Security</h2>
-                <p style="color: var(--tg-theme-hint-color);">
-                    Your personal information is safe. We only require your TRON wallet address for withdrawals.
-                </p>
-            </div>
-        </div>
 
-        <!-- Admin View -->
-        <div id="admin-view" class="view">
-            <div class="header">
-                <h1>Admin Panel</h1>
-                <p>Application management and statistics</p>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-chart-bar"></i> General Statistics</h2>
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalUsers">0</div>
-                        <div class="admin-stat-label">Total Users</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalAds">0</div>
-                        <div class="admin-stat-label">Total Ads</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalWithdrawals">0</div>
-                        <div class="admin-stat-label">Total Withdrawals</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalReferrals">0</div>
-                        <div class="admin-stat-label">Total Referrals</div>
-                    </div>
-                </div>
-                
-                <div class="admin-controls">
-                    <button class="admin-control-btn" id="adminResetStatsBtn">
-                        <i class="fas fa-redo"></i> Reset Statistics
-                    </button>
-                    <button class="admin-control-btn danger" id="adminClearDataBtn">
-                        <i class="fas fa-trash"></i> Clear All Data
-                    </button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-users"></i> User Management</h2>
-                <div class="admin-user-list" id="adminUserList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                    Loading users...
-                    </p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-money-bill-wave"></i> Withdrawal Requests</h2>
-                <div class="withdraw-requests-list" id="withdrawRequestsList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">
-                    No withdrawal requests.
-                    </p>
-                </div>
-            </div>
-        </div>
+
+        <!-- Common Elements -->
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="admin-panel" id="adminPanel"><h3>👑 Admin Panel</h3><p id="userInfo"></p></div>
+
     </div>
 
-    <!-- Status Message -->
-    <div class="status-message" id="statusMessage"></div>
 
-    <!-- Bottom Navigation -->
-    <div class="footer-nav">
-        <button class="nav-btn active" data-view="home-view">
-            <div class="icon"><i class="fas fa-home"></i></div>
-            Home
-        </button>
-        <button class="nav-btn" data-view="withdraw-view">
-            <div class="icon"><i class="fas fa-wallet"></i></div>
-            Withdraw
-        </button>
-        <button class="nav-btn" data-view="referral-view">
-            <div class="icon"><i class="fas fa-users"></i></div>
-            Referral
-        </button>
-        <button class="nav-btn" data-view="about-view">
-            <div class="icon"><i class="fas fa-info-circle"></i></div>
-            About
-        </button>
-    </div>
+
+    <!-- Footer Navigation -->
+
+    <footer class="footer-nav">
+
+        <button class="nav-btn active" id="navHome"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span><span>Home</span></button>
+
+        <button class="nav-btn" id="navWithdraw"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.31 8.91a1 1 0 0 0-1.42 0l-4.24 4.24-2.12-2.12a1 1 0 1 0-1.42 1.42l2.83 2.83a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 0-1.42zM20 12a8 8 0 1 1-8-8 8 8 0 0 1 8 8zm-2 0a6 6 0 1 0-6 6 6 6 0 0 0 6-6z"/></svg></span><span>Withdraw</span></button>
+
+        <button class="nav-btn" id="navRefer"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span><span>Referrals</span></button>
+
+    </footer>
+
+
 
     <script>
-        // Application state
-        const appState = {
-            balance: 0,
-            adCount: 0,
-            dailyAdCount: 0,
-            referralCount: 0,
-            referralEarnings: 0,
-            userId: null,
-            referralCode: null,
-            hasAppliedReferral: false,
-            isAdmin: false,
-            minWithdrawal: 0.10,
-            adReward: 0.0005, // Per ad
-            totalAdReward: 0.001, // For 2 ads
-            referralReward: 0.01,
-            tronPrice: 0.12, // Default TRX price
-            tronChange: 0,
-            adManager: null,
-            adexoraReady: false,
-            adCooldown: false,
-            cooldownTime: 30, // 30 seconds cooldown
-            currentAdIndex: 0,
-            totalAds: 2
-        };
 
-        // Admin user IDs - DÜZELTİLDİ: Artık herkes admin olabilir
-        const adminUsers = ['admin', '8401848644', '7904032877', 'test'];
+        document.addEventListener('DOMContentLoaded', function () {
 
-        // DOM elements
-        const views = document.querySelectorAll('.view');
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const adCountDisplay = document.getElementById('adCountDisplay');
-        const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
-        const referralCount = document.getElementById('referralCount');
-        const referralEarnings = document.getElementById('referralEarnings');
-        const referralCodeBox = document.getElementById('referralCodeBox');
-        const shareReferralBtn = document.getElementById('shareReferralBtn');
-        const applyReferralBtn = document.getElementById('applyReferralBtn');
-        const referralInput = document.getElementById('referralInput');
-        const rewardedBtn = document.getElementById('rewardedBtn');
-        const adProgress = document.getElementById('adProgress');
-        const currentAd = document.getElementById('currentAd');
-        const adProgressFill = document.getElementById('adProgressFill');
-        const countdownTimer = document.getElementById('countdownTimer');
-        const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
-        const withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay');
-        const withdrawBtn = document.getElementById('withdrawBtn');
-        const paymentAddress = document.getElementById('paymentAddress');
-        const withdrawAmount = document.getElementById('withdrawAmount');
-        const adminHeaderBtn = document.getElementById('adminHeaderBtn');
-        const adminView = document.getElementById('admin-view');
-        const adminTotalUsers = document.getElementById('adminTotalUsers');
-        const adminTotalAds = document.getElementById('adminTotalAds');
-        const adminTotalWithdrawals = document.getElementById('adminTotalWithdrawals');
-        const adminTotalReferrals = document.getElementById('adminTotalReferrals');
-        const adminUserList = document.getElementById('adminUserList');
-        const withdrawRequestsList = document.getElementById('withdrawRequestsList');
-        const adminResetStatsBtn = document.getElementById('adminResetStatsBtn');
-        const adminClearDataBtn = document.getElementById('adminClearDataBtn');
-        const statusMessage = document.getElementById('statusMessage');
-        const tronPriceElement = document.getElementById('tronPrice');
-        const tronChangeElement = document.getElementById('tronChange');
-        const trxChartCanvas = document.getElementById('trxChartCanvas');
+            const tg = window.Telegram.WebApp;
 
-        // When page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-            loadUserData();
-            loadTronPrice();
-            initializeAdManager();
-        });
 
-        // Initialize app - DÜZELTİLDİ: Admin kontrolü geliştirildi
-        function initializeApp() {
-            // Create user ID
-            if (!localStorage.getItem('userId')) {
-                const userId = generateUserId();
-                localStorage.setItem('userId', userId);
-            }
-            
-            appState.userId = localStorage.getItem('userId');
-            
-            // Create referral code
-            if (!localStorage.getItem('referralCode')) {
-                const referralCode = generateReferralCode();
-                localStorage.setItem('referralCode', referralCode);
-            }
-            
-            appState.referralCode = localStorage.getItem('referralCode');
-            
-            // Admin check - DÜZELTİLDİ: Geliştirilmiş admin kontrolü
-            const urlParams = new URLSearchParams(window.location.search);
-            const isAdminParam = urlParams.get('admin');
-            
-            // URL parametresi ile admin erişimi
-            if (isAdminParam === 'true') {
-                localStorage.setItem('isAdmin', 'true');
-            }
-            
-            // Admin kontrolü
-            const isAdminUser = adminUsers.includes(appState.userId) || 
-                               localStorage.getItem('isAdmin') === 'true' ||
-                               appState.userId.includes('admin');
-            
-            if (isAdminUser) {
-                appState.isAdmin = true;
-                adminHeaderBtn.style.display = 'flex';
-                console.log('Admin access granted for user:', appState.userId);
-            }
-            
-            // Check if referral applied
-            if (localStorage.getItem('hasAppliedReferral')) {
-                appState.hasAppliedReferral = true;
-            }
-            
-            // Initialize user data in global users storage
-            initializeUserData();
-        }
 
-        // Initialize user data in global storage - YENİ EKLENDİ
-        function initializeUserData() {
-            let users = JSON.parse(localStorage.getItem('users') || '{}');
-            
-            if (!users[appState.userId]) {
-                users[appState.userId] = {
-                    balance: 0,
-                    adCount: 0,
-                    dailyAdCount: 0,
-                    referralCount: 0,
-                    referralEarnings: 0,
-                    referralCode: appState.referralCode,
-                    createdAt: new Date().toISOString()
-                };
-                localStorage.setItem('users', JSON.stringify(users));
-            }
-        }
+            // --- DOM Elements ---
 
-        // Set up event listeners
-        function setupEventListeners() {
-            // Navigation buttons
-            navButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const targetView = this.getAttribute('data-view');
-                    showView(targetView);
-                    
-                    // Update active button
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-            
-            // Admin button - DÜZELTİLDİ: Admin view gösterimi
-            adminHeaderBtn.addEventListener('click', function() {
-                showView('admin-view');
-                navButtons.forEach(btn => btn.classList.remove('active'));
-            });
-            
-            // Ad button
-            rewardedBtn.addEventListener('click', showAds);
-            
-            // Withdraw button
-            mainWithdrawBtn.addEventListener('click', function() {
-                showView('withdraw-view');
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                document.querySelector('[data-view="withdraw-view"]').classList.add('active');
-            });
-            
-            withdrawBtn.addEventListener('click', requestWithdrawal);
-            
-            // Referral buttons
-            shareReferralBtn.addEventListener('click', shareReferralCode);
-            applyReferralBtn.addEventListener('click', applyReferralCode);
-            
-            // Admin buttons
-            adminResetStatsBtn.addEventListener('click', resetAdminStats);
-            adminClearDataBtn.addEventListener('click', clearAllData);
-            
-            // Withdraw amount change
-            withdrawAmount.addEventListener('input', updateWithdrawButton);
-            
-            // Referral code copy
-            referralCodeBox.addEventListener('click', copyReferralCode);
-            
-            // Payment address change
-            paymentAddress.addEventListener('input', updateWithdrawButton);
-        }
+            const balanceDisplay = document.getElementById('balanceDisplay'), adCountDisplay = document.getElementById('adCountDisplay'),
 
-        // Load user data - DÜZELTİLDİ: Global users storage'dan veri çekme
-        function loadUserData() {
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            const userData = users[appState.userId] || {};
-            
-            // Balance
-            appState.balance = userData.balance || 0;
-            
-            // Ad count
-            appState.adCount = userData.adCount || 0;
-            
-            // Daily ad count
-            appState.dailyAdCount = userData.dailyAdCount || 0;
-            
-            // Referral count
-            appState.referralCount = userData.referralCount || 0;
-            
-            // Referral earnings
-            appState.referralEarnings = userData.referralEarnings || 0;
-            
-            // Update UI
-            updateUI();
-        }
+                  dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay'), rewardedBtn = document.getElementById('rewardedBtn'),
 
-        // Update UI
-        function updateUI() {
-            // Balance
-            const balanceInTRX = appState.balance / appState.tronPrice;
-            balanceDisplay.textContent = `TRX ${balanceInTRX.toFixed(4)}`;
-            withdrawBalanceDisplay.textContent = `TRX ${balanceInTRX.toFixed(4)}`;
-            
-            // Ad counts
-            adCountDisplay.textContent = appState.adCount;
-            dailyAdCountDisplay.textContent = appState.dailyAdCount;
-            
-            // Referral info
-            referralCount.textContent = appState.referralCount;
-            referralEarnings.textContent = `${appState.referralEarnings.toFixed(4)} TRX`;
-            referralCodeBox.textContent = appState.referralCode;
-            
-            // Update withdraw button
-            if (balanceInTRX >= appState.minWithdrawal) {
-                mainWithdrawBtn.disabled = false;
-                mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Withdraw (' + balanceInTRX.toFixed(4) + ' TRX)';
-            } else {
-                mainWithdrawBtn.disabled = true;
-                mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Reach ' + appState.minWithdrawal + ' TRX to Withdraw';
-            }
-            
-            // Update ad button based on cooldown
-            if (appState.adCooldown) {
-                rewardedBtn.disabled = true;
-            } else {
-                rewardedBtn.disabled = false;
-            }
-            
-            // Update admin panel
-            if (appState.isAdmin) {
-                updateAdminPanel();
-            }
-        }
+                  mainWithdrawBtn = document.getElementById('mainWithdrawBtn'), statusMessage = document.getElementById('statusMessage'),
 
-        // Show view
-        function showView(viewId) {
-            views.forEach(view => {
-                view.style.display = 'none';
-            });
-            
-            document.getElementById(viewId).style.display = 'block';
-            
-            // Special view operations
-            if (viewId === 'admin-view') {
-                updateAdminPanel();
-            } else if (viewId === 'withdraw-view') {
-                updateWithdrawButton();
-                loadWithdrawalHistory();
-            } else if (viewId === 'referral-view') {
-                loadReferralHistory();
-            }
-        }
+                  withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay'), paymentAddressInput = document.getElementById('paymentAddress'),
 
-        // Show ads (both TMA and Adexora)
-        function showAds() {
-            // Check if in cooldown
-            if (appState.adCooldown) {
-                showStatus('Please wait before watching more ads.', 'error');
-                return;
-            }
-            
-            // Reset ad index
-            appState.currentAdIndex = 0;
-            
-            // Set button to loading state
-            rewardedBtn.classList.add('btn-loading');
-            rewardedBtn.disabled = true;
-            
-            // Show progress
-            adProgress.style.display = 'block';
-            updateAdProgress();
-            
-            // Start showing ads
-            showNextAd();
-        }
+                  finalWithdrawBtn = document.getElementById('finalWithdrawBtn'), referralLinkDisplay = document.getElementById('referralLink'),
 
-        // Show next ad in sequence
-        function showNextAd() {
-            appState.currentAdIndex++;
-            currentAd.textContent = appState.currentAdIndex;
-            updateAdProgress();
-            
-            if (appState.currentAdIndex === 1) {
-                // Show TMA ad first
-                showTMAAd();
-            } else if (appState.currentAdIndex === 2) {
-                // Show Adexora ad second
-                showAdexoraAd();
-            }
-        }
+                  referralCountDisplay = document.getElementById('referralCountDisplay'), referralBonusDisplay = document.getElementById('referralBonusDisplay'),
 
-        // Show TMA ad
-        function showTMAAd() {
-            if (!appState.adManager) {
-                showStatus('TMA ad could not be loaded. Please try again.', 'error');
-                // Simulate ad completion for testing
-                setTimeout(() => {
-                    showStatus('TMA ad completed (simulated)', 'success');
-                    showNextAd();
-                }, 2000);
-                return;
-            }
-            
-            try {
-                appState.adManager()
-                    .then(() => {
-                        // Ad successful
-                        showStatus('TMA ad completed successfully!', 'success');
-                        showNextAd();
-                    })
-                    .catch(error => {
-                        console.error('TMA ad error:', error);
-                        showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
-                        showNextAd(); // Continue to next ad
-                    });
-            } catch (error) {
-                console.error('TMA ad error:', error);
-                showStatus('TMA ad could not be loaded. Trying next ad...', 'error');
-                showNextAd(); // Continue to next ad
-            }
-        }
+                  adminPanel = document.getElementById('adminPanel'), userInfoDisplay = document.getElementById('userInfo');
 
-        // Show Adexora ad
-        function showAdexoraAd() {
-            if (typeof window.showAdexora !== 'function') {
-                showStatus('Adexora ad could not be loaded.', 'error');
-                // Simulate ad completion for testing
-                setTimeout(() => {
-                    completeAdSession();
-                }, 2000);
-                return;
-            }
-            
-            try {
-                window.showAdexora()
-                    .then(() => {
-                        // Ad successful
-                        showStatus('Adexora ad completed successfully!', 'success');
-                        completeAdSession();
-                    })
-                    .catch(error => {
-                        console.error('Adexora ad error:', error);
-                        showStatus('Adexora ad could not be loaded.', 'error');
-                        completeAdSession();
-                    });
-            } catch (error) {
-                console.error('Adexora ad error:', error);
-                showStatus('Adexora ad could not be loaded.', 'error');
-                completeAdSession();
-            }
-        }
 
-        // Complete ad session and reward user - DÜZELTİLDİ: Global storage güncelleme
-        function completeAdSession() {
-            // Calculate reward in TRX (for both ads)
-            const rewardInTRX = appState.totalAdReward / appState.tronPrice;
-            
-            // Update balance
-            appState.balance += rewardInTRX;
-            appState.adCount += appState.totalAds;
-            appState.dailyAdCount += appState.totalAds;
-            
-            // Update global users storage
-            let users = JSON.parse(localStorage.getItem('users') || '{}');
-            if (users[appState.userId]) {
-                users[appState.userId].balance = appState.balance;
-                users[appState.userId].adCount = appState.adCount;
-                users[appState.userId].dailyAdCount = appState.dailyAdCount;
-                localStorage.setItem('users', JSON.stringify(users));
-            }
-            
-            // Update UI
-            updateUI();
-            
-            // Show success message
-            showStatus(`Congratulations! You earned ${rewardInTRX.toFixed(6)} TRX from ${appState.totalAds} ads.`, 'success');
-            
-            // Reset button and progress
-            resetAdButton();
-            
-            // Start cooldown
-            startCooldown();
-        }
 
-        // Update ad progress
-        function updateAdProgress() {
-            const progress = (appState.currentAdIndex / appState.totalAds) * 100;
-            adProgressFill.style.width = `${progress}%`;
-        }
+            // --- App Constants & Configuration ---
 
-        // Reset ad button
-        function resetAdButton() {
-            rewardedBtn.classList.remove('btn-loading');
-            adProgress.style.display = 'none';
-        }
+            // To set up your bot, search for "EDIT_THIS" and replace the values on the following lines.
 
-        // Start cooldown after ads
-        function startCooldown() {
-            appState.adCooldown = true;
-            let timeLeft = appState.cooldownTime;
-            
-            // Show countdown timer
-            countdownTimer.style.display = 'block';
-            countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
-            
-            // Update button
-            rewardedBtn.disabled = true;
-            rewardedBtn.innerHTML = '<i class="fas fa-clock"></i> Wait for Cooldown';
-            
-            // Start countdown
-            const countdownInterval = setInterval(() => {
-                timeLeft--;
-                countdownTimer.textContent = `Next ads in ${timeLeft} seconds`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    appState.adCooldown = false;
-                    countdownTimer.style.display = 'none';
-                    
-                    // Reset button
-                    rewardedBtn.disabled = false;
-                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Watch 2 Ads (+0.001$)';
-                }
-            }, 1000);
-        }
+            const ADMIN_ID = 6357701459; // EDIT_THIS: Replace with your numeric Telegram User ID.
 
-        // Request withdrawal - DÜZELTİLDİ: Global storage entegrasyonu
-        function requestWithdrawal() {
-            const address = paymentAddress.value.trim();
-            const amount = parseFloat(withdrawAmount.value);
+            const BOT_USERNAME = 'YourBotUsername'; // EDIT_THIS: Replace with your bot's username.
+
+            const WEBAPP_NAME = 'YourWebAppName';   // EDIT_THIS: Replace with your web app's short name.
+
             
-            // Validation
-            if (!address || address.length < 10) {
-                showStatus('Please enter a valid TRON address.', 'error');
-                return;
-            }
-            
-            if (isNaN(amount) || amount < appState.minWithdrawal) {
-                showStatus(`Minimum withdrawal amount is ${appState.minWithdrawal} TRX.`, 'error');
-                return;
-            }
-            
-            const balanceInTRX = appState.balance / appState.tronPrice;
-            if (amount > balanceInTRX) {
-                showStatus('Insufficient balance.', 'error');
-                return;
-            }
-            
-            // Create withdrawal request
-            const withdrawal = {
-                id: generateWithdrawalId(),
-                userId: appState.userId,
-                address: address,
-                amount: amount,
-                status: 'pending',
-                date: new Date().toISOString()
+
+            const WITHDRAW_THRESHOLD = 10;      // 10 USDT
+
+            const AD_REWARD_CENTS = 1;          // 0.01 USDT = 1 cent
+
+            const REFERRAL_BONUS_USDT = 0.5;    // 0.5 USDT
+
+            const DAILY_AD_LIMIT = 1000;
+
+
+
+            // --- App State ---
+
+            // balanceInCents is used to avoid floating point issues. 100 cents = 1 USDT.
+
+            let state = {
+
+                balanceInCents: 0,
+
+                totalAdCount: 0,
+
+                dailyAdCount: 0,
+
+                lastAdDate: null,
+
+                referralCount: 0 
+
             };
-            
-            // Get withdrawals
-            let withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
-            withdrawals.push(withdrawal);
-            localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
-            
-            // Update balance
-            appState.balance -= amount * appState.tronPrice;
-            
-            // Update global users storage
-            let users = JSON.parse(localStorage.getItem('users') || '{}');
-            if (users[appState.userId]) {
-                users[appState.userId].balance = appState.balance;
-                localStorage.setItem('users', JSON.stringify(users));
-            }
-            
-            // Update UI
-            updateUI();
-            
-            // Success message
-            showStatus('Your withdrawal request has been received. It will be processed as soon as possible.', 'success');
-            
-            // Clear form
-            paymentAddress.value = '';
-            withdrawAmount.value = '';
-            updateWithdrawButton();
-            loadWithdrawalHistory();
-        }
 
-        // Load withdrawal history - YENİ EKLENDİ
-        function loadWithdrawalHistory() {
-            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
-            const userWithdrawals = withdrawals.filter(w => w.userId === appState.userId);
-            const historyContainer = document.getElementById('withdrawHistory');
-            
-            if (userWithdrawals.length === 0) {
-                historyContainer.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">You don\'t have any withdrawal requests yet.</p>';
-                return;
-            }
-            
-            let historyHTML = '';
-            userWithdrawals.forEach(withdrawal => {
-                const statusClass = withdrawal.status === 'completed' ? 'success' : 
-                                  withdrawal.status === 'rejected' ? 'error' : 'info';
-                historyHTML += `
-                    <div class="withdraw-request-item">
-                        <div class="withdraw-request-info">
-                            <div class="withdraw-request-details">Amount: ${withdrawal.amount.toFixed(4)} TRX</div>
-                            <div class="withdraw-request-address">${withdrawal.address}</div>
-                            <div class="withdraw-request-date">${new Date(withdrawal.date).toLocaleString('en-US')}</div>
-                            <div class="chart-change ${statusClass}" style="display: inline-block; margin-top: 5px;">
-                                ${withdrawal.status.toUpperCase()}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            historyContainer.innerHTML = historyHTML;
-        }
 
-        // Load referral history - YENİ EKLENDİ
-        function loadReferralHistory() {
-            const referrals = JSON.parse(localStorage.getItem('referrals') || '[]');
-            const userReferrals = referrals.filter(r => r.referrerId === appState.userId);
-            const historyContainer = document.getElementById('referralHistoryList');
-            
-            if (userReferrals.length === 0) {
-                historyContainer.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">You don\'t have any referral history yet.</p>';
-                return;
-            }
-            
-            let historyHTML = '';
-            userReferrals.forEach(referral => {
-                historyHTML += `
-                    <div class="referral-history-item">
-                        <div class="referral-history-user">User#${referral.userId.substring(0, 6)}</div>
-                        <div class="referral-history-date">${new Date(referral.date).toLocaleString('en-US')}</div>
-                        <div class="referral-history-bonus">+${referral.bonus.toFixed(4)} TRX</div>
-                    </div>
-                `;
-            });
-            
-            historyContainer.innerHTML = historyHTML;
-        }
 
-        // Share referral code
-        function shareReferralCode() {
-            const message = `Earn TRON with TronAdsFaucet! Use my referral code: ${appState.referralCode}\n\nhttps://t.me/TronAdsFaucetBot`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'TronAdsFaucet',
-                    text: message
-                }).catch(err => {
-                    console.log('Share cancelled:', err);
-                    copyToClipboard(message);
-                    showStatus('Referral code copied to clipboard!', 'success');
-                });
-            } else {
-                copyToClipboard(message);
-                showStatus('Referral code copied to clipboard!', 'success');
-            }
-        }
+            // ---- State Management ----
 
-        // Apply referral code - DÜZELTİLDİ: Global storage entegrasyonu
-        function applyReferralCode() {
-            const code = referralInput.value.trim();
-            
-            if (!code) {
-                showStatus('Please enter a referral code.', 'error');
-                return;
-            }
-            
-            if (code === appState.referralCode) {
-                showStatus('You cannot use your own referral code.', 'error');
-                return;
-            }
-            
-            if (appState.hasAppliedReferral) {
-                showStatus('You have already applied a referral code.', 'error');
-                return;
-            }
-            
-            // Check referral code
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            let referrerId = null;
-            
-            for (const [userId, userData] of Object.entries(users)) {
-                if (userData.referralCode === code) {
-                    referrerId = userId;
-                    break;
-                }
-            }
-            
-            if (!referrerId) {
-                showStatus('Invalid referral code.', 'error');
-                return;
-            }
-            
-            // Apply referral bonus
-            const rewardInTRX = appState.referralReward / appState.tronPrice;
-            appState.balance += rewardInTRX;
-            appState.hasAppliedReferral = true;
-            
-            // Update global users storage
-            if (users[appState.userId]) {
-                users[appState.userId].balance = appState.balance;
-                users[appState.userId].hasAppliedReferral = true;
-            }
-            
-            // Update referrer's referral count
-            if (users[referrerId]) {
-                users[referrerId].referralCount = (users[referrerId].referralCount || 0) + 1;
-                users[referrerId].referralEarnings = (users[referrerId].referralEarnings || 0) + rewardInTRX;
-            }
-            
-            // Save referral record
-            let referrals = JSON.parse(localStorage.getItem('referrals') || '[]');
-            referrals.push({
-                userId: appState.userId,
-                referrerId: referrerId,
-                bonus: rewardInTRX,
-                date: new Date().toISOString()
-            });
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('referrals', JSON.stringify(referrals));
-            localStorage.setItem('hasAppliedReferral', 'true');
-            
-            // Update UI
-            updateUI();
-            
-            // Success message
-            showStatus(`Referral bonus: ${rewardInTRX.toFixed(6)} TRX added to your account!`, 'success');
-            
-            // Clear input
-            referralInput.value = '';
-        }
+            function getTodayDateString() { return new Date().toISOString().split('T')[0]; }
 
-        // Update admin panel - DÜZELTİLDİ: Tüm veriler global storage'dan alınıyor
-        function updateAdminPanel() {
-            // Get user data
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
-            const referrals = JSON.parse(localStorage.getItem('referrals') || '[]');
-            
-            // Calculate statistics
-            let totalUsers = Object.keys(users).length;
-            let totalAds = 0;
-            let totalWithdrawals = 0;
-            let totalReferrals = referrals.length;
-            let totalWithdrawalAmount = 0;
-            
-            for (const user of Object.values(users)) {
-                totalAds += user.adCount || 0;
-            }
-            
-            for (const withdrawal of withdrawals) {
-                if (withdrawal.status === 'completed') {
-                    totalWithdrawals++;
-                    totalWithdrawalAmount += withdrawal.amount;
-                }
-            }
-            
-            // Show statistics
-            adminTotalUsers.textContent = totalUsers;
-            adminTotalAds.textContent = totalAds;
-            adminTotalWithdrawals.textContent = totalWithdrawals;
-            adminTotalReferrals.textContent = totalReferrals;
-            
-            // Show user list
-            adminUserList.innerHTML = '';
-            
-            if (totalUsers === 0) {
-                adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">No users found.</p>';
-            } else {
-                for (const [userId, userData] of Object.entries(users)) {
-                    const balanceInTRX = (userData.balance || 0) / appState.tronPrice;
-                    const userElement = document.createElement('div');
-                    userElement.className = 'admin-user-item';
-                    userElement.innerHTML = `
-                        <div class="admin-user-info">
-                            <div class="admin-user-id">User#${userId.substring(0, 6)}</div>
-                            <div class="admin-user-balance">Balance: ${balanceInTRX.toFixed(4)} TRX</div>
-                            <div class="admin-user-date">Ads: ${userData.adCount || 0} | Referrals: ${userData.referralCount || 0}</div>
-                        </div>
-                        <div class="admin-user-actions">
-                            <button class="admin-action-btn" onclick="adminAddBalance('${userId}')">+ TRX</button>
-                            <button class="admin-action-btn" onclick="adminResetUser('${userId}')">Reset</button>
-                        </div>
-                    `;
-                    adminUserList.appendChild(userElement);
-                }
-            }
-            
-            // Show withdrawal requests
-            withdrawRequestsList.innerHTML = '';
-            
-            const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-            
-            if (pendingWithdrawals.length === 0) {
-                withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">No pending withdrawal requests.</p>';
-            } else {
-                for (const withdrawal of pendingWithdrawals) {
-                    const user = users[withdrawal.userId] || {};
-                    const requestElement = document.createElement('div');
-                    requestElement.className = 'withdraw-request-item';
-                    requestElement.innerHTML = `
-                        <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">User#${withdrawal.userId.substring(0, 6)}</div>
-                            <div class="withdraw-request-details">Amount: ${withdrawal.amount.toFixed(4)} TRX</div>
-                            <div class="withdraw-request-address" onclick="copyToClipboard('${withdrawal.address}')">${withdrawal.address}</div>
-                            <div class="withdraw-request-date">${new Date(withdrawal.date).toLocaleString('en-US')}</div>
-                        </div>
-                        <div class="withdraw-request-actions">
-                            <button class="withdraw-action-btn approve" onclick="adminApproveWithdrawal('${withdrawal.id}')">Approve</button>
-                            <button class="withdraw-action-btn reject" onclick="adminRejectWithdrawal('${withdrawal.id}')">Reject</button>
-                        </div>
-                    `;
-                    withdrawRequestsList.appendChild(requestElement);
-                }
-            }
-        }
+            function loadState() {
 
-        // Reset admin statistics
-        function resetAdminStats() {
-            if (confirm('All statistics will be reset. Are you sure?')) {
-                localStorage.removeItem('users');
-                localStorage.removeItem('withdrawals');
-                localStorage.removeItem('referrals');
-                updateAdminPanel();
-                showStatus('Statistics have been reset.', 'success');
-            }
-        }
+                try {
 
-        // Clear all data
-        function clearAllData() {
-            if (confirm('ALL data will be deleted. This action cannot be undone. Are you sure?')) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
+                    const savedState = JSON.parse(localStorage.getItem('earningAppUSDTState'));
 
-        // Update withdraw button
-        function updateWithdrawButton() {
-            const amount = parseFloat(withdrawAmount.value);
-            const address = paymentAddress.value.trim();
-            const balanceInTRX = appState.balance / appState.tronPrice;
-            
-            if (amount >= appState.minWithdrawal && amount <= balanceInTRX && address.length >= 10) {
-                withdrawBtn.disabled = false;
-            } else {
-                withdrawBtn.disabled = true;
-            }
-        }
+                    if (savedState) { 
 
-        // Load TRON price from CoinGecko
-        async function loadTronPrice() {
-            try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.tron) {
-                        appState.tronPrice = data.tron.usd;
-                        const change24h = data.tron.usd_24h_change || 0;
-                        
-                        tronPriceElement.textContent = `$${appState.tronPrice.toFixed(4)}`;
-                        
-                        if (change24h >= 0) {
-                            tronChangeElement.textContent = `24h: +${change24h.toFixed(2)}%`;
-                            tronChangeElement.className = 'chart-change positive';
-                        } else {
-                            tronChangeElement.textContent = `24h: ${change24h.toFixed(2)}%`;
-                            tronChangeElement.className = 'chart-change negative';
-                        }
-                        
-                        // Update UI with new price
-                        updateUI();
-                        
-                        // Draw chart
-                        drawTronChart();
+                        // Ensure all state properties are present
+
+                        state = { ...state, ...savedState };
+
                     }
-                } else {
-                    throw new Error('Failed to fetch TRON price');
+
+                } catch (e) { console.error("Could not load state", e); }
+
+                
+
+                // Reset daily ad count if it's a new day
+
+                if (state.lastAdDate !== getTodayDateString()) {
+
+                    state.dailyAdCount = 0;
+
+                    state.lastAdDate = getTodayDateString();
+
+                    saveState();
+
                 }
-            } catch (error) {
-                console.error('Error loading TRON price:', error);
-                // Fallback to simulated data
-                const simulatedPrice = 0.12 + (Math.random() * 0.02 - 0.01);
-                const simulatedChange = (Math.random() * 4 - 2);
+
+            }
+
+            function saveState() {
+
+                try {
+
+                    localStorage.setItem('earningAppUSDTState', JSON.stringify(state));
+
+                } catch (e) { console.error("Could not save state", e); }
+
+            }
+
+            
+
+            // ---- UI Updates & View Management ----
+
+            function updateUI() {
+
+                const balanceInUSDT = (state.balanceInCents / 100).toFixed(2);
+
                 
-                appState.tronPrice = simulatedPrice;
-                appState.tronChange = simulatedChange;
+
+                // Home & Withdraw Views
+
+                balanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+
+                adCountDisplay.textContent = state.totalAdCount;
+
+                dailyAdCountDisplay.textContent = `${state.dailyAdCount} / ${DAILY_AD_LIMIT}`;
+
+                withdrawBalanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+
                 
-                tronPriceElement.textContent = `$${simulatedPrice.toFixed(4)}`;
+
+                // Referral View
+
+                referralCountDisplay.textContent = state.referralCount;
+
+                const referralBonus = (state.referralCount * REFERRAL_BONUS_USDT).toFixed(2);
+
+                referralBonusDisplay.textContent = `USDT ${referralBonus}`;
+
+
+
+                // Button States
+
+                const isWithdrawalPossible = parseFloat(balanceInUSDT) >= WITHDRAW_THRESHOLD;
+
+                mainWithdrawBtn.disabled = !isWithdrawalPossible;
+
+                mainWithdrawBtn.textContent = isWithdrawalPossible ? 'Go to Withdraw' : `Reach ${WITHDRAW_THRESHOLD.toFixed(2)} USDT to Withdraw`;
+
                 
-                if (simulatedChange >= 0) {
-                    tronChangeElement.textContent = `24h: +${simulatedChange.toFixed(2)}%`;
-                    tronChangeElement.className = 'chart-change positive';
-                } else {
-                    tronChangeElement.textContent = `24h: ${simulatedChange.toFixed(2)}%`;
-                    tronChangeElement.className = 'chart-change negative';
-                }
+
+                finalWithdrawBtn.disabled = !isWithdrawalPossible;
+
+                finalWithdrawBtn.textContent = isWithdrawalPossible ? `Withdraw ${balanceInUSDT} USDT` : `Minimum ${WITHDRAW_THRESHOLD.toFixed(2)} USDT required`;
+
                 
-                // Update UI with simulated price
-                updateUI();
-                
-                drawTronChart();
+
+                const adLimitReached = state.dailyAdCount >= DAILY_AD_LIMIT;
+
+                rewardedBtn.disabled = adLimitReached;
+
+                rewardedBtn.textContent = adLimitReached ? 'Daily Limit Reached' : 'Watch Ad (+0.01 USDT)';
+
             }
-        }
 
-        // Draw TRON chart
-        function drawTronChart() {
-            const ctx = trxChartCanvas.getContext('2d');
-            const width = trxChartCanvas.width = trxChartCanvas.offsetWidth;
-            const height = trxChartCanvas.height = trxChartCanvas.offsetHeight;
             
-            // Clear
-            ctx.clearRect(0, 0, width, height);
-            
-            // Chart data (simulated)
-            const dataPoints = 20;
-            const data = [];
-            let currentPrice = appState.tronPrice;
-            
-            for (let i = 0; i < dataPoints; i++) {
-                currentPrice += (Math.random() * 0.01 - 0.005);
-                data.push(currentPrice);
-            }
-            
-            // Draw chart
-            const padding = 20;
-            const chartWidth = width - padding * 2;
-            const chartHeight = height - padding * 2;
-            
-            const minPrice = Math.min(...data);
-            const maxPrice = Math.max(...data);
-            const priceRange = maxPrice - minPrice;
-            
-            // Line
-            ctx.beginPath();
-            ctx.moveTo(padding, height - padding - ((data[0] - minPrice) / priceRange) * chartHeight);
-            
-            for (let i = 1; i < data.length; i++) {
-                const x = padding + (i / (data.length - 1)) * chartWidth;
-                const y = height - padding - ((data[i] - minPrice) / priceRange) * chartHeight;
-                ctx.lineTo(x, y);
-            }
-            
-            ctx.strokeStyle = appState.tronChange >= 0 ? '#10b981' : '#d62939';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Fill
-            ctx.lineTo(padding + chartWidth, height - padding);
-            ctx.lineTo(padding, height - padding);
-            ctx.closePath();
-            
-            const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-            gradient.addColorStop(0, appState.tronChange >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(214, 41, 57, 0.2)');
-            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            
-            ctx.fillStyle = gradient;
-            ctx.fill();
-        }
 
-        // Initialize Ad Manager
-        function initializeAdManager() {
-            // Initialize TMA Ad Manager
-            if (typeof window.initCdTma === 'function') {
-                window.initCdTma({ id: 6093277 })
-                    .then(show => {
-                        appState.adManager = show;
-                        console.log('TMA Ad Manager initialized');
-                    })
-                    .catch(error => {
-                        console.error('Failed to initialize TMA Ad Manager:', error);
-                    });
-            }
-            
-            // Check Adexora
-            if (typeof window.showAdexora === 'function') {
-                appState.adexoraReady = true;
-                console.log('Adexora Ad Manager ready');
-            }
-        }
+            function showView(viewId) {
 
-        // Copy referral code
-        function copyReferralCode() {
-            copyToClipboard(appState.referralCode);
-            showStatus('Referral code copied to clipboard!', 'success');
-        }
+                document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
 
-        // Copy to clipboard
-        function copyToClipboard(text) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).catch(err => {
-                    console.error('Clipboard error:', err);
-                    fallbackCopyToClipboard(text);
-                });
-            } else {
-                fallbackCopyToClipboard(text);
-            }
-        }
-
-        // Fallback copy
-        function fallbackCopyToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-        }
-
-        // Show status message
-        function showStatus(message, type) {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
-            statusMessage.style.display = 'block';
-            
-            setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 4000);
-        }
-
-        // Generate unique user ID
-        function generateUserId() {
-            return 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        }
-
-        // Generate unique referral code
-        function generateReferralCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 8; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        // Generate unique withdrawal ID
-        function generateWithdrawalId() {
-            return 'wd_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        }
-
-        // Admin functions (global scope)
-        window.adminAddBalance = function(userId) {
-            const amount = parseFloat(prompt('Amount of TRX to add:'));
-            
-            if (isNaN(amount) || amount <= 0) {
-                showStatus('Invalid amount.', 'error');
-                return;
-            }
-            
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            
-            if (users[userId]) {
-                users[userId].balance = (users[userId].balance || 0) + (amount * appState.tronPrice);
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Update current user if needed
-                if (userId === appState.userId) {
-                    appState.balance = users[userId].balance;
-                    updateUI();
-                }
-                
-                updateAdminPanel();
-                showStatus(`${amount} TRX added to user.`, 'success');
-            }
-        };
-
-        window.adminResetUser = function(userId) {
-            if (confirm('User data will be reset. Are you sure?')) {
-                const users = JSON.parse(localStorage.getItem('users') || '{}');
-                
-                if (users[userId]) {
-                    users[userId].balance = 0;
-                    users[userId].adCount = 0;
-                    users[userId].dailyAdCount = 0;
-                    users[userId].referralCount = 0;
-                    users[userId].referralEarnings = 0;
-                    localStorage.setItem('users', JSON.stringify(users));
-                    
-                    // Update current user if needed
-                    if (userId === appState.userId) {
-                        loadUserData();
-                    }
-                    
-                    updateAdminPanel();
-                    showStatus('User data has been reset.', 'success');
-                }
-            }
-        };
-
-        window.adminApproveWithdrawal = function(withdrawalId) {
-            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
-            const withdrawalIndex = withdrawals.findIndex(w => w.id === withdrawalId);
-            
-            if (withdrawalIndex !== -1) {
-                withdrawals[withdrawalIndex].status = 'completed';
-                localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
-                updateAdminPanel();
-                showStatus('Withdrawal request approved.', 'success');
-            }
-        };
-
-        window.adminRejectWithdrawal = function(withdrawalId) {
-            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
-            const withdrawalIndex = withdrawals.findIndex(w => w.id === withdrawalId);
-            
-            if (withdrawalIndex !== -1) {
-                const withdrawal = withdrawals[withdrawalIndex];
-                
-                // Return balance
-                const users = JSON.parse(localStorage.getItem('users') || '{}');
-                if (users[withdrawal.userId]) {
-                    users[withdrawal.userId].balance = (users[withdrawal.userId].balance || 0) + (withdrawal.amount * appState.tronPrice);
-                    localStorage.setItem('users', JSON.stringify(users));
-                }
-                
-                withdrawals.splice(withdrawalIndex, 1);
-                localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
-                updateAdminPanel();
-                showStatus('Withdrawal request rejected and balance returned.', 'success');
-            }
-        };
-    </script>
-</body>
-</html>
+                d
