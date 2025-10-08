@@ -32,12 +32,9 @@
             --input-border: #CED4DA;
             --input-bg: #FFFFFF;
         }
-        /* Kırmızı-Beyaz Tema (Kalıcı Olarak Işık Modu Ayarlandı) */
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            min-height: 100vh; 
-            overflow-x: hidden; 
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        /* Düzeltme 1: Tam Ekran Desteği */
+        body { font-family: 'Poppins', sans-serif; height: 100vh; min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
+        body:not(.dark-mode) { 
             background-color: var(--bg-light); 
             color: var(--text-dark); 
             --header-bg: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); 
@@ -48,8 +45,20 @@
             --input-border: #CED4DA; 
             --input-bg: var(--card-bg-light); 
         }
+        body.dark-mode { 
+            background-color: var(--bg-dark); 
+            color: var(--text-light); 
+            --header-bg: linear-gradient(135deg, var(--primary-dark), #470005); 
+            --card-bg: var(--card-bg-dark); 
+            --text-primary: var(--text-light); 
+            --text-secondary: #D1D5DB; 
+            --border-color: #4B5563; 
+            --input-border: #4B5563; 
+            --input-bg: #4B5563; 
+        }
         
-        .app-container { max-width: 480px; margin: 0 auto; position: relative; }
+        /* Düzeltme 1: Tam Ekran Desteği */
+        .app-container { max-width: 480px; margin: 0 auto; position: relative; min-height: 100vh; }
         .header { height: 200px; background: var(--header-bg); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-light); border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15); z-index: 100; max-width: 480px; margin: 0 auto; border-top: 1px solid var(--border-color); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; flex: 1; transition: var(--transition); padding: 5px; min-width: 80px; cursor: pointer; }
@@ -60,10 +69,10 @@
         .btn-secondary { background: var(--secondary-color); color: white; box-shadow: 0 6px 15px rgba(69, 123, 157, 0.4); }
         .btn-secondary:hover { background: #356683; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        /* Tema değiştirme butonu kaldırıldı */
+        .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
         .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
         .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); overflow: hidden; } /* overflow: hidden eklendi */
+        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
         .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
         .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
         .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
@@ -76,33 +85,35 @@
         .section-title { display: flex; align-items: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); border-left: 4px solid var(--primary-color); padding-left: 10px; }
         .task-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border: 1px solid var(--border-color); }
         .task-description { margin-bottom: 25px; color: var(--text-secondary); font-size: 0.95rem; }
-        
-        /* Gelişmiş Input Alanı (Tüm Input'lar için) */
         .input-group { margin-bottom: 20px; }
         .input-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
-        .input-field { width: 100%; padding: 12px; border-radius: var(--border-radius-sm); border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 1rem; transition: border-color var(--transition); box-shadow: inset 0 1px 3px rgba(0,0,0,0.06); }
-        .input-field:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2); }
-
-        /* İç İçe Butonlu Input Alanı (Withdraw, Referral için) */
-        .input-with-button { display: flex; width: 100%; border-radius: var(--border-radius-sm); overflow: hidden; border: 2px solid var(--input-border); transition: border-color var(--transition); background: var(--input-bg); }
-        .input-with-button:focus-within { border-color: var(--primary-color); }
-        .input-with-button .input-field { flex: 1; border: none; padding: 12px; background: transparent; font-size: 1rem; box-shadow: none; }
-        .input-with-button .input-field:focus { border-color: transparent; outline: none; box-shadow: none; }
-        .integrated-btn { background: var(--secondary-color); color: white; border: none; padding: 0 15px; font-weight: 700; cursor: pointer; transition: background 0.3s; flex-shrink: 0; font-size: 0.9rem; text-transform: uppercase; }
-        .integrated-btn:hover { background: #356683; }
-
-        /* Eski Referral CSS kaldırıldı/değiştirildi */
-        .referral-input-group { display: flex; margin-bottom: 15px; } /* Bu kısım input-with-button ile değiştirildi */
-        
+        .input-field { width: 100%; padding: 12px; border-radius: var(--border-radius-sm); border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 1rem; transition: border-color var(--transition); }
+        .input-field:focus { border-color: var(--primary-color); outline: none; }
         .error-message { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px; border-radius: var(--border-radius-sm); margin-bottom: 15px; font-size: 0.9rem; }
-        
+        .referral-input-group { display: flex; margin-bottom: 15px; }
+        .referral-input { flex: 1; padding: 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 0.95rem; }
+        .copy-btn { padding: 0 18px; background: var(--secondary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: var(--transition); }
+        .copy-btn:hover { background: #356683; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: var(--border-radius-sm); opacity: 0; transition: opacity 0.5s; z-index: 1000; font-size: 0.9rem; }
         .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
         .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
         .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
         .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
-        .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
+        /* Düzeltme 2: Admin Butonlarını Küçültme */
+        .admin-container .btn-action { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 6px 10px; /* Azaltıldı */
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin-right: 5px; 
+            transition: 0.3s; 
+            font-size: 0.8rem; /* Azaltıldı */
+            white-space: nowrap; /* Yeni Eklendi: Metin kaymasını engeller */
+        }
         .admin-container .btn-action.deduct { background: var(--primary-color); }
         .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
         .admin-container .btn-action:hover { background: #409244; }
@@ -169,13 +180,14 @@
         
         <div id="mainAppContent">
             <div class="header">
+                <button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
                 <h1 class="header-title">⚡ TronAdsFaucet</h1>
                 <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 5px; z-index: 2;">Earn TRON (TRX) daily!</p>
             </div>
 
             <div class="profile-section">
                 <div class="profile-card">
-                    <div class="profile-pic" id="profilePic"></div>
+                    <div class="profile-pic" id="profilePic"><i class="fas fa-user-circle"></i></div>
                     <h1 class="profile-name" id="profileNameDisplay"></h1>
                     <div class="points-display" id="userPointsDisplay"><i class="fas fa-bolt"></i> 0.0000 TRX</div>
                     <div class="stats-display">
@@ -480,19 +492,6 @@
             const editNameBtn = document.getElementById('editNameBtn');
             if(editNameBtn) editNameBtn.addEventListener('click', promptForNewName);
 
-            // --- PROFİL FOTOĞRAFI DÜZELTMESİ ---
-            const profilePicEl = document.getElementById('profilePic');
-            if (currentUser.photoUrl) {
-                // Telegram profil fotoğrafını göster
-                profilePicEl.innerHTML = `<img src="${currentUser.photoUrl}" alt="${currentUser.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                profilePicEl.style.background = 'none'; // Fotoğraf varken arka planı kaldır
-            } else {
-                 // Varsayılan ikon tutucuyu göster
-                 profilePicEl.innerHTML = `<i class="fas fa-user-circle"></i>`;
-                 profilePicEl.style.background = 'var(--primary-color)'; // Varsayılan arka planı koru
-            }
-            // --- PROFİL FOTOĞRAFI DÜZELTMESİ SONU ---
-
             userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
             
             adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
@@ -504,7 +503,7 @@
                 const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
                 const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
                 watchBtn.disabled = (adsLeft <= 0);
-                watchBtn.innerHTML = adsLeft > 0 ? `<i class="fas fa-eye"></i> Watch Ad & Earn ${earnedTRX} TRX` : `<i class="fas fa-clock"></i> Daily Limit Reached`;
+                watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${earnedTRX} TRX` : `Daily Limit Reached`;
             }
         }
 
@@ -528,7 +527,7 @@
                         Watch an advertisement daily and earn **${earnedTRX} TRX** (worth $${USD_PER_AD.toFixed(3)}). You have **${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}** ads left today.
                     </p>
                     <button class="btn btn-primary" id="watchDailyAdBtn">
-                        <i class="fas fa-eye"></i> Watch Ad & Earn ${earnedTRX} TRX
+                        Watch Ad & Earn ${earnedTRX} TRX
                     </button>
                 </div>
                 
@@ -567,15 +566,15 @@
                     </p>
                     <div class="referral-container">
                         <label class="input-label" style="font-size: 1rem; color: var(--primary-color);"><i class="fas fa-link"></i> Your Share Link</label>
-                        <div class="input-with-button" style="border-radius: var(--border-radius);">
-                            <input type="text" id="referralLinkDisplay" class="input-field" value="https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}" readonly>
-                            <button type="button" class="integrated-btn" id="copyReferralLinkBtn" style="border-radius: 0 var(--border-radius) var(--border-radius) 0; padding: 0 18px;"><i class="fas fa-copy"></i> Copy</button>
+                        <div class="referral-input-group">
+                            <input type="text" id="referralLinkDisplay" class="referral-input" value="https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}" readonly>
+                            <button class="copy-btn" id="copyReferralLinkBtn">Copy</button>
                         </div>
-                        <button class="btn btn-primary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
+                        <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
                             <i class="fas fa-paper-plane"></i> Share Now (Telegram)
                         </button>
                     </div>
-                    <div class="referral-stats stats-display" style="border-top: none; padding-top: 0; margin-top: 20px;">
+                    <div class="referral-stats stats-display" style="border-top: none; padding-top: 0; margin-top: 0;">
                         <div class="stat-item">
                             <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
                             <div class="stat-label">Total Referrals</div>
@@ -608,10 +607,7 @@
                     <form id="withdrawalForm">
                         <div class="input-group">
                             <label for="amountTRX" class="input-label">Amount (TRX)</label>
-                            <div class="input-with-button">
-                                <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
-                                <button type="button" class="integrated-btn" id="maxAmountBtn">MAX</button>
-                            </div>
+                            <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
                         </div>
                         <div class="input-group">
                             <label for="walletAddress" class="input-label">TRX (TRC20) Wallet Address</label>
@@ -628,13 +624,6 @@
             `;
 
             document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
-            
-            // MAX Butonu Event Listener
-            document.getElementById('maxAmountBtn')?.addEventListener('click', () => {
-                const amountInput = document.getElementById('amountTRX');
-                const maxAmount = convertUSDToTRX(currentUser.balanceUSD);
-                amountInput.value = maxAmount.toFixed(4);
-            });
         }
 
         // --- HANDLERS (Uygulama) ---
@@ -786,14 +775,11 @@
             }).catch(e => console.error("Telegram API Error:", e));
         }
 
-        /* toggleTheme fonksiyonu ve kullanımı kaldırıldı (Kalıcı Kırmızı-Beyaz Tema) */
-        /*
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
             document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         }
-        */
 
         function promptForNewName() {
             const newName = prompt("Enter your new name:", currentUser.name);
@@ -1000,13 +986,20 @@
                 totalAdsWatchedEl = document.getElementById('totalAdsWatched');
                 const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item');
                 
-                // 5. Tema ayarını yükle (Kaldırıldı, kalıcı ışık modu)
+                // 5. Tema ayarını yükle
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
+                } else {
+                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+                }
 
                 // 6. Sayfaya yönlendir ve UI'ı güncelle
                 navigateTo('home');
 
                 // 7. Event listeners ata
-                // Tema değiştirme butonu listener'ı kaldırıldı
+                document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
                 bottomNavItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.page); }); });
 
                 // 8. Uygulamayı göster ve yükleme ekranını gizle
