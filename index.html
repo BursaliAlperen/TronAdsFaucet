@@ -11,7 +11,11 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
     <style>
+        /* CSS Variables and Styles remain the same */
         /* Google Font Import */
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
@@ -119,6 +123,9 @@
         .input-group { display: flex; }
         .input-group input { flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
         .input-group button { background-color: var(--primary-color-light); color: #fff; border: none; font-weight: 600; border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 12px 15px; }
+        .manual-input-group { display: flex; gap: 5px; margin-bottom: 5px;}
+        .manual-input-group input { padding: 8px; font-size: 0.9rem; }
+        .manual-input-group button { padding: 8px 10px; font-size: 0.9rem; }
 
         .light-theme input, .light-theme select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
         .dark-theme input, .dark-theme select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
@@ -262,25 +269,28 @@
                 <h2>Admin Dashboard</h2>
                 <div class="stats-grid" style="grid-template-columns: 1fr;">
                     <div class="stat-card">
-                        <h3>Total Users (On This Device's Cache)</h3> 
+                        <h3>Total Users (Firebase)</h3> 
                         <p id="total-users-count">...</p>
                     </div>
                 </div>
 
                 <div class="referral-section" style="margin-top: 20px;">
-                    <h3>Pending Withdrawal Requests</h3>
+                    <h3>Pending Withdrawal Requests (Realtime)</h3>
+                    
+                    <button type="button" id="clear-requests-btn" class="action-btn" style="background-color: #6c757d; margin-top: 10px; padding: 10px; font-size: 0.9rem;">Clear All Requests (DONE)</button>
+                    
                     <div style="overflow-x: auto;">
                         <table class="admin-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>User ID</th>
+                                    <th>User ID/Name</th>
                                     <th>Amount (TRX)</th>
                                     <th>Address</th>
                                 </tr>
                             </thead>
                             <tbody id="withdrawal-requests-table">
-                                <tr><td colspan="4" style="text-align: center; color: var(--subtle-text-light);">No pending requests.</td></tr>
+                                <tr><td colspan="4" style="text-align: center; color: var(--subtle-text-light);">Loading requests...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -304,6 +314,25 @@
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
     
     <script>
+        // *** FIREBASE CONFIGURATION START ***
+        const firebaseConfig = {
+          apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
+          authDomain: "tronadsfaucet.firebaseapp.com",
+          projectId: "tronadsfaucet",
+          storageBucket: "tronadsfaucet.firebasestorage.app",
+          messagingSenderId: "26180984735",
+          appId: "1:26180984735:web:e498a635c4f61bd0a167aa"
+          // Realtime Database URL ve Measurement ID bu uygulamada Firestore kullandığı için çıkarılmıştır.
+        };
+
+        // Firebase'i başlat
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        // Firestore'u kullanıma hazırla
+        const db = firebase.firestore();
+        // *** FIREBASE CONFIGURATION END ***
+
         document.addEventListener('DOMContentLoaded', () => {
             const tg = window.Telegram.WebApp;
 
@@ -313,14 +342,9 @@
             const ADMIN_CHAT_ID = "7904032877";
             
             const DAILY_AD_LIMIT = 100; 
-            
-            // USD Reward Amounts
             const USD_PER_AD = 0.001; 
             const USD_PER_REFERRAL_BONUS = 0.02; 
-            
             const MIN_WITHDRAW_POINTS = 0.01; 
-            
-            // TRX Price (This value should be updated manually)
             let TRX_TO_USD_RATE = 0.342249; 
 
             // Calculated TRX Amounts
@@ -344,7 +368,6 @@
             const refCodeInputGroup = document.getElementById('ref-code-input-group');
             const refCodeInput = document.getElementById('ref-code-input');
             const submitRefCodeBtn = document.getElementById('submit-ref-code-btn');
-            // NEW REFERRAL ELEMENTS
             const myRefIdDisplay = document.getElementById('my-ref-id-display');
             const copyRefIdBtn = document.getElementById('copy-ref-id-btn');
             
@@ -353,57 +376,22 @@
             const navAdminBtn = document.getElementById('nav-admin-btn');
             const totalUsersCountElem = document.getElementById('total-users-count');
             const withdrawalRequestsTable = document.getElementById('withdrawal-requests-table');
+            const clearRequestsBtn = document.getElementById('clear-requests-btn');
 
-
-            // --- State Management (LocalStorage = Central Data) ---
+            // --- State Management (Now Firestore based) ---
             let userState = {
                 trxBalance: 0.0000, 
                 dailyAdWatchCount: 0,
                 lastAdWatchDate: null,
                 referrals: [],
                 referredBy: null, 
-                userId: null
-            };
-            
-            // AppData is used for withdrawal requests and user names (stored on Admin's device)
-            let appData = {
-                withdrawalRequests: [],
-                users: {} 
+                userId: null,
+                name: null, 
+                username: null
             };
 
-            const saveState = () => {
-                if(userState.userId) {
-                    localStorage.setItem(`userState_TRX_${userState.userId}`, JSON.stringify(userState));
-                }
-            };
-
-            const loadState = (userId) => {
-                const savedState = localStorage.getItem(`userState_TRX_${userId}`);
-                if (savedState) {
-                    userState = JSON.parse(savedState);
-                    if (userState.trxBalance === undefined) userState.trxBalance = 0.0000;
-                    userState.trxBalance = parseFloat(userState.trxBalance) || 0;
-                }
-            };
-
-            const saveAppData = () => {
-                // Only save on the ADMIN's device
-                if (String(userState.userId) === ADMIN_CHAT_ID) {
-                    localStorage.setItem('TronAdsFaucet_AppData', JSON.stringify(appData));
-                }
-            };
-
-            const loadAppData = () => {
-                // Only load from the ADMIN's device
-                if (String(userState.userId) === ADMIN_CHAT_ID) {
-                    const savedData = localStorage.getItem('TronAdsFaucet_AppData');
-                    if (savedData) {
-                        appData = JSON.parse(savedData);
-                    }
-                }
-                if (!appData.withdrawalRequests) appData.withdrawalRequests = [];
-                if (!appData.users) appData.users = {};
-            };
+            const userDocRef = (userId) => db.collection('users').doc(String(userId));
+            const requestsCollection = db.collection('withdrawal_requests');
             
             // --- Core Functions ---
             const initApp = () => {
@@ -418,26 +406,35 @@
                 }
                 
                 userState.userId = user.id;
-                loadState(user.id);
-                loadAppData(); 
-                
-                // Save/Update user info in AppData (collect only on Admin's device)
-                if (String(userState.userId) === ADMIN_CHAT_ID) {
-                    appData.users[user.id] = { 
-                        name: user.first_name, 
-                        username: user.username 
-                    };
-                    saveAppData();
-                } else if (!localStorage.getItem(`userState_TRX_${user.id}`)) {
-                    // If it's a new user, save their state on their own device
-                    saveState();
-                }
+                userState.name = `${user.first_name || ''} ${user.last_name || ''}`;
+                userState.username = user.username || null;
 
-                const today = new Date().toISOString().slice(0, 10);
-                if (userState.lastAdWatchDate !== today) {
-                    userState.dailyAdWatchCount = 0;
-                    userState.lastAdWatchDate = today;
-                }
+                // Load and listen for user data in real-time
+                userDocRef(user.id).onSnapshot(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        
+                        // Merge current state with Firebase data
+                        userState = { ...userState, ...data };
+                        userState.trxBalance = parseFloat(userState.trxBalance) || 0;
+
+                        // Check daily reset
+                        const today = new Date().toISOString().slice(0, 10);
+                        if (userState.lastAdWatchDate !== today) {
+                            userState.dailyAdWatchCount = 0;
+                            userState.lastAdWatchDate = today;
+                            saveState(); // Update Firebase with reset counts
+                        }
+                        
+                        updateUI();
+                        
+                    } else {
+                        // New user: Create initial document
+                        saveState(true);
+                    }
+                }, error => {
+                    tg.showAlert("Veri yüklenemedi. Firebase bağlantı hatası: " + error.message);
+                });
                 
                 // ADMIN CHECK
                 if (String(userState.userId) === ADMIN_CHAT_ID) {
@@ -445,11 +442,37 @@
                     navAdminBtn.style.display = 'flex';
                 }
 
-                updateUI();
                 setupNavigation();
                 setupEventListeners();
             };
             
+            // Replaces saveState, now writes to Firebase
+            const saveState = async (isNewUser = false) => {
+                if(!userState.userId) return;
+                
+                const dataToSave = {
+                    trxBalance: parseFloat(userState.trxBalance).toFixed(4), 
+                    dailyAdWatchCount: userState.dailyAdWatchCount,
+                    lastAdWatchDate: userState.lastAdWatchDate,
+                    referrals: userState.referrals || [],
+                    referredBy: userState.referredBy || null, 
+                };
+
+                // Only write metadata on creation or if explicitly needed
+                if (isNewUser) {
+                    dataToSave.name = userState.name;
+                    dataToSave.username = userState.username;
+                    dataToSave.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                }
+
+                try {
+                    await userDocRef(userState.userId).set(dataToSave, { merge: true });
+                } catch (error) {
+                    console.error("Error saving state to Firebase:", error);
+                    tg.showAlert("Hata: Veri kaydı yapılamadı. Tekrar deneyin.");
+                }
+            };
+
             const updateUI = () => {
                 const user = tg.initDataUnsafe.user;
                 
@@ -458,13 +481,11 @@
                 
                 userPointsElem.textContent = parseFloat(userState.trxBalance).toFixed(4); 
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
-                referralCountElem.textContent = userState.referrals.length;
+                referralCountElem.textContent = (userState.referrals || []).length;
 
-                // TRX Info
                 trxPriceDisplayElem.textContent = `$${TRX_TO_USD_RATE.toFixed(4)}`;
                 adRewardTrxElem.textContent = TRX_PER_AD.toFixed(6); 
                 
-                // Populate the new copyable Referral ID
                 if (myRefIdDisplay) {
                     myRefIdDisplay.value = userState.userId;
                 }
@@ -472,6 +493,18 @@
                 // Check Referral Code Entry Field
                 if (userState.referredBy) {
                     refCodeInputGroup.innerHTML = `<p style="color: var(--primary-color-light); font-weight: 700;">✅ Referral code successfully used! (${userState.referredBy})</p>`;
+                } else {
+                    // Reset if referredBy is cleared/not set
+                    if (!document.getElementById('ref-code-input')) {
+                         refCodeInputGroup.innerHTML = `
+                            <label for="ref-code-input">Enter Friend's Referral Code & Get Reward! ✨</label>
+                            <div class="input-group">
+                                <input type="text" id="ref-code-input" placeholder="Friend's User ID">
+                                <button type="button" id="submit-ref-code-btn">Apply</button>
+                            </div>
+                        `;
+                        document.getElementById('submit-ref-code-btn').addEventListener('click', handleEnterReferralCode);
+                    }
                 }
             };
             
@@ -487,8 +520,13 @@
                 watchAdBtn.addEventListener('click', handleWatchAd);
                 withdrawForm.addEventListener('submit', handleWithdraw);
                 copyRefLinkBtn.addEventListener('click', copyReferralLink);
-                submitRefCodeBtn.addEventListener('click', handleEnterReferralCode);
-                // NEW LISTENER
+                
+                // İlk başta var olup olmadığını kontrol et
+                const initialSubmitRefCodeBtn = document.getElementById('submit-ref-code-btn');
+                if (initialSubmitRefCodeBtn) {
+                     initialSubmitRefCodeBtn.addEventListener('click', handleEnterReferralCode);
+                }
+                
                 copyRefIdBtn.addEventListener('click', handleCopyRefId); 
 
                 adminBtn.addEventListener('click', () => {
@@ -496,11 +534,13 @@
                      document.getElementById('admin-page').classList.add('active');
                      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
                      navAdminBtn.classList.add('active');
-                     loadAdminStats();
+                     loadAdminStats(); // Start listener
                 });
+                
+                if (clearRequestsBtn) clearRequestsBtn.addEventListener('click', handleClearRequests);
             };
 
-            const handleWatchAd = () => {
+            const handleWatchAd = async () => {
                 if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
                     tg.showAlert("You have reached the daily ad watch limit."); return;
                 }
@@ -508,80 +548,110 @@
                 
                 if(typeof window.showAdexora === 'function') {
                     window.showAdexora()
-                    .then(() => {
-                        userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
-                        userState.dailyAdWatchCount++;
-                        saveState();
-                        updateUI();
+                    .then(async () => {
+                        // Use a transaction for safe update
+                        await db.runTransaction(async (transaction) => {
+                            const userDoc = await transaction.get(userDocRef(userState.userId));
+                            if (!userDoc.exists) { throw "User document does not exist!"; }
+                            
+                            const currentData = userDoc.data();
+                            const newBalance = parseFloat(currentData.trxBalance) + TRX_PER_AD;
+                            const newAdCount = currentData.dailyAdWatchCount + 1;
+                            
+                            transaction.update(userDocRef(userState.userId), { 
+                                trxBalance: newBalance.toFixed(4), 
+                                dailyAdWatchCount: newAdCount 
+                            });
+                        });
+
                         tg.HapticFeedback.notificationOccurred('success');
                         tg.showAlert(`Congratulations! You earned ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ).`);
                     })
                     .catch(e => {
-                        tg.showAlert("Ad failed to load or was interrupted. Please try again.");
+                        console.error(e);
+                        tg.showAlert("Ad failed to load or a transaction error occurred. Please try again.");
                     })
                     .finally(() => {
                         loadingModal.style.display = 'none';
                     });
                 } else {
-                    // Fallback if Adexora is not loaded
-                    setTimeout(() => {
-                        userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
-                        userState.dailyAdWatchCount++;
-                        saveState();
-                        updateUI();
-                        tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert(`Congratulations! You earned ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) (Adexora failed to load).`);
+                    // Fallback (Should be removed once adexora is stable)
+                    setTimeout(async () => {
+                        try {
+                            await db.runTransaction(async (transaction) => {
+                                const userDoc = await transaction.get(userDocRef(userState.userId));
+                                const currentData = userDoc.data();
+                                const newBalance = parseFloat(currentData.trxBalance) + TRX_PER_AD;
+                                const newAdCount = currentData.dailyAdWatchCount + 1;
+                                transaction.update(userDocRef(userState.userId), { 
+                                    trxBalance: newBalance.toFixed(4), 
+                                    dailyAdWatchCount: newAdCount 
+                                });
+                            });
+                            tg.HapticFeedback.notificationOccurred('success');
+                            tg.showAlert(`Congratulations! You earned ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) (Adexora failed to load - fallback used).`);
+                        } catch(e) {
+                             tg.showAlert("Fallback ad error: " + e.message);
+                        }
                         loadingModal.style.display = 'none';
                     }, 1000);
                 }
             };
 
-            const handleEnterReferralCode = () => {
+            const handleEnterReferralCode = async () => {
                 if (userState.referredBy) {
                     tg.showAlert("Your referral code has already been used.");
                     return;
                 }
                 
                 const refCode = refCodeInput.value.trim();
-                if (!refCode || isNaN(parseInt(refCode))) {
-                    tg.showAlert("Please enter a valid Referral Code (User ID).");
-                    return;
-                }
-                
-                const refId = parseInt(refCode);
-                if (refId === userState.userId) {
-                    tg.showAlert("You cannot use your own code.");
-                    return;
-                }
+                const refId = String(parseInt(refCode));
 
-                const referrerStateKey = `userState_TRX_${refId}`;
-                const referrerStateJson = localStorage.getItem(referrerStateKey);
+                if (!refCode || isNaN(refId)) { tg.showAlert("Please enter a valid Referral Code (User ID)."); return; }
+                if (refId === String(userState.userId)) { tg.showAlert("You cannot use your own code."); return; }
 
-                if (!referrerStateJson) {
-                    tg.showAlert("The referral code you entered is invalid or the user was not found.");
-                    return;
+                submitRefCodeBtn.disabled = true;
+
+                try {
+                    await db.runTransaction(async (transaction) => {
+                        const referrerDoc = await transaction.get(userDocRef(refId));
+                        const referredDoc = await transaction.get(userDocRef(userState.userId));
+                        
+                        if (!referrerDoc.exists) { throw new Error("The referral code is invalid or the user was not found."); }
+                        if (referredDoc.data().referredBy) { throw new Error("User already used a referral code."); }
+
+                        // 1. Update Referred User (Current User)
+                        const currentBalance = parseFloat(referredDoc.data().trxBalance);
+                        const newBalance = currentBalance + TRX_PER_REFERRAL_BONUS;
+                        transaction.update(userDocRef(userState.userId), { 
+                            referredBy: refId, 
+                            trxBalance: newBalance.toFixed(4)
+                        });
+
+                        // 2. Update Referrer User
+                        const referrerData = referrerDoc.data();
+                        // ensure referrals is an array before spread
+                        const existingReferrals = Array.isArray(referrerData.referrals) ? referrerData.referrals : [];
+                        const newReferrals = [...existingReferrals, userState.userId];
+                        transaction.update(userDocRef(refId), { 
+                            referrals: newReferrals 
+                        });
+                    });
+
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert(`Congratulations! Referral code applied and you earned ${TRX_PER_REFERRAL_BONUS.toFixed(4)} TRX!`);
+
+                } catch (error) {
+                    console.error("Referral Transaction Error:", error);
+                    tg.showAlert(error.message || "An error occurred during referral processing. Please check the code.");
+                } finally {
+                    submitRefCodeBtn.disabled = false;
                 }
-                
-                // Give bonus to the user who entered the code
-                userState.referredBy = refId;
-                userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_REFERRAL_BONUS;
-                
-                // Find the referrer's data and increase referral count
-                let referrerState = JSON.parse(referrerStateJson);
-                if (!referrerState.referrals) referrerState.referrals = [];
-                referrerState.referrals.push(userState.userId);
-                localStorage.setItem(referrerStateKey, JSON.stringify(referrerState));
-                
-                saveState();
-                updateUI();
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert(`Congratulations! Referral code applied and you earned ${TRX_PER_REFERRAL_BONUS.toFixed(4)} TRX!`);
             };
             
             const handleWithdraw = async (e) => {
                 e.preventDefault();
-                const method = "Tron (TRX)";
-                const accountNumber = document.getElementById('account-number').value;
+                const accountNumber = document.getElementById('account-number').value.trim();
                 const amount = parseFloat(document.getElementById('amount').value);
 
                 if (isNaN(amount) || amount <= 0) { tg.showAlert("Please enter a valid amount."); return; }
@@ -590,57 +660,69 @@
 
                 withdrawSubmitBtn.classList.add('loading');
                 withdrawSubmitBtn.disabled = true;
-
-                // Deduct from balance
-                userState.trxBalance = parseFloat(userState.trxBalance) - amount;
-                saveState();
                 
-                const user = tg.initDataUnsafe.user;
+                let balanceDeducted = false;
                 
-                // Add Withdrawal Request to Central Admin List
-                loadAppData(); 
-                const request = {
-                    id: Date.now(),
-                    userId: user.id,
-                    userName: user.first_name,
-                    amount: amount.toFixed(4),
-                    address: accountNumber,
-                    timestamp: new Date().toLocaleString()
-                };
-                appData.withdrawalRequests.unshift(request); // Newest at the top
-                saveAppData(); 
-
-                // Send Telegram notification to Admin
-                const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> ${amount.toFixed(4)} TRX\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
-                
-                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
                 try {
-                    await fetch(url, {
+                    // 1. Safely deduct from balance and add request to Firebase in one transaction
+                    await db.runTransaction(async (transaction) => {
+                        const userDoc = await transaction.get(userDocRef(userState.userId));
+                        if (!userDoc.exists) { throw new Error("User not found."); }
+                        
+                        const currentBalance = parseFloat(userDoc.data().trxBalance);
+                        if (currentBalance < amount) { throw new Error("Insufficient balance during transaction."); }
+
+                        const newBalance = currentBalance - amount;
+                        
+                        // Deduct balance
+                        transaction.update(userDocRef(userState.userId), { 
+                            trxBalance: newBalance.toFixed(4) 
+                        });
+                        balanceDeducted = true;
+                        
+                        // Add withdrawal request (This will automatically update the Admin Panel)
+                        transaction.set(requestsCollection.doc(), {
+                            userId: String(userState.userId),
+                            userName: userState.name,
+                            userUsername: userState.username,
+                            amount: amount.toFixed(4),
+                            address: accountNumber,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    
+                    // 2. Send Telegram notification (Outside of transaction - just a notification)
+                    const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${userState.name} (@${userState.username || 'N/A'})\n<b>User ID:</b> <code>${userState.userId}</code>\n-----------------------------------\n<b>Method:</b> Tron (TRX)\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> ${amount.toFixed(4)} TRX\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
+                    
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: message, parse_mode: 'HTML'})
                     });
                     
                     tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("Withdrawal request successfully submitted! It will be visible in the Admin panel.");
+                    tg.showAlert("Withdrawal request successfully submitted! Admin panelinde otomatik olarak görünecektir.");
                     withdrawForm.reset();
+
                 } catch (error) {
+                    console.error("Withdrawal Error:", error);
                     tg.HapticFeedback.notificationOccurred('error');
-                    tg.showAlert("Request notification could not be sent to Admin. Your balance has been returned.");
-                    userState.trxBalance = parseFloat(userState.trxBalance) + amount;
                     
-                    // Remove from Admin list if notification fails
-                    appData.withdrawalRequests.shift(); 
-                    saveAppData();
+                    // Transaction failed. If the error was just with Telegram (i.e. balanceDeducted is true, which shouldn't happen with Firestore Transactions, but for safety in case of partial success outside of the transaction scope):
+                    if (balanceDeducted && !error.message.includes("Transaction")) {
+                        tg.showAlert("Hata: Çekim talebi Firebase'e kaydedildi ancak Admin'e bildirim gönderilemedi. Admin panelinden kontrol edin.");
+                    } else {
+                        tg.showAlert(error.message || "Çekim talebi başarısız oldu. Lütfen tekrar deneyin.");
+                    }
+
                 } finally {
-                    updateUI(); 
                     withdrawSubmitBtn.classList.remove('loading');
                     withdrawSubmitBtn.disabled = false;
+                    updateUI();
                 }
             };
             
             const copyReferralLink = () => {
-                // Dynamically create the new, engaging share text
                 const shareText = `💰 **Crypto Earning Made Easy!** Get **$0.30 to $3 daily** in TRX instantly. Start stacking Tron Coin today! Join the Faucet with my referral code for extra rewards: (${userState.userId})\n\nhttps://t.me/${BOT_USERNAME}`;
                 
                 if (tg.shareText) {
@@ -654,42 +736,76 @@
                 }
             };
 
-            // ADMIN PANEL FUNCTION: FIXES USER COUNTING ISSUE
+            // ADMIN PANEL FUNCTIONS (Firestore Listeners)
+            let unsubscribeRequests = null;
+            let unsubscribeUsers = null;
+            
             const loadAdminStats = () => {
+                // 1. Total User Count (Real-time listener on users collection size)
+                if (unsubscribeUsers) unsubscribeUsers(); // Clear previous listener
+                unsubscribeUsers = db.collection('users').onSnapshot(snapshot => {
+                    totalUsersCountElem.textContent = snapshot.size.toString().padStart(2, '0');
+                }, error => {
+                    console.error("User Count Error:", error);
+                    totalUsersCountElem.textContent = "Error";
+                });
                 
-                // 1. Total User Count (Count ALL userState_TRX_ keys in LocalStorage)
-                let totalUsers = 0;
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    // Only count user state entries
-                    if (key && key.startsWith('userState_TRX_')) {
-                        totalUsers++;
-                    }
-                }
-                totalUsersCountElem.textContent = totalUsers.toString().padStart(2, '0');
-                
-                // 2. Display Withdrawal Requests
-                loadAppData(); 
-                let requestsHTML = '';
-                const requests = appData.withdrawalRequests;
+                // 2. Display Withdrawal Requests (Real-time listener)
+                if (unsubscribeRequests) unsubscribeRequests(); // Clear previous listener
 
-                if (requests.length === 0) {
-                    requestsHTML = '<tr><td colspan="4" style="text-align: center; color: var(--subtle-text-light);">No pending requests.</td></tr>';
-                } else {
-                    requests.forEach((req, index) => {
-                        const userDetails = appData.users[req.userId] || { name: 'Unknown', username: 'N/A' };
-                        requestsHTML += `
-                            <tr>
-                                <td>#${requests.length - index}</td>
-                                <td>${userDetails.name || 'Unknown'} <br> <code>${req.userId}</code></td>
-                                <td>${req.amount} TRX</td>
-                                <td><code>${req.address.substring(0, 15)}...</code></td>
-                            </tr>
-                        `;
-                    });
-                }
+                unsubscribeRequests = requestsCollection
+                    .orderBy('timestamp', 'desc')
+                    .onSnapshot(snapshot => {
+                    
+                    let requestsHTML = '';
+                    const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    if (requests.length === 0) {
+                        requestsHTML = '<tr><td colspan="4" style="text-align: center; color: var(--subtle-text-light);">No pending requests.</td></tr>';
+                    } else {
+                        requests.forEach((req, index) => {
+                            requestsHTML += `
+                                <tr>
+                                    <td>#${requests.length - index}</td>
+                                    <td>${req.userName || 'Unknown'} <br> <code>${req.userId}</code></td>
+                                    <td>${req.amount} TRX</td>
+                                    <td><code>${req.address ? req.address.substring(0, 15) + '...' : 'N/A'}</code></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    
+                    withdrawalRequestsTable.innerHTML = requestsHTML;
+                }, error => {
+                    console.error("Requests Listener Error:", error);
+                    withdrawalRequestsTable.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary-color-light);">Hata: Talepler yüklenemedi.</td></tr>';
+                });
+            };
+
+            // Admin: Clear all requests (Mark as DONE)
+            const handleClearRequests = async () => {
+                if (String(userState.userId) !== ADMIN_CHAT_ID) return;
                 
-                withdrawalRequestsTable.innerHTML = requestsHTML;
+                tg.showConfirm("Tüm bekleyen çekim taleplerini TEMİZLEMEK istediğinizden emin misiniz? (Bu işlem geri alınamaz)", async (isConfirmed) => {
+                    if (isConfirmed) {
+                        try {
+                            const snapshot = await requestsCollection.get();
+                            const batch = db.batch();
+                            snapshot.docs.forEach(doc => {
+                                // Delete the document to clear the panel
+                                batch.delete(doc.ref);
+                            });
+                            await batch.commit();
+
+                            tg.HapticFeedback.notificationOccurred('success');
+                            tg.showAlert("All pending requests cleared successfully.");
+
+                        } catch (error) {
+                            console.error("Error clearing requests:", error);
+                            tg.showAlert("Hata: Talepler temizlenirken bir sorun oluştu.");
+                        }
+                    }
+                });
             };
 
             const setupNavigation = () => {
@@ -703,8 +819,14 @@
                         navButtons.forEach(btn => btn.classList.remove('active'));
                         button.classList.add('active');
 
-                        if (pageId === 'admin-page' && String(userState.userId) === ADMIN_CHAT_ID) {
-                            loadAdminStats();
+                        // Clean up listener when leaving admin page
+                        if (pageId !== 'admin-page' && String(userState.userId) === ADMIN_CHAT_ID) {
+                            if (unsubscribeRequests) unsubscribeRequests();
+                            if (unsubscribeUsers) unsubscribeUsers();
+                            unsubscribeRequests = null;
+                            unsubscribeUsers = null;
+                        } else if (pageId === 'admin-page' && String(userState.userId) === ADMIN_CHAT_ID) {
+                            loadAdminStats(); // Start listener
                         }
                     });
                 });
