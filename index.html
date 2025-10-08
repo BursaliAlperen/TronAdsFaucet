@@ -3,38 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TronAdsFaucet</title>
+    <title>Tron Ads Faucet</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
     <style>
         /* Google Font Import */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
-        /* CSS Variables for Theming */
+        /* CSS Variables for Theming (RED/WHITE) */
         :root {
             --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #fefefe; /* Near White */
-            --secondary-bg-light: #ffffff;
-            --text-color-light: #2c2c2e;
-            --subtle-text-light: #8e8e93;
-            --primary-color-light: #dc3545; /* Red */
-            --primary-color-hover: #c82333; /* Darker Red */
+            --bg-color-light: #f4f4f9; /* Beyaz/açık gri ton */
+            --secondary-bg-light: #ffffff; /* Beyaz */
+            --text-color-light: #1c1c1e;
+            --subtle-text-light: #6d6d72;
+            --primary-color-light: #dc3545; /* Kırmızı */
             --border-color-light: #e0e0e0;
-            
-            /* Theme Styles - Telegram Mini App uses light/dark scheme */
-            --primary-color: var(--primary-color-light);
-            --secondary-bg: var(--secondary-bg-light);
-            --text-color: var(--text-color-light);
-            --subtle-text: var(--subtle-text-light);
-            --border-color: var(--border-color-light);
+            /* Koyu tema değişkenleri kırmızıya uyumlu hale getirildi, ancak hafif tema baskın kullanılacak */
+            --bg-color-dark: #121212;
+            --secondary-bg-dark: #1c1c1e;
+            --text-color-dark: #ffffff;
+            --subtle-text-dark: #8e8e93;
+            --primary-color-dark: #ff4d4d; /* Daha parlak kırmızı */
+            --border-color-dark: #38383a;
         }
 
         /* Base Styles */
@@ -44,202 +40,125 @@
             transition: background-color 0.3s, color 0.3s;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background-color: var(--bg-color-light); 
-            color: var(--text-color-light); 
         }
 
-        /* Theme Styles for Telegram App */
-        body.light-theme { 
-            --primary-color: var(--primary-color-light);
-            --secondary-bg: var(--secondary-bg-light);
-            --text-color: var(--text-color-light);
-            --subtle-text: var(--subtle-text-light);
-            --border-color: var(--border-color-light);
-        }
-        
-        /* Telegram Mini App Dark Theme Compatibility */
-        @media (prefers-color-scheme: dark) {
-            body:not(.light-theme) { /* If no explicit theme is set, use dark */
-                background-color: #121212;
-                color: #f0f0f0;
-                --primary-color: #ff4d4d;
-                --secondary-bg: #1e1e1e;
-                --text-color: #f0f0f0;
-                --subtle-text: #8e8e93;
-                --border-color: #38383a;
-            }
-        }
-
-        #app { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+        /* Theme Styles */
+        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
+        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; } 
 
         /* Profile Header */
-        .profile-header { 
-            padding: 20px 15px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
-            background-color: var(--secondary-bg);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid var(--border-color);
-        }
+        .profile-header { padding: 20px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid; }
+        .light-theme .profile-header { border-bottom-color: var(--border-color-light); }
+        .dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
         .profile-info { display: flex; align-items: center; gap: 15px; }
-        #user-photo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color); }
-        .user-details h1 { font-size: 1.1rem; font-weight: 800; }
-        .verified-icon { font-size: 0.9rem; margin-left: 5px; color: var(--primary-color); }
-        .user-details p { font-size: 0.9rem; font-weight: 600; color: var(--subtle-text); }
-        .user-details p span { font-size: 1.1rem; font-weight: 900; color: var(--primary-color); margin-left: 5px; }
+        #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
+        .light-theme #user-photo { border-color: var(--primary-color-light); }
+        .dark-theme #user-photo { border-color: var(--primary-color-dark); }
+        .user-details h1 { font-size: 1.2rem; font-weight: 700; }
+        .verified-icon { font-size: 1rem; margin-left: 5px; }
+        .light-theme .verified-icon { color: var(--primary-color-light); }
+        .dark-theme .verified-icon { color: var(--primary-color-dark); }
+        .user-details p { font-size: 0.9rem; font-weight: 600; }
+        .light-theme .user-details p { color: var(--subtle-text-light); }
+        .dark-theme .user-details p { color: var(--subtle-text-dark); }
+        #admin-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+
 
         /* Main Content & Pages */
         main { padding: 15px; }
         .page { display: none; }
-        .page.active { display: block; animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 20px; border-left: 4px solid var(--primary-color); padding-left: 10px; }
+        .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { font-size: 1.5rem; margin-bottom: 15px; }
 
-        /* Stats & Action Card */
-        .card { 
-            background-color: var(--secondary-bg); 
-            padding: 20px; 
-            border-radius: 15px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color);
-        }
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-            gap: 15px; 
-            margin-top: 15px; 
-            margin-bottom: 25px;
-        }
-        .stat-item { 
-            padding: 15px; 
-            border-radius: 12px; 
-            text-align: center; 
-            background-color: var(--bg-color-light); 
-            border: 1px solid var(--border-color);
-        }
-        .stat-item h3 { font-size: 0.85rem; margin-bottom: 5px; color: var(--subtle-text); font-weight: 600; }
-        .stat-item p { font-size: 1.4rem; font-weight: 900; color: var(--primary-color); }
+        /* Home Page Stats & Referral */
+        /* 3 sütunlu grid eklendi */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat-card { padding: 15px 10px; border-radius: 12px; text-align: center; }
+        .light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .stat-card h3 { font-size: 0.8rem; margin-bottom: 5px; }
+        .light-theme .stat-card h3 { color: var(--subtle-text-light); }
+        .dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
+        .stat-card p { font-size: 1.1rem; font-weight: 700; word-break: break-all; }
+        .light-theme .stat-card p { color: var(--primary-color-light); }
+        .dark-theme .stat-card p { color: var(--primary-color-dark); }
+        .price-text { font-size: 0.9rem !important; }
+
+        /* Referral Section (Friends Page) */
+        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
+        .light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .referral-section h3 { text-align: center; }
+        #referral-link-display { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
+        .light-theme #referral-link-display { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
+        .dark-theme #referral-link-display { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        /* Yeşil yerine Kırmızı Tema */
+        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; background-color: var(--primary-color-light); } 
         
-        /* Action Button */
-        .action-btn { 
-            width: 100%; 
-            padding: 15px; 
-            font-size: 1.1rem; 
-            font-weight: 800; 
-            color: #fff; 
-            border: none; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            background-color: var(--primary-color);
-            transition: background-color 0.2s, transform 0.1s; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-        }
-        .action-btn:hover:not(:disabled) { background-color: var(--primary-color-hover); }
-        .action-btn:active:not(:disabled) { transform: translateY(1px); }
-        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .action-btn i { margin-right: 10px; }
+        /* Task Container (Sadece Reklam Kaldı) */
+        .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-top: 30px; }
+        .light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .task-icon { font-size: 3rem; margin-bottom: 15px; }
+        .light-theme .task-icon { color: var(--primary-color-light); }
+        .dark-theme .task-icon { color: var(--primary-color-dark); }
+        .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
+        .task-container p { font-size: 0.9rem; margin-bottom: 15px; }
+        .light-theme .task-container p { color: var(--subtle-text-light); }
+        .dark-theme .task-container p { color: var(--subtle-text-dark); }
 
-        /* Referral Section */
-        .referral-section h3 { font-size: 1.2rem; text-align: center; font-weight: 800; margin-bottom: 10px; }
-        #referral-link { 
-            width: 100%; 
-            padding: 12px; 
-            text-align: center; 
-            border: 1px dashed var(--primary-color); 
-            border-radius: 8px; 
-            margin: 15px 0; 
-            font-size: 0.9rem; 
-            background-color: var(--bg-color-light); 
-            color: var(--text-color);
-        }
-        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 700; background-color: var(--primary-color); transition: background-color 0.2s; }
+        /* Action Button */
+        .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
+        .light-theme .action-btn { background-color: var(--primary-color-light); }
+        .dark-theme .action-btn { background-color: var(--primary-color-dark); }
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        .action-btn.loading .btn-text { visibility: hidden; }
+        .action-btn.loading .btn-loader { display: block; position: absolute; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Form Styles */
-        #withdraw-form .form-group { margin-bottom: 20px; }
-        #withdraw-form label { display: block; margin-bottom: 8px; font-weight: 700; }
-        #withdraw-form input, #withdraw-form select { 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-family: var(--font-family); 
-            font-size: 1rem; 
-            border: 1px solid var(--border-color); 
-            background-color: var(--bg-color-light); 
-            color: var(--text-color); 
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input:focus, select:focus { 
-            outline: none; 
-            border-color: var(--primary-color); 
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15); 
-        }
-
+        #withdraw-form .form-group { margin-bottom: 15px; }
+        #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+        #withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
+        .dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
+        .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15); }
+        .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.2); }
+        
         /* Bottom Navigation */
-        .bottom-nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            max-width: 500px; 
-            margin: 0 auto; 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 10px 0; 
-            border-top: 1px solid var(--border-color); 
-            background-color: var(--secondary-bg);
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-            z-index: 1000; 
-        }
-        .nav-btn { 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 5px 10px; 
-            font-family: var(--font-family); 
-            font-size: 0.75rem; 
-            transition: color 0.2s; 
-            flex-grow: 1; 
-            color: var(--subtle-text);
-            font-weight: 700;
-        }
-        .nav-btn i { font-size: 1.6rem; margin-bottom: 3px; }
-        .nav-btn.active { color: var(--primary-color); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
+        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
+        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
+        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
+        .light-theme .nav-btn { color: var(--subtle-text-light); }
+        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
+        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
+        .nav-btn.active { font-weight: 700; }
+        .light-theme .nav-btn.active { color: var(--primary-color-light); }
+        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
 
-        /* Admin Button */
-        #admin-btn {
-            position: absolute;
-            top: 25px;
-            right: 15px;
-            background: var(--primary-color);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            display: none; /* Initial hide, will show if user is admin */
-        }
-        #admin-btn:hover { opacity: 0.9; }
-
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
+        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
+        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
+        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        .light-theme .loader { border-top-color: var(--primary-color-light); }
+        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
     </style>
 </head>
-<body>
+<body class="light-theme">
 
     <div id="app">
         <header class="profile-header">
             <div class="profile-info">
-                <img id="user-photo" src="https://i.imgur.com/placeholder.png" alt="User Photo">
+                <img id="user-photo" src="" alt="User Photo">
                 <div class="user-details">
-                    <h1 id="user-name">Loading... <i class="fas fa-bolt verified-icon"></i></h1>
-                    <p>Balance: <span id="user-points">0.0000</span> TRX</p>
+                    <h1 id="user-name">Yükleniyor... <i class="fas fa-check-circle verified-icon"></i></h1>
+                    <p> Bakiye: <span id="user-points">0.0000</span> TRX</p>
                 </div>
             </div>
             <button id="admin-btn" style="display: none;">Admin Panel</button>
@@ -247,510 +166,395 @@
 
         <main id="main-content">
             <div id="home-page" class="page active">
-                <h2>TronAds Faucet</h2>
-                
-                <div class="card">
-                    <h3>Current Stats</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <h3>TRX Price</h3>
-                            <p>$<span id="trx-price-usd">0.00</span></p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>Daily Ads</h3>
-                            <p><span id="daily-ads-watched">0</span> / 25</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>Ad Reward</h3>
-                            <p><span id="ad-reward-trx">0.0000</span> TRX</p>
-                        </div>
+                <h2>Dashboard & Task</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Daily Ads Watched</h3>
+                        <p><span id="daily-ads-watched">00</span> /  100</p>
                     </div>
-                    
-                    <button id="watch-ad-btn" class="action-btn">
-                        <i class="fas fa-video"></i> Watch Ad & Earn
-                    </button>
-                </div>
-
-                <div class="referral-section card">
-                    <h3>Refer & Earn More!</h3>
-                    <p style="color: var(--subtle-text); font-size: 0.9rem;">Share your link and get a bonus for every referral.</p>
-                    <input type="text" id="referral-link" readonly>
-                    <button id="copy-ref-link-btn" class="action-btn" style="background-color: #5cb85c; margin-top: 10px;">
-                        <i class="fas fa-link"></i> Copy Referral Link
-                    </button>
-                    <div class="stat-item" style="margin-top: 15px; border: none; background: none;">
-                        <h3>Total Referrals</h3>
-                        <p id="referral-count">0</p>
+                    <div class="stat-card">
+                        <h3>TRX/USD Price</h3>
+                        <p id="trx-price-display" class="price-text">Loading...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Ad Reward (TRX)</h3>
+                        <p id="ad-reward-trx">0.0000</p>
                     </div>
                 </div>
 
+                <div class="task-container">
+                    <i class="fas fa-video task-icon"></i>
+                    <h3>Watch a Rewarded Ad</h3>
+                    <p>Earn **$0.0001** worth of TRX for every ad.</p> 
+                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
+                </div>
             </div>
-            
+
             <div id="withdraw-page" class="page">
-                <h2>Withdraw TRX</h2>
-                <p style="color: var(--subtle-text); margin-bottom: 20px;">Minimum <span style="font-weight: 700; color: var(--primary-color);">0.10 TRX</span> required to withdraw.</p>
-                <form id="withdraw-form" class="card">
+                <h2>Withdraw</h2>
+                <p>Minimum 0.01 TRX required to withdraw.</p>
+                <form id="withdraw-form">
                     <div class="form-group">
                         <label for="withdraw-method">Method:</label>
-                        <select id="withdraw-method" disabled required>
+                        <select id="withdraw-method" required>
+                            <option value="Bkash">Bkash (Simulated)</option>
+                            <option value="Nagad">Nagad (Simulated)</option>
+                            <option value="Binance">Binance (Simulated)</option>
                             <option value="Tron (TRX)">Tron (TRX)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="account-number">Tron Wallet Address:</label>
-                        <input type="text" id="account-number" placeholder="Enter your TRX Wallet Address (T...)" required>
+                        <label for="account-number">Account Number/ID:</label>
+                        <input type="text" id="account-number" placeholder="e.g., T..." required>
                     </div>
                     <div class="form-group">
                         <label for="amount">TRX to Withdraw:</label>
-                        <input type="number" id="amount" placeholder="e.g., 0.15" required step="0.0001">
+                        <input type="number" id="amount" placeholder="e.g., 0.01" required step="0.0001">
                     </div>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn">
-                        <i class="fas fa-hand-holding-usd"></i> Submit Withdrawal
+                        <span class="btn-text">Submit Request</span>
+                        <span class="btn-loader"></span>
                     </button>
                 </form>
             </div>
-            
-            <div id="admin-page" class="page">
-                <h2>Admin Panel</h2>
-                <div class="card">
-                    <h3>Withdrawal Requests</h3>
-                    <p style="color: var(--subtle-text);">Fetching live withdrawal requests from Firebase...</p>
-                    <ul id="withdrawal-list" style="list-style: none; padding: 0; margin-top: 15px;">
-                        </ul>
+
+            <div id="friends-page" class="page">
+                <h2>Invite Friends & Earn</h2>
+                <div class="referral-section">
+                    <h3>Your Referral Link</h3>
+                    <p>Share this link to let your friends join and earn **$0.02** worth of TRX per referral.</p>
+                    <input type="text" id="referral-link-display" readonly>
+                    <button id="copy-ref-link-btn" class="action-btn"><i class="fas fa-share-alt"></i> Share Referral Link</button>
+                    
+                    <div class="stat-card" style="margin-top: 20px;">
+                        <h3>Total Referrals</h3>
+                        <p id="referral-count">00</p>
+                    </div>
                 </div>
             </div>
 
+            <div id="admin-page" class="page">
+                <h2>Admin Dashboard</h2>
+                <p style="color: var(--primary-color-light); font-weight: 700; margin-bottom: 20px;">UYARI: Bu paneldeki veriler LocalStorage'dan (Tarayıcı Yerel Depolama) alındığı için merkeze ait değildir.</p>
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="stat-card">
+                        <h3>Total Users (Local)</h3>
+                        <p id="total-users-count">...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Withdrawals (Simulated)</h3>
+                        <p id="total-withdraw-amount" style="font-size: 0.9rem; color: #dc3545; font-weight: 700;">SERVER REQUIRED</p>
+                    </div>
+                </div>
+                <div class="referral-section">
+                    <h3>User List (Simulated)</h3>
+                    <ul id="user-list" style="list-style: none; padding: 0; text-align: left; font-size: 0.9rem;">
+                        </ul>
+                </div>
+            </div>
         </main>
 
         <nav class="bottom-nav">
             <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
             <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-            <button class="nav-btn" data-page="home-page" onclick="document.getElementById('home-page').scrollIntoView({ behavior: 'smooth' });"><i class="fas fa-users"></i><span>Referral</span></button>
+            <button class="nav-btn" data-page="friends-page"><i class="fas fa-user-friends"></i><span>Friends</span></button>
+            <button class="nav-btn" data-page="admin-page" id="nav-admin-btn" style="display: none;"><i class="fas fa-user-shield"></i><span>Admin</span></button>
         </nav>
     </div>
 
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+    <div id="loading-modal" class="modal">
+        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
+    </div>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+    <script src='//libtl.com/sdk.js' data-zone='9712189' data-sdk='show_9712189'></script>
+    
     <script>
-        // --- FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
-            authDomain: "tronadsfaucet.firebaseapp.com",
-            databaseURL: "https://tronadsfaucet-default-rtdb.firebaseio.com",
-            projectId: "tronadsfaucet",
-            storageBucket: "tronadsfaucet.firebasestorage.app",
-            messagingSenderId: "26180984735",
-            appId: "1:26180984735:web:e498a635c4f61bd0a167aa",
-            measurementId: "G-WG3ETVHC78"
-        };
-        const firebaseApp = firebase.initializeApp(firebaseConfig);
-        const database = firebaseApp.database();
-        
-        // --- Configuration ---
-        const BOT_USERNAME = "TronAdsFaucetBot"; 
-        const ADMIN_ID = "7904032877";
-        const DAILY_AD_LIMIT = 25;
-        const EARNING_PER_AD_USD = 0.001; // $0.001 per ad
-        const MIN_WITHDRAW_TRX = 0.10;
-        const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd';
-        
-        // Bu değer, API çağrısı başarısız olursa veya ilk yükleme sırasında kullanılır.
-        let CURRENT_TRX_PRICE_USD = 0.08; 
-        
-        // --- DOM Elements ---
-        const userPhotoElem = document.getElementById('user-photo');
-        const userNameElem = document.getElementById('user-name');
-        const userPointsElem = document.getElementById('user-points');
-        const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-        const referralCountElem = document.getElementById('referral-count');
-        const watchAdBtn = document.getElementById('watch-ad-btn');
-        const withdrawForm = document.getElementById('withdraw-form');
-        const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-        const referralLinkElem = document.getElementById('referral-link');
-        const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
-        const adminBtn = document.getElementById('admin-btn');
-        const trxPriceUSDElem = document.getElementById('trx-price-usd');
-        const adRewardTRXElem = document.getElementById('ad-reward-trx');
-        
-        // --- State Management ---
-        let userState = {
-            pointsTRX: 0,
-            dailyAdWatchCount: 0,
-            lastAdWatchDate: null,
-            referrals: 0,
-            userId: null,
-            uniqueRefCode: null, 
-            isNewUser: true
-        };
-
-        const calculateTrxReward = () => {
-             // Kazanç USD / TRX Fiyatı USD = TRX
-            return EARNING_PER_AD_USD / CURRENT_TRX_PRICE_USD;
-        };
-        
-        // --- Fiyat Çekme Fonksiyonu ---
-        const fetchTrxPrice = async () => {
-            try {
-                const response = await fetch(COINGECKO_API_URL);
-                const data = await response.json();
-                
-                if (data.tron && data.tron.usd) {
-                    CURRENT_TRX_PRICE_USD = data.tron.usd;
-                } else {
-                    console.warn("CoinGecko API'den beklenen TRX fiyat verisi alınamadı. Varsayılan değer kullanılıyor.");
-                }
-            } catch (error) {
-                console.error("CoinGecko fiyat çekme hatası:", error);
-            }
-        };
-
-        const generateUniqueCode = (id) => {
-            return btoa(String(id)).substring(0, 8).toUpperCase().replace(/=/g, '');
-        };
-        
-        const saveStateToFirebase = () => {
-            if(userState.userId) {
-                const userRef = database.ref(`users/${userState.userId}`);
-                userRef.set({
-                    pointsTRX: parseFloat(userState.pointsTRX.toFixed(4)), 
-                    dailyAdWatchCount: userState.dailyAdWatchCount,
-                    lastAdWatchDate: userState.lastAdWatchDate,
-                    referrals: userState.referrals,
-                    uniqueRefCode: userState.uniqueRefCode,
-                    lastUpdate: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
-        };
-
-        const loadStateFromFirebase = (userId) => {
-            return new Promise((resolve, reject) => {
-                const userRef = database.ref(`users/${userId}`);
-                userRef.once('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        userState.pointsTRX = data.pointsTRX || 0;
-                        userState.dailyAdWatchCount = data.dailyAdWatchCount || 0;
-                        userState.lastAdWatchDate = data.lastAdWatchDate || null;
-                        userState.referrals = data.referrals || 0;
-                        userState.uniqueRefCode = data.uniqueRefCode || generateUniqueCode(userId);
-                        userState.isNewUser = false;
-                    } else {
-                        // Yeni kullanıcı başlatma
-                        userState.uniqueRefCode = generateUniqueCode(userId);
-                        userState.isNewUser = true;
-                        
-                        // Referans kontrolü (start parametresi)
-                        const startParam = new URLSearchParams(window.Telegram.WebApp.initData).get('start');
-                        if (startParam && startParam.startsWith('ref_')) {
-                            const referrerCode = startParam.replace('ref_', '');
-                            checkAndProcessReferral(referrerCode, userId);
-                        }
-                    }
-                    resolve();
-                }, (error) => {
-                    console.error("Firebase yükleme hatası:", error);
-                    reject(error);
-                });
-            });
-        };
-        
-        const checkAndProcessReferral = (referrerCode, newUserId) => {
-            database.ref('users').orderByChild('uniqueRefCode').equalTo(referrerCode).once('value', (snapshot) => {
-                const users = snapshot.val();
-                if (users) {
-                    const referrerId = Object.keys(users)[0];
-                    if (referrerId !== String(newUserId)) {
-                        const referrerData = users[referrerId];
-                        const newReferrals = (referrerData.referrals || 0) + 1;
-                        // Referansçının sayısını güncelle
-                        database.ref(`users/${referrerId}/referrals`).set(newReferrals);
-                    }
-                }
-            });
-        };
-
-        // --- Core Functions ---
-        const initApp = async () => {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            // Tema rengini Telegram'dan al
-            document.body.className = `${tg.colorScheme}-theme`;
-
-            const user = tg.initDataUnsafe.user;
-            if (!user || !user.id) {
-                tg.showAlert("Kullanıcı doğrulanamadı. Lütfen uygulamayı Telegram üzerinden açın.", () => tg.close());
-                return;
-            }
-            
-            userState.userId = String(user.id);
-            
-            // 1. Fiyatı CoinGecko'dan çek
-            await fetchTrxPrice();
-            
-            // 2. Firebase durumunu yükle
-            try {
-                await loadStateFromFirebase(userState.userId);
-            } catch (e) {
-                tg.showAlert("Kullanıcı verisi yüklenirken hata oluştu. Lütfen tekrar deneyin.");
-                console.error(e);
-                return;
-            }
-            
-            // 3. Günlük Sıfırlama Kontrolü
-            const today = new Date().toISOString().slice(0, 10);
-            if (userState.lastAdWatchDate !== today) {
-                userState.dailyAdWatchCount = 0;
-                userState.lastAdWatchDate = today;
-            }
-            
-            // 4. UI'ı Kur
-            updateUI();
-            setupNavigation();
-            setupEventListeners();
-            
-            // 5. İlk durumu kaydet (Yeni kullanıcılar veya günlük sıfırlama için)
-            saveStateToFirebase();
-
-            // 6. Admin kontrolü
-            if (userState.userId === ADMIN_ID) {
-                adminBtn.style.display = 'block';
-            }
-        };
-        
-        const updateUI = () => {
-            const tg = window.Telegram.WebApp;
-            const user = tg.initDataUnsafe.user;
-            
-            // Header
-            if (user) {
-                // Not: Telegram'ın bot api'si üzerinden fotoğraf çekilmesi daha güvenli ve doğru olabilir.
-                // Mini App'te sadece düşük çözünürlüklü bir fotoğraf URL'si döner.
-                userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
-                userNameElem.innerHTML = `${user.first_name || 'User'} <i class="fas fa-bolt verified-icon"></i>`;
-            }
-            
-            const rewardTRX = calculateTrxReward();
-            
-            userPointsElem.textContent = parseFloat(userState.pointsTRX).toFixed(4);
-            dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
-            referralCountElem.textContent = userState.referrals;
-            trxPriceUSDElem.textContent = CURRENT_TRX_PRICE_USD.toFixed(4); // Fiyatı 4 ondalık basamakla göster
-            adRewardTRXElem.textContent = parseFloat(rewardTRX).toFixed(4);
-
-            // Referans Linki güncelleme
-            referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.uniqueRefCode}`;
-
-            // Buton durumu
-            if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-                watchAdBtn.textContent = 'Daily Limit Reached';
-                watchAdBtn.disabled = true;
-            } else {
-                watchAdBtn.textContent = `Watch Ad & Earn`;
-                watchAdBtn.disabled = false;
-            }
-        };
-        
-        const setupEventListeners = () => {
-            watchAdBtn.addEventListener('click', handleWatchAd);
-            withdrawForm.addEventListener('submit', handleWithdraw);
-            copyRefLinkBtn.addEventListener('click', copyReferralLink);
-            adminBtn.addEventListener('click', () => {
-                // Admin sayfasına geçiş
-                document.querySelector('.page.active').classList.remove('active');
-                document.getElementById('admin-page').classList.add('active');
-                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-                adminBtn.classList.add('active'); // Admin butonu aktif hale getirildi
-                loadWithdrawalRequests();
-            });
-        };
-
-        const handleWatchAd = () => {
-            if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-                tg.showAlert("Günlük reklam izleme limitine ulaştınız."); return;
-            }
-            
-            watchAdBtn.disabled = true;
-            watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Ad...';
-
-            window.showAdexora()
-                .then(async () => {
-                    // Adexora reklam kodu burası (Reward Logic Here)
-                    
-                    // Önce güncel TRX fiyatını tekrar kontrol et (opsiyonel ama güvenli)
-                    await fetchTrxPrice();
-                    const rewardTRX = calculateTrxReward();
-                    
-                    userState.pointsTRX += rewardTRX;
-                    userState.dailyAdWatchCount++;
-                    
-                    saveStateToFirebase();
-                    updateUI();
-                    
-                    const tg = window.Telegram.WebApp;
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert(`Tebrikler! ${parseFloat(rewardTRX).toFixed(4)} TRX kazandınız.`);
-
-                })
-                .catch(e => {
-                    // Reklam engellendi veya yüklenemedi (Handle errors here)
-                    const tg = window.Telegram.WebApp;
-                    tg.showAlert("Reklam yüklenemedi veya engellendi. Lütfen daha sonra tekrar deneyin.");
-                    console.error("Adexora Hata:", e);
-                })
-                .finally(() => {
-                    // Butonu eski haline getir
-                    watchAdBtn.disabled = false;
-                    watchAdBtn.innerHTML = '<i class="fas fa-video"></i> Watch Ad & Earn';
-                    updateUI(); 
-                });
-        };
-
-        const handleWithdraw = async (e) => {
-            e.preventDefault();
-            const accountNumber = document.getElementById('account-number').value.trim();
-            const amount = parseFloat(document.getElementById('amount').value);
+        document.addEventListener('DOMContentLoaded', () => {
             const tg = window.Telegram.WebApp;
 
-            if (isNaN(amount) || amount <= 0) { tg.showAlert("Lütfen geçerli bir miktar girin."); return; }
-            if (!accountNumber.startsWith('T') || accountNumber.length < 34) { tg.showAlert("Lütfen geçerli bir Tron Wallet Adresi (T ile başlamalı) girin."); return; }
-            if (amount < MIN_WITHDRAW_TRX) { tg.showAlert(`Minimum çekim ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`); return; }
-            if (amount > userState.pointsTRX) { tg.showAlert("Bakiyeniz yeterli değil."); return; }
-
-            withdrawSubmitBtn.disabled = true;
-            withdrawSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-
-            // Bakiyeden düşülür
-            userState.pointsTRX -= amount;
+            // --- Configuration ---
+            const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
+            const BOT_USERNAME = "TronAdsFaucetBot"; 
+            const ADMIN_CHAT_ID = "7904032877"; // ADMIN ID
             
-            const withdrawRef = database.ref('withdrawals').push();
-            const user = tg.initDataUnsafe.user;
+            const DAILY_AD_LIMIT = 100; 
             
-            const requestData = {
-                userId: userState.userId,
-                username: user.username || 'N/A',
-                firstName: user.first_name || '',
-                amountTRX: parseFloat(amount.toFixed(4)),
-                accountNumber: accountNumber,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                status: 'Pending'
+            // YENİ DOLAR BAZLI ÖDÜLLER
+            const USD_PER_AD = 0.0001; 
+            // Referans bonusu şu an sadece sayılıyor, ancak kodda bir ödül mekanizması yok. Eğer gerekiyorsa, basit bir başlangıç bonusu gibi kodlayabiliriz.
+            const USD_PER_REFERRAL_BONUS = 0.02; // Varsayılan olarak her yeni kullanıcıya verilen bonus gibi simüle edilecek
+            
+            const MIN_WITHDRAW_POINTS = 0.01; 
+            const REFERRAL_SHARE_MESSAGE = "Earnings of $0.30 to $3 per day \nTron Coin Ads faucet \nUse it to Make Money \n"; 
+
+            // TRX FİYATI (Google Search'ten gelen güncel veri 0.342249)
+            let TRX_TO_USD_RATE = 0.342249; 
+
+            // HESAPLANAN TRX MİKTARLARI
+            let TRX_PER_AD = USD_PER_AD / TRX_TO_USD_RATE; 
+            let TRX_PER_REFERRAL_BONUS = USD_PER_REFERRAL_BONUS / TRX_TO_USD_RATE;
+            
+            // --- DOM Elements ---
+            const userPhotoElem = document.getElementById('user-photo');
+            const userNameElem = document.getElementById('user-name');
+            const userPointsElem = document.getElementById('user-points');
+            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
+            const trxPriceDisplayElem = document.getElementById('trx-price-display'); // YENİ ELEMENT
+            const adRewardTrxElem = document.getElementById('ad-reward-trx'); // YENİ ELEMENT
+            const referralCountElem = document.getElementById('referral-count');
+            
+            const watchAdBtn = document.getElementById('watch-ad-btn');
+            
+            const withdrawForm = document.getElementById('withdraw-form');
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+            const referralLinkDisplay = document.getElementById('referral-link-display'); 
+            const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
+            const loadingModal = document.getElementById('loading-modal');
+            
+            // ADMIN PANEL ELEMENTLERİ
+            const adminBtn = document.getElementById('admin-btn');
+            const navAdminBtn = document.getElementById('nav-admin-btn');
+            const totalUsersCountElem = document.getElementById('total-users-count');
+            const totalWithdrawAmountElem = document.getElementById('total-withdraw-amount');
+            const userListElem = document.getElementById('user-list');
+
+
+            // --- State Management ---
+            let userState = {
+                trxBalance: 0.0000, 
+                dailyAdWatchCount: 0,
+                lastAdWatchDate: null,
+                referrals: [],
+                // Join channel/group durumları kaldırıldı, ancak eski kullanıcıların verisi bozulmaması için state'te tutulmaya devam edilebilir, sadece UI'da kullanılmayacak.
+                userId: null
             };
 
-            try {
-                await withdrawRef.set(requestData);
-                saveStateToFirebase(); // Yeni bakiyeyi kaydet
-                updateUI();
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert("Çekim talebiniz başarıyla gönderildi!");
-                withdrawForm.reset();
-                
-            } catch (error) {
-                // Hata olursa, puanları iade et
-                tg.HapticFeedback.notificationOccurred('error');
-                tg.showAlert("Talep gönderilemedi. Bakiyeniz iade edildi.");
-                userState.pointsTRX += amount;
-                saveStateToFirebase();
-                updateUI();
-            } finally {
-                withdrawSubmitBtn.disabled = false;
-                withdrawSubmitBtn.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Submit Withdrawal';
-            }
-        };
-        
-        const copyReferralLink = () => {
-            const tg = window.Telegram.WebApp;
-            navigator.clipboard.writeText(referralLinkElem.value).then(() => {
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert("Referans linki kopyalandı!");
-            });
-        };
+            const saveState = () => {
+                if(userState.userId) {
+                    localStorage.setItem(`userState_TRX_${userState.userId}`, JSON.stringify(userState));
+                }
+            };
 
-        const setupNavigation = () => {
-            const navButtons = document.querySelectorAll('.nav-btn');
-            const pages = document.querySelectorAll('.page');
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Referral butonu (sonuncu) tıklandığında sadece home sayfasına kaydırma yap.
-                    if (button.textContent.trim() === 'Referral') {
-                        document.getElementById('home-page').scrollIntoView({ behavior: 'smooth' });
-                        return; 
-                    }
-
-                    const pageId = button.dataset.page;
-                    pages.forEach(page => page.classList.remove('active'));
-                    document.getElementById(pageId).classList.add('active');
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                });
-            });
-        };
-
-        // Admin Panel Fonksiyonları
-        const loadWithdrawalRequests = () => {
-            const list = document.getElementById('withdrawal-list');
-            list.innerHTML = '<p style="text-align: center;">Talepler yükleniyor...</p>';
-
-            database.ref('withdrawals').orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
-                const requests = snapshot.val();
-                list.innerHTML = '';
-                let requestCount = 0;
-
-                if (requests) {
-                    const requestArray = Object.entries(requests).map(([key, value]) => ({ id: key, ...value })).reverse();
+            const loadState = (userId) => {
+                const savedState = localStorage.getItem(`userState_TRX_${userId}`);
+                if (savedState) {
+                    userState = JSON.parse(savedState);
                     
-                    requestArray.forEach(req => {
-                        const date = new Date(req.timestamp).toLocaleString();
-                        const statusColor = req.status === 'Pending' ? 'orange' : (req.status === 'Completed' ? 'green' : 'red');
-                        requestCount++;
-                        
-                        const listItem = document.createElement('li');
-                        listItem.style.cssText = `border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 10px;`;
-                        listItem.innerHTML = `
-                            <strong>ID:</strong> ${req.userId} | <strong>User:</strong> @${req.username}<br>
-                            <strong>Amount:</strong> <span style="color: var(--primary-color); font-weight: 700;">${req.amountTRX} TRX</span><br>
-                            <strong>Wallet:</strong> <code>${req.accountNumber}</code><br>
-                            <strong>Status:</strong> <span style="color: ${statusColor}; font-weight: 700;">${req.status}</span><br>
-                            <small>Time: ${date}</small>
-                            <div style="margin-top: 10px;">
-                                <button data-id="${req.id}" data-status="Completed" style="background-color: green; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px;">Complete</button>
-                                <button data-id="${req.id}" data-status="Rejected" style="background-color: red; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Reject</button>
-                            </div>
-                        `;
-                        list.appendChild(listItem);
-                    });
+                    if (userState.trxBalance === undefined) userState.trxBalance = 0.0000;
+                    userState.trxBalance = parseFloat(userState.trxBalance) || 0;
+                    
+                    // Eski join bonusları kaldırıldığı için temizlik yapılabilir (isteğe bağlı)
+                    delete userState.hasJoinedChannel;
+                    delete userState.hasJoinedGroup;
+                }
+            };
+            
+            // --- Core Functions ---
+            const initApp = () => {
+                tg.ready();
+                tg.expand();
+                document.body.className = `${tg.colorScheme}-theme`;
+
+                const user = tg.initDataUnsafe.user;
+                if (!user || !user.id) {
+                    tg.showAlert("Kullanıcı doğrulanamadı. Lütfen bu uygulamayı Telegram üzerinden açın.", () => tg.close());
+                    return;
+                }
+                
+                userState.userId = user.id;
+                loadState(user.id);
+                
+                const today = new Date().toISOString().slice(0, 10);
+                if (userState.lastAdWatchDate !== today) {
+                    userState.dailyAdWatchCount = 0;
+                    userState.lastAdWatchDate = today;
+                }
+                
+                // ADMIN KONTROLÜ
+                if (String(userState.userId) === ADMIN_CHAT_ID) {
+                    adminBtn.style.display = 'block';
+                    navAdminBtn.style.display = 'flex';
                 }
 
-                if (requestCount === 0) {
-                     list.innerHTML = '<p style="text-align: center; color: var(--subtle-text);">Bekleyen talep bulunmamaktadır.</p>';
+                updateUI();
+                setupNavigation();
+                setupEventListeners();
+                saveState();
+            };
+            
+            const updateUI = () => {
+                const user = tg.initDataUnsafe.user;
+                if (user) {
+                    userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
+                    userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
+                }
+                
+                userPointsElem.textContent = parseFloat(userState.trxBalance).toFixed(4); 
+                dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
+                referralCountElem.textContent = userState.referrals.length;
+
+                // YENİ TRX BİLGİLERİ
+                trxPriceDisplayElem.textContent = `$${TRX_TO_USD_RATE.toFixed(4)}`;
+                adRewardTrxElem.textContent = TRX_PER_AD.toFixed(6); // 6 basamak göster (0.000292)
+
+                // Friends sayfasındaki linki güncelle
+                referralLinkDisplay.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+            };
+            
+            const setupEventListeners = () => {
+                // Sadece reklam izleme kaldı
+                watchAdBtn.addEventListener('click', handleWatchAd);
+                
+                withdrawForm.addEventListener('submit', handleWithdraw);
+                copyRefLinkBtn.addEventListener('click', copyReferralLink);
+                adminBtn.addEventListener('click', () => {
+                     document.querySelector('.page.active').classList.remove('active');
+                     document.getElementById('admin-page').classList.add('active');
+                     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                     navAdminBtn.classList.add('active');
+                     loadAdminStats();
+                });
+            };
+
+            const handleWatchAd = () => {
+                if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+                    tg.showAlert("Günlük reklam izleme limitine ulaştınız."); return;
+                }
+                loadingModal.style.display = 'flex';
+                // Monetag SDK'yı çağır
+                if(typeof show_9712189 === 'function') {
+                    show_9712189().then(() => {
+                        userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
+                        userState.dailyAdWatchCount++;
+                        saveState();
+                        updateUI();
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert(`Tebrikler! ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) kazandınız.`);
+                    }).catch(() => {
+                        tg.showAlert("Reklam yüklenemedi. Lütfen daha sonra tekrar deneyin.");
+                    }).finally(() => {
+                        loadingModal.style.display = 'none';
+                    });
+                } else {
+                    // SDK yüklenmediyse simüle et (Gerçek botta bu hatayı almamalısınız)
+                    setTimeout(() => {
+                        userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
+                        userState.dailyAdWatchCount++;
+                        saveState();
+                        updateUI();
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert(`Tebrikler! ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) kazandınız (Simülasyon).`);
+                        loadingModal.style.display = 'none';
+                    }, 1000);
+                }
+            };
+            
+            // Join Channel ve Group görevleri kaldırıldı.
+
+            const handleWithdraw = async (e) => {
+                e.preventDefault();
+                const method = document.getElementById('withdraw-method').value;
+                const accountNumber = document.getElementById('account-number').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+
+                if (isNaN(amount) || amount <= 0) { tg.showAlert("Lütfen geçerli bir miktar girin."); return; }
+                if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum çekim ${MIN_WITHDRAW_POINTS.toFixed(2)} TRX.`); return; }
+                if (amount > userState.trxBalance) { tg.showAlert("Bakiyeniz yeterli değil."); return; }
+
+                withdrawSubmitBtn.classList.add('loading');
+                withdrawSubmitBtn.disabled = true;
+
+                userState.trxBalance = parseFloat(userState.trxBalance) - amount;
+                saveState();
+                updateUI();
+                
+                const user = tg.initDataUnsafe.user;
+                const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> ${amount.toFixed(4)} TRX\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
+                
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: message, parse_mode: 'HTML'})
+                    });
+                    const result = await response.json();
+                    if (result.ok) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("Çekim talebi başarıyla gönderildi!");
+                        withdrawForm.reset();
+                    } else { throw new Error(result.description); }
+                } catch (error) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("Talep gönderilemedi. Bakiyeniz iade edildi.");
+                    userState.trxBalance = parseFloat(userState.trxBalance) + amount;
+                    saveState();
+                    updateUI();
+                } finally {
+                    withdrawSubmitBtn.classList.remove('loading');
+                    withdrawSubmitBtn.disabled = false;
+                }
+            };
+            
+            const copyReferralLink = () => {
+                const link = referralLinkDisplay.value;
+                const shareText = `${REFERRAL_SHARE_MESSAGE}${link}`;
+                
+                if (tg.shareText) {
+                    tg.shareText(shareText);
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("Referans mesajı ve linki kopyalandı!");
+                    });
+                }
+            };
+
+            // ADMIN PANEL FONKSİYONU
+            const loadAdminStats = () => {
+                let totalUsers = 0;
+                let userListHTML = '';
+
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('userState_TRX_')) {
+                        totalUsers++;
+                        userListHTML += `<li style="padding: 5px 0; border-bottom: 1px dotted #ccc;">User ID: <code>${key.replace('userState_TRX_', '')}</code></li>`;
+                    }
                 }
 
-                list.querySelectorAll('button').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.target.dataset.id;
-                        const status = e.target.dataset.status;
-                        updateWithdrawalStatus(id, status);
+                totalUsersCountElem.textContent = totalUsers.toString().padStart(2, '0');
+                
+                if (totalUsers > 0) {
+                     userListElem.innerHTML = userListHTML;
+                } else {
+                     userListElem.innerHTML = '<li style="color: #6d6d72;">(Local veritabanınızda kullanıcı bulunamadı.)</li>';
+                }
+
+            };
+
+            const setupNavigation = () => {
+                const navButtons = document.querySelectorAll('.nav-btn');
+                const pages = document.querySelectorAll('.page');
+                navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const pageId = button.dataset.page;
+                        pages.forEach(page => page.classList.remove('active'));
+                        document.getElementById(pageId).classList.add('active');
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+
+                        if (pageId === 'admin-page' && String(userState.userId) === ADMIN_CHAT_ID) {
+                            loadAdminStats();
+                        }
                     });
                 });
+            };
 
-            }, (error) => {
-                list.innerHTML = `<p style="text-align: center; color: red;">Talepler yüklenirken hata: ${error.message}</p>`;
-                console.error(error);
-            });
-        };
-
-        const updateWithdrawalStatus = (requestId, newStatus) => {
-            // Not: Bu işlem normalde sunucu tarafında yapılmalıdır.
-            database.ref(`withdrawals/${requestId}/status`).set(newStatus)
-                .then(() => {
-                    window.Telegram.WebApp.showAlert(`Talep ${requestId} durumu ${newStatus} olarak ayarlandı.`);
-                })
-                .catch(error => {
-                    window.Telegram.WebApp.showAlert(`Durum güncellenemedi: ${error.message}`);
-                });
-        };
-
-        initApp();
+            initApp();
+        });
     </script>
 </body>
 </html>
