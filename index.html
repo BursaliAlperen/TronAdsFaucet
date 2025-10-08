@@ -70,8 +70,9 @@
         .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
         .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
         .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
-        .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
+        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); display: flex; align-items: center; justify-content: center; }
+        .profile-pic i { font-size: 3rem; color: white; }
+        .profile-pic img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
         .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
         .points-display { display: inline-flex; align-items: center; background: rgba(230, 57, 70, 0.15); padding: 8px 20px; border-radius: 50px; margin-top: 10px; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; border: 1px solid var(--primary-color); }
@@ -141,17 +142,34 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* KRİTİK DÜZELTME: Görünmez katmanın tıklamayı engellemesini önler */
+        /* Reklam Modal Stili */
         .ad-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); 
+            background: rgba(0, 0, 0, 0.8); 
             z-index: 999; 
             display: none; 
-            pointer-events: none; 
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .ad-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            max-width: 90%;
+            color: var(--text-dark);
+        }
+        .ad-countdown {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--primary-color);
         }
 
     </style>
@@ -175,7 +193,9 @@
 
             <div class="profile-section">
                 <div class="profile-card">
-                    <div class="profile-pic" id="profilePic"><i class="fas fa-user-circle"></i></div>
+                    <div class="profile-pic" id="profilePic">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
                     <h1 class="profile-name" id="profileNameDisplay"></h1>
                     <div class="points-display" id="userPointsDisplay"><i class="fas fa-bolt"></i> 0.0000 TRX</div>
                     <div class="stats-display">
@@ -195,7 +215,15 @@
                 <div class="nav-item" data-page="withdraw"><i class="fas fa-wallet"></i><span>Withdraw</span></div>
             </div>
 
-            <div class="ad-modal-overlay" id="adModal"></div>
+            <div class="ad-modal-overlay" id="adModal">
+                <div class="ad-modal-content">
+                    <h2>Watching Advertisement</h2>
+                    <p>Please wait while the ad is loading...</p>
+                    <div class="ad-countdown" id="adCountdown">5</div>
+                    <p>Do not close this window to earn your reward!</p>
+                    <button class="btn btn-primary" id="closeAdBtn" style="display: none;">Close Ad</button>
+                </div>
+            </div>
         </div>
         
         <div id="adminPanelContent" style="display:none;"></div>
@@ -236,11 +264,13 @@
         const mainContent = document.getElementById('mainContent');
         const loadingScreen = document.getElementById('loadingScreen');
         const loadingError = document.getElementById('loadingError');
+        const profilePic = document.getElementById('profilePic');
         let profileNameDisplay, userPointsDisplay, adsWatchedTodayEl, adsLeftTodayEl, totalAdsWatchedEl;
         
         // --- STATE ---
         let currentUser = null; 
         let currentTRXPrice = FALLBACK_TRX_PRICE;
+        let adCountdownInterval;
 
         // --- FIREBASE INITIALIZATION ---
         let db;
@@ -271,6 +301,95 @@
             });
         }
 
+        // --- PROFİL FOTOĞRAFI YÜKLEME ---
+        function loadProfilePicture() {
+            if (!currentUser) return;
+            
+            // Telegram'dan profil fotoğrafını al
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user) {
+                const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                
+                // Telegram profil fotoğrafı URL'sini kontrol et
+                if (tgUser.photo_url) {
+                    // Telegram profil fotoğrafını yükle
+                    const img = new Image();
+                    img.onload = function() {
+                        // Fotoğraf başarıyla yüklendi, ikonu kaldır ve fotoğrafı göster
+                        profilePic.innerHTML = '';
+                        profilePic.appendChild(img);
+                    };
+                    img.onerror = function() {
+                        // Fotoğraf yüklenemedi, varsayılan ikonu kullan
+                        console.log("Telegram profile photo failed to load, using default icon");
+                        profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+                    };
+                    img.src = tgUser.photo_url;
+                    img.alt = 'Profile Picture';
+                } else {
+                    // Telegram profil fotoğrafı yok, varsayılan ikonu kullan
+                    console.log("No Telegram profile photo available, using default icon");
+                    profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+                }
+            } else {
+                // Telegram WebApp yok, varsayılan ikonu kullan
+                console.log("Telegram WebApp not available, using default icon");
+                profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+            }
+        }
+
+        // --- REKLAM OYNATMA FONKSİYONU ---
+        function showAdAndReward() {
+            const adModal = document.getElementById('adModal');
+            const adCountdown = document.getElementById('adCountdown');
+            const closeAdBtn = document.getElementById('closeAdBtn');
+            
+            // Modal'ı göster
+            adModal.style.display = 'flex';
+            
+            // Geri sayımı başlat
+            let countdown = 5;
+            adCountdown.textContent = countdown;
+            
+            adCountdownInterval = setInterval(() => {
+                countdown--;
+                adCountdown.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(adCountdownInterval);
+                    
+                    // Reklam bitti, ödülü ver
+                    rewardUserForAd();
+                    
+                    // Kapat butonunu göster
+                    closeAdBtn.style.display = 'block';
+                }
+            }, 1000);
+            
+            // Kapat butonu event listener'ı
+            closeAdBtn.onclick = function() {
+                adModal.style.display = 'none';
+                closeAdBtn.style.display = 'none';
+                clearInterval(adCountdownInterval);
+            };
+        }
+        
+        function rewardUserForAd() {
+            if (!currentUser) return;
+            
+            // Kullanıcıya ödül ver
+            currentUser.balanceUSD += USD_PER_AD;
+            currentUser.adsWatchedToday += 1;
+            currentUser.totalAdsWatchedLifetime = (currentUser.totalAdsWatchedLifetime || 0) + 1;
+            
+            // Kullanıcıyı kaydet ve UI'ı güncelle
+            saveUserStateLocalOrFirebase();
+            
+            const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
+            showToast(`+${earnedTRX} TRX earned!`);
+            
+            // Telegram'a bildirim gönder
+            sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
+        }
 
         // --- FIREBASE DATA HANDLING ---
 
@@ -493,6 +612,9 @@
                 watchBtn.disabled = (adsLeft <= 0);
                 watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${earnedTRX} TRX` : `Daily Limit Reached`;
             }
+            
+            // Profil fotoğrafını yükle
+            loadProfilePicture();
         }
 
         function navigateTo(page) {
@@ -512,7 +634,7 @@
                 <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ad</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Watch an advertisement daily and earn **${earnedTRX} TRX** (worth $${USD_PER_AD.toFixed(3)}). You have **${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}** ads left today.
+                        Watch an advertisement daily and earn <strong>${earnedTRX} TRX</strong> (worth $${USD_PER_AD.toFixed(3)}). You have <strong>${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}</strong> ads left today.
                     </p>
                     <button class="btn btn-primary" id="watchDailyAdBtn">
                         Watch Ad & Earn ${earnedTRX} TRX
@@ -550,7 +672,7 @@
                 <h2 class="section-title"><i class="fas fa-share-alt"></i> Refer & Earn</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Invite friends and earn **${referrerBonusTRX} TRX** for each friend who joins using your link. Your friends will also get **${refereeBonusTRX} TRX** as a welcome bonus!
+                        Invite friends and earn <strong>${referrerBonusTRX} TRX</strong> for each friend who joins using your link. Your friends will also get <strong>${refereeBonusTRX} TRX</strong> as a welcome bonus!
                     </p>
                     <div class="input-group">
                         <label class="input-label">Your Referral Code</label>
@@ -619,229 +741,9 @@
             document.getElementById('submitWithdrawalBtn')?.addEventListener('click', handleWithdrawal);
         }
 
-        // --- ADMIN PANEL (Mobil Uyumlu) ---
-        async function renderAdminPanel() {
-            document.getElementById('mainAppContent').style.display = 'none';
-            const adminPanelContent = document.getElementById('adminPanelContent');
-            adminPanelContent.style.display = 'block';
-            
-            adminPanelContent.innerHTML = `
-                <div class="admin-container">
-                    <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
-                    <button class="btn btn-secondary" id="backToAppBtn" style="margin-bottom: 20px;"><i class="fas fa-arrow-left"></i> Back to App</button>
-                    
-                    <div class="admin-message" id="adminMessage"></div>
-                    
-                    <h2 style="color: var(--primary-color); margin-top: 30px; font-size: 1.2rem;">Users</h2>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Balance</th>
-                                    <th>Ads Today</th>
-                                    <th>Total Ads</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminUsersTableBody">
-                                <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <h2 style="color: var(--primary-color); margin-top: 30px; font-size: 1.2rem;">Pending Withdrawals</h2>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>User ID</th>
-                                    <th>Wallet</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminWithdrawalsTableBody">
-                                <tr><td colspan="5" style="text-align: center;">Loading withdrawals...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('backToAppBtn').addEventListener('click', () => {
-                document.getElementById('mainAppContent').style.display = 'block';
-                adminPanelContent.style.display = 'none';
-                navigateTo('home');
-            });
-            
-            await loadAdminUsers();
-            await loadAdminWithdrawals();
-        }
-
-        async function loadAdminUsers() {
-            if (!db) return;
-            try {
-                const snapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(50).get();
-                const tbody = document.getElementById('adminUsersTableBody');
-                tbody.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users found</td></tr>';
-                    return;
-                }
-                
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const balanceTRX = convertUSDToTRX(user.balanceUSD).toFixed(4);
-                    const adsLeft = ADS_PER_DAY_LIMIT - user.adsWatchedToday;
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.telegramId}</td>
-                        <td>${user.name}</td>
-                        <td>${balanceTRX} TRX</td>
-                        <td>${user.adsWatchedToday}/${ADS_PER_DAY_LIMIT} (${adsLeft} left)</td>
-                        <td>${user.totalAdsWatchedLifetime || 0}</td>
-                        <td>
-                            <button class="btn-action deduct" data-userid="${user.telegramId}" data-username="${user.name}">Deduct</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                document.querySelectorAll('.btn-action.deduct').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-userid');
-                        const userName = this.getAttribute('data-username');
-                        handleDeductBalance(userId, userName);
-                    });
-                });
-                
-            } catch (error) {
-                console.error("Error loading admin users:", error);
-                document.getElementById('adminUsersTableBody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Error loading users</td></tr>';
-            }
-        }
-
-        async function loadAdminWithdrawals() {
-            if (!db) return;
-            try {
-                const snapshot = await db.collection('withdrawals')
-                    .where('status', '==', 'pending')
-                    .orderBy('requestedAt', 'desc')
-                    .limit(50)
-                    .get();
-                    
-                const tbody = document.getElementById('adminWithdrawalsTableBody');
-                tbody.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No pending withdrawals</td></tr>';
-                    return;
-                }
-                
-                snapshot.forEach(doc => {
-                    const withdrawal = doc.data();
-                    const date = withdrawal.requestedAt ? withdrawal.requestedAt.toDate().toLocaleDateString() : 'Unknown';
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${withdrawal.userId}</td>
-                        <td>${withdrawal.walletAddress}</td>
-                        <td>${withdrawal.amountTRX} TRX</td>
-                        <td>${date}</td>
-                        <td>
-                            <button class="btn-action" data-withdrawalid="${doc.id}" data-userid="${withdrawal.userId}" data-amount="${withdrawal.amountTRX}" data-wallet="${withdrawal.walletAddress}">Complete</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                document.querySelectorAll('#adminWithdrawalsTableBody .btn-action').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const withdrawalId = this.getAttribute('data-withdrawalid');
-                        const userId = this.getAttribute('data-userid');
-                        const amount = this.getAttribute('data-amount');
-                        const wallet = this.getAttribute('data-wallet');
-                        handleCompleteWithdrawal(withdrawalId, userId, amount, wallet);
-                    });
-                });
-                
-            } catch (error) {
-                console.error("Error loading admin withdrawals:", error);
-                document.getElementById('adminWithdrawalsTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading withdrawals</td></tr>';
-            }
-        }
-
-        function handleDeductBalance(userId, userName) {
-            const amount = prompt(`Enter TRX amount to deduct from ${userName} (ID: ${userId}):`);
-            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return;
-            
-            const amountUSD = parseFloat(amount) * currentTRXPrice;
-            
-            if (!db) return;
-            const userRef = db.collection('users').doc(String(userId));
-            
-            db.runTransaction(async (transaction) => {
-                return transaction.get(userRef).then(doc => {
-                    if (!doc.exists) throw "User does not exist!";
-                    
-                    const userData = doc.data();
-                    const newBalanceUSD = Math.max(0, userData.balanceUSD - amountUSD);
-                    
-                    transaction.update(userRef, { balanceUSD: newBalanceUSD });
-                    return { oldBalance: userData.balanceUSD, newBalance: newBalanceUSD };
-                });
-            }).then(result => {
-                showAdminMessage(`Deducted ${amount} TRX ($${amountUSD.toFixed(4)}) from ${userName}. Balance: ${convertUSDToTRX(result.oldBalance).toFixed(4)} → ${convertUSDToTRX(result.newBalance).toFixed(4)} TRX`, 'success');
-                loadAdminUsers();
-            }).catch(error => {
-                console.error("Transaction failed: ", error);
-                showAdminMessage(`Failed to deduct balance: ${error}`, 'error');
-            });
-        }
-
-        async function handleCompleteWithdrawal(withdrawalId, userId, amount, wallet) {
-            if (!confirm(`Complete withdrawal of ${amount} TRX to ${wallet}?`)) return;
-            
-            if (!db) return;
-            const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
-            const userRef = db.collection('users').doc(String(userId));
-            
-            try {
-                await db.runTransaction(async (transaction) => {
-                    const withdrawalDoc = await transaction.get(withdrawalRef);
-                    if (!withdrawalDoc.exists) throw "Withdrawal request not found!";
-                    if (withdrawalDoc.data().status !== 'pending') throw "Withdrawal already processed!";
-                    
-                    const userDoc = await transaction.get(userRef);
-                    if (!userDoc.exists) throw "User not found!";
-                    
-                    transaction.update(withdrawalRef, { status: 'completed', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    
-                    showAdminMessage(`Withdrawal of ${amount} TRX to ${wallet} marked as completed.`, 'success');
-                    loadAdminWithdrawals();
-                });
-            } catch (error) {
-                console.error("Withdrawal completion failed: ", error);
-                showAdminMessage(`Failed to complete withdrawal: ${error}`, 'error');
-            }
-        }
-
-        function showAdminMessage(message, type = 'info') {
-            const msgEl = document.getElementById('adminMessage');
-            msgEl.textContent = message;
-            msgEl.className = `admin-message admin-${type}`;
-            msgEl.style.display = 'block';
-            setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
-        }
-
         // --- EVENT HANDLERS ---
 
-        async function handleWatchDailyAd() {
+        function handleWatchDailyAd() {
             if (!currentUser) return;
             
             const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
@@ -850,42 +752,22 @@
                 return;
             }
             
-            const watchBtn = document.getElementById('watchDailyAdBtn');
-            watchBtn.disabled = true;
-            watchBtn.textContent = 'Loading Ad...';
-            
-            try {
-                // Adexora reklam gösterimi
-                if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
-                    // Reklam gösteriminden önce modal overlay'i göster
-                    const adModal = document.getElementById('adModal');
-                    adModal.style.display = 'block';
-                    
-                    // Adexora reklamını göster
+            // Adexora reklamını dene
+            if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
+                try {
                     window[ADEXORA_AD_FUNCTION_NAME]();
-                    
-                    // Reklam izleme işlemi başarılı olduğunda
-                    currentUser.balanceUSD += USD_PER_AD;
-                    currentUser.adsWatchedToday += 1;
-                    currentUser.totalAdsWatchedLifetime = (currentUser.totalAdsWatchedLifetime || 0) + 1;
-                    
-                    saveUserStateLocalOrFirebase();
-                    
-                    // Modal overlay'i gizle
+                    // Reklam gösterildikten sonra ödül ver
                     setTimeout(() => {
-                        adModal.style.display = 'none';
-                    }, 2000);
-                    
-                    showToast(`+${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX earned!`);
-                } else {
-                    throw new Error("Ad provider not available");
+                        rewardUserForAd();
+                    }, 1000);
+                } catch (error) {
+                    console.error("Adexora ad error:", error);
+                    // Adexora çalışmazsa simülasyon reklam göster
+                    showAdAndReward();
                 }
-            } catch (error) {
-                console.error("Error showing ad:", error);
-                showToast('Failed to load ad. Please try again.');
-            } finally {
-                watchBtn.disabled = (adsLeft - 1) <= 0;
-                watchBtn.textContent = (adsLeft - 1) > 0 ? `Watch Ad & Earn ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX` : `Daily Limit Reached`;
+            } else {
+                // Adexora yoksa simülasyon reklam göster
+                showAdAndReward();
             }
         }
 
@@ -946,6 +828,32 @@
             }
         }
 
+        function sendToTelegram(message, isSilent) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const payload = {
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'MarkdownV2',
+                disable_notification: isSilent,
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => console.error("Telegram API Error:", e));
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeIcon = document.getElementById('themeToggle').querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                themeIcon.className = 'fas fa-sun';
+            }
+        }
+
         // --- INITIALIZATION ---
 
         async function initApp() {
@@ -987,16 +895,6 @@
                 console.error("App Initialization Error:", error);
                 loadingError.textContent = `Initialization Error: ${error.message}. Please restart the bot or contact support.`;
                 loadingError.style.display = 'block';
-            }
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const themeIcon = document.getElementById('themeToggle').querySelector('i');
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.className = 'fas fa-moon';
-            } else {
-                themeIcon.className = 'fas fa-sun';
             }
         }
 
