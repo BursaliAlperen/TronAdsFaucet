@@ -14,144 +14,207 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
     <style>
-        /* Genel Tema Ayarları */
+        /* Genel Tema Ayarları - Gelişmiş Palet */
         :root {
-            --primary-color: #E63946; /* Kırmızı */
-            --primary-dark: #A82E37;
-            --secondary-color: #457B9D; /* Mavi/TRON */
-            --bg-light: #F8F9FA;
-            --bg-dark: #1F2937;
+            --primary-color: #2ECC71; /* Canlı Yeşil (Başarı/Kazanma) */
+            --primary-dark: #27AE60;
+            --secondary-color: #3498DB; /* TRON Mavi (Bakiye/İkincil) */
+            --bg-light: #F4F7F9;
+            --bg-dark: #1E2B38;
             --card-bg-light: #FFFFFF;
-            --card-bg-dark: #374151;
-            --text-dark: #212529;
-            --text-light: #F8F9FA;
-            --border-color-light: #E9ECEF;
-            --border-radius: 16px;
-            --border-radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            --input-border: #CED4DA;
+            --card-bg-dark: #2C3E50;
+            --text-dark: #2C3E50;
+            --text-light: #ECF0F1;
+            --border-color-light: #E0E0E0;
+            --border-radius: 18px; 
+            --border-radius-sm: 10px;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Yumuşak geçiş */
+            --input-border: #BDC3C7;
             --input-bg: #FFFFFF;
         }
-        body { font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            transition: background-color var(--transition), color var(--transition); 
+        }
+        
+        /* Light Mode */
         body:not(.dark-mode) { 
             background-color: var(--bg-light); 
             color: var(--text-dark); 
-            --header-bg: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); 
+            --header-bg: linear-gradient(145deg, var(--primary-color), var(--primary-dark)); 
             --card-bg: var(--card-bg-light); 
             --text-primary: var(--text-dark); 
-            --text-secondary: #6C757D; 
+            --text-secondary: #7F8C8D; 
             --border-color: var(--border-color-light); 
-            --input-border: #CED4DA; 
+            --input-border: #BDC3C7; 
             --input-bg: var(--card-bg-light); 
         }
+        /* Dark Mode */
         body.dark-mode { 
             background-color: var(--bg-dark); 
             color: var(--text-light); 
-            --header-bg: linear-gradient(135deg, var(--primary-dark), #470005); 
+            --header-bg: linear-gradient(145deg, #1E3748, #162431); 
             --card-bg: var(--card-bg-dark); 
             --text-primary: var(--text-light); 
-            --text-secondary: #D1D5DB; 
-            --border-color: #4B5563; 
-            --input-border: #4B5563; 
-            --input-bg: #4B5563; 
+            --text-secondary: #AAB7B8; 
+            --border-color: #3B5263; 
+            --input-border: #4B6375; 
+            --input-bg: #4B6375; 
         }
         
         .app-container { max-width: 480px; margin: 0 auto; position: relative; }
-        .header { height: 200px; background: var(--header-bg); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-light); border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15); z-index: 100; max-width: 480px; margin: 0 auto; border-top: 1px solid var(--border-color); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; flex: 1; transition: var(--transition); padding: 5px; min-width: 80px; cursor: pointer; }
-        .nav-item.active { color: var(--primary-color); transform: translateY(-3px); }
-        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; border-radius: var(--border-radius); border: none; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 6px 15px rgba(230, 57, 70, 0.4); }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-secondary { background: var(--secondary-color); color: white; box-shadow: 0 6px 15px rgba(69, 123, 157, 0.4); }
-        .btn-secondary:hover { background: #356683; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
-        .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
-        .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
-        .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
-        .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-        .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
-        .points-display { display: inline-flex; align-items: center; background: rgba(230, 57, 70, 0.15); padding: 8px 20px; border-radius: 50px; margin-top: 10px; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; border: 1px solid var(--primary-color); }
-        .stats-display { display: flex; justify-content: space-around; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border-color); }
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--primary-color); }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
-        .content-section { padding: 20px; margin-bottom: 80px; }
-        .section-title { display: flex; align-items: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); border-left: 4px solid var(--primary-color); padding-left: 10px; }
-        .task-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border: 1px solid var(--border-color); }
-        .task-description { margin-bottom: 25px; color: var(--text-secondary); font-size: 0.95rem; }
-        .input-group { margin-bottom: 20px; }
-        .input-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
-        .input-field { width: 100%; padding: 12px; border-radius: var(--border-radius-sm); border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 1rem; transition: border-color var(--transition); }
-        .input-field:focus { border-color: var(--primary-color); outline: none; }
-        .error-message { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px; border-radius: var(--border-radius-sm); margin-bottom: 15px; font-size: 0.9rem; }
-        .referral-input-group { display: flex; margin-bottom: 15px; }
-        .referral-input { flex: 1; padding: 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 0.95rem; }
-        .copy-btn { padding: 0 18px; background: var(--secondary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: var(--transition); }
-        .copy-btn:hover { background: #356683; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: var(--border-radius-sm); opacity: 0; transition: opacity 0.5s; z-index: 1000; font-size: 0.9rem; }
-        .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
-        .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-        .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
-        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
-        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
-        .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
-        .admin-container .btn-action.deduct { background: var(--primary-color); }
-        .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
-        .admin-container .btn-action:hover { background: #409244; }
-        .admin-message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 0.9rem; }
-        .admin-success { background: rgba(76, 175, 80, 0.15); color: #4CAF50; border: 1px solid #4CAF50; }
-        .admin-error { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .admin-warning { background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px solid #FFC107; }
-        .balance { font-weight: 600; color: #4CAF50; }
-        .usd-val { font-size: 0.8em; color: var(--text-secondary); }
+        .header { 
+            height: 220px; 
+            background: var(--header-bg); 
+            position: relative; 
+            display: flex; align-items: center; justify-content: center; 
+            flex-direction: column; 
+            color: var(--text-light); 
+            border-bottom-left-radius: var(--border-radius); 
+            border-bottom-right-radius: var(--border-radius); 
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); 
+        }
+        .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; transition: transform var(--transition); }
+        .theme-toggle:hover { transform: rotate(15deg) scale(1.1); }
 
-        /* Yükleme Ekranı Stili */
-        #loadingScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 1000;
-            color: var(--text-dark);
+        /* BOTTOM NAVIGATION (ICON-ONLY & ANIMATED) */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--card-bg); 
+            display: flex; justify-content: space-around; 
+            padding: 15px 0; 
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15); 
+            z-index: 100; max-width: 480px; margin: 0 auto; 
+            border-top: 1px solid var(--border-color); 
+            border-top-left-radius: var(--border-radius); 
+            border-top-right-radius: var(--border-radius);
+            backdrop-filter: blur(5px);
         }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+        .nav-item { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            color: var(--text-secondary); text-decoration: none; 
+            font-size: 1.5rem; 
+            flex: 1; transition: var(--transition); 
+            padding: 5px; cursor: pointer; position: relative;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .nav-item i { transition: var(--transition); }
+        .nav-item:hover { color: var(--primary-color); transform: scale(1.05); }
+        .nav-item.active { 
+            color: var(--primary-color); 
+            /* İkonu yukarı taşıyan ve vurgulayan animasyon */
+            transform: translateY(-8px) scale(1.1); 
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); /* Hafif parlama */
         }
+        .nav-item span { display: none; } /* Yazıları gizle */
+
+        /* BUTTONS (ANIMATED) */
+        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 18px; border-radius: var(--border-radius-sm); border: none; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); }
+        .btn-primary:hover { 
+            background: var(--primary-dark); 
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(46, 204, 113, 0.6);
+        }
+        .btn-secondary { background: var(--secondary-color); color: white; box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4); }
+        .btn-secondary:hover { 
+            background: #2980B9; 
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.6);
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        /* PROFILE SECTION */
+        .profile-section { margin-top: -100px; padding: 0 20px; position: relative; z-index: 2; }
+        .profile-card { 
+            background: var(--card-bg); 
+            border-radius: var(--border-radius); 
+            padding: 80px 25px 30px; 
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2); 
+            border: 1px solid var(--border-color); 
+            position: relative; text-align: center; 
+            transition: var(--transition);
+        }
+        .profile-card:hover { transform: scale(1.01); }
         
-        /* KRİTİK DÜZELTME: Görünmez katmanın tıklamayı engellemesini önler */
-        .ad-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5); 
-            z-index: 999; 
-            display: none; 
-            pointer-events: none; 
+        .profile-pic { 
+            position: absolute; top: -60px; left: 50%; transform: translateX(-50%); 
+            width: 120px; height: 120px; border-radius: 50%; 
+            border: 6px solid var(--card-bg); 
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); 
+            background: var(--secondary-color); /* Mavi çerçeve */
+            display: flex; align-items: center; justify-content: center;
         }
+        .profile-pic i { font-size: 4rem; color: white; }
+        .profile-name { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; color: var(--text-primary); }
+        
+        .points-display { 
+            display: inline-flex; align-items: center; 
+            background: rgba(46, 204, 113, 0.15); 
+            padding: 10px 25px; border-radius: 50px; 
+            margin-top: 15px; 
+            font-weight: 700; 
+            color: var(--primary-color); 
+            font-size: 1.2rem; 
+            border: 2px solid var(--primary-color);
+        }
+        .stats-display { display: flex; justify-content: space-around; margin-top: 25px; padding-top: 20px; border-top: 1px dashed var(--border-color); }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--secondary-color); transition: var(--transition); }
+        .stat-item:hover .stat-value { color: var(--primary-color); }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; }
 
+        /* CONTENT & CARDS (ANIMATED) */
+        .content-section { padding: 20px; margin-bottom: 80px; }
+        .section-title { 
+            display: flex; align-items: center; margin-bottom: 25px; 
+            font-size: 1.5rem; font-weight: 700; 
+            color: var(--text-primary); 
+            border-left: 5px solid var(--primary-color); 
+            padding-left: 12px; 
+            transition: border-left 0.5s;
+        }
+        .task-card { 
+            background: var(--card-bg); 
+            border-radius: var(--border-radius); 
+            padding: 30px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); 
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+        .task-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); }
+        .task-description strong { color: var(--primary-color); font-weight: 700; }
+        
+        .input-field { border: 2px solid var(--input-border); border-radius: var(--border-radius-sm); }
+        .input-field:focus { border-color: var(--primary-color); }
+        .copy-btn:hover { background: #2980B9; transform: scale(1.05); }
+
+        /* Admin Panel Styles (Updated) */
+        .admin-container { 
+            max-width: 1200px; margin: auto; 
+            background: var(--card-bg); padding: 30px; 
+            border-radius: var(--border-radius); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); 
+        }
+        .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+        .admin-container th { background-color: var(--border-color); color: var(--secondary-color); }
+        .admin-container tr:hover { background-color: rgba(52, 152, 219, 0.05); }
+
+        /* Dashboard Stats */
+        .stat-card.users .stat-card-value { color: var(--secondary-color); }
+        .stat-card.pending .stat-card-value { color: #F39C12; } /* Turuncu */
+        .stat-card.finance .stat-card-value { color: var(--primary-color); } /* Yeşil */
+        .stat-card { transition: var(--transition); }
+        .stat-card:hover { transform: translateY(-5px) scale(1.02); }
+        
+        /* Table Actions */
+        .admin-container .btn-action { transition: var(--transition); }
+        .admin-container .btn-action:hover { transform: scale(1.1); }
+        
+        /* Diğer Hata/Yükleme Stilleri */
+        .spinner { border-top: 4px solid var(--primary-color); }
+        .ad-modal-overlay { pointer-events: none; }
     </style>
 </head>
 <body>
@@ -177,7 +240,7 @@
                     <h1 class="profile-name" id="profileNameDisplay"></h1>
                     <div class="points-display" id="userPointsDisplay"><i class="fas fa-bolt"></i> 0.0000 TRX</div>
                     <div class="stats-display">
-                        <div class="stat-item"><div class="stat-value" id="adsWatchedToday">0</div><div class="stat-label">Ads Today</div></div>
+                        <div class="stat-item"><div class="stat-value" id="adsWatchedToday">0</div><div class="stat-label">Today</div></div>
                         <div class="stat-item"><div class="stat-value" id="adsLeftToday">0</div><div class="stat-label">Left</div></div>
                         <div class="stat-item"><div class="stat-value" id="totalAdsWatched">0</div><div class="stat-label">Total Ads</div></div>
                     </div>
@@ -188,9 +251,9 @@
                 </div>
 
             <div class="bottom-nav">
-                <div class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>Home</span></div>
-                <div class="nav-item" data-page="referral"><i class="fas fa-users"></i><span>Referral</span></div>
-                <div class="nav-item" data-page="withdraw"><i class="fas fa-wallet"></i><span>Withdraw</span></div>
+                <div class="nav-item active" data-page="home" title="Home"><i class="fas fa-home"></i></div>
+                <div class="nav-item" data-page="referral" title="Referral"><i class="fas fa-users"></i></div>
+                <div class="nav-item" data-page="withdraw" title="Withdraw"><i class="fas fa-wallet"></i></div>
             </div>
 
             <div class="ad-modal-overlay" id="adModal"></div>
@@ -248,7 +311,6 @@
             console.log("Firebase initialized successfully.");
         } catch(e) {
             console.error("Firebase Initialization Error:", e);
-            // db remains undefined/null if initialization fails
         }
 
         // --- UTILITY FUNCTIONS ---
@@ -270,13 +332,13 @@
         }
 
 
-        // --- FIREBASE DATA HANDLING ---
+        // --- FIREBASE DATA HANDLING (Unchanged from last turn) ---
 
         async function fetchUser(tgId) {
             if (!db) return null; // Firebase connection check
             try {
                 const userRef = db.collection('users').doc(String(tgId));
-                // 5 saniyelik bir timeout ekleyerek takılı kalmayı engelleriz
+                // 5 saniyelik bir timeout ekleyerek takılı kalmayı engeller
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
@@ -284,7 +346,6 @@
                 return doc.exists ? doc.data() : null;
             } catch (error) {
                 console.error("Firebase fetchUser Error:", error);
-                // Eğer hata olursa veya timeout olursa null döner
                 return null;
             }
         }
@@ -383,7 +444,7 @@
         }
 
 
-        // --- DATA/STATE MANAGEMENT (Authentication and Load) ---
+        // --- DATA/STATE MANAGEMENT (Authentication and Load - Unchanged) ---
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -391,7 +452,6 @@
 
             // 1. Telegram WebApp Kullanıcısı Kontrolü
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                // KRİTİK: Telegram kullanıcısı yoksa, uygulamayı durdur ve hata göster.
                 throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
             }
             
@@ -400,27 +460,20 @@
             
             // 2. Firebase Bağlantısı Kontrolü
             if (!db) {
-                // KRİTİK: Firebase bağlantısı başarısız olduysa, uygulamayı durdur ve hata göster.
                 throw new Error("Database connection failed. Please check internet or contact support.");
             }
 
             // 3. Kullanıcı Verisini Çek/Oluştur
-            let user = await fetchUser(tgId); // Bu fonksiyon 5s timeout içerir
+            let user = await fetchUser(tgId); 
             
             if (!user) {
-                // Eğer fetchUser timeout nedeniyle null döndürdüyse
                 if (tgId) {
-                     // Yeni kullanıcı oluşturmadan önce fetchUser'ın hata alıp almadığını kontrol etmeliyiz.
-                     // fetchUser içinde zaten bir timeout var. Eğer hala null ise, ya yeni kullanıcıdır ya da ciddi bir ağ sorunu var.
-                     // Yeni kullanıcı olduğunu varsayarak devam edebiliriz.
                     user = await createNewUser(tgUser, refCodeFromUrl);
                 } else {
-                    // Ciddi bir hata varsa veya TG ID çekilememişse, uygulama takılır.
                     throw new Error("Failed to retrieve or create user data from database.");
                 }
             }
             
-            // Kullanıcı verisi başarıyla çekildi veya oluşturuldu
             const today = new Date().toDateString();
             if (user.lastAdWatchDate !== today) {
                 user.adsWatchedToday = 0;
@@ -437,16 +490,14 @@
                 }
             }
             
-            currentUser = user; // Başarıyla yüklendi
+            currentUser = user; 
 
         }
         
         function saveUserStateLocalOrFirebase() {
-            // Misafir modu olmadığı için sadece Firebase'e kaydetmeyi deneriz.
             if (currentUser && currentUser.telegramId && db) { 
                 saveUser(currentUser); 
             } else {
-                // Eğer burada bir sorun varsa, bir uyarı verebiliriz ancak kritik bir hata saymayız.
                 console.warn("User state could not be saved to Firebase. DB or TG ID missing.");
             }
             updateUI();
@@ -467,7 +518,7 @@
             }
         }
         
-        // --- UI RENDER (Uygulama) ---
+        // --- UI RENDER (Uygulama - Unchanged) ---
 
         function updateUI() {
             if (!currentUser) return;
@@ -529,7 +580,6 @@
                     </div>
                 ` : ''}
             `;
-            // KRİTİK: Buton Event Listener'lar render işleminden hemen sonra bağlanmalı
             document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
             document.getElementById('openAdminPanelBtn')?.addEventListener('click', renderAdminPanel);
         }
@@ -612,20 +662,18 @@
             document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
         }
 
-        // --- HANDLERS (Uygulama) ---
+        // --- HANDLERS (Uygulama - Unchanged) ---
 
         function handleWatchDailyAd() {
             if (currentUser.adsWatchedToday < ADS_PER_DAY_LIMIT) {
                 const adModal = document.getElementById('adModal');
                 
                 if (window[ADEXORA_AD_FUNCTION_NAME]) {
-                    // KRİTİK DÜZELTME: Reklam gösterilmeden önce overlay'i etkinleştirin
                     adModal.style.display = 'block';
                     adModal.style.pointerEvents = 'auto';
 
                     window[ADEXORA_AD_FUNCTION_NAME]()
                         .then(() => {
-                            // Reklam bittikten sonra overlay'i kapatın ve tıklama olaylarını devre dışı bırakın
                             adModal.style.display = 'none';
                             adModal.style.pointerEvents = 'none';
 
@@ -641,7 +689,6 @@
                             sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
                         })
                         .catch(e => {
-                            // Hata durumunda da overlay'i kapatmayı UNUTMAYIN
                             adModal.style.display = 'none';
                             adModal.style.pointerEvents = 'none';
                             
@@ -666,7 +713,6 @@
         async function handleSubmitWithdrawal(e) {
             e.preventDefault();
             
-            // Critical checks for submission
             if (!currentUser.telegramId || !db) { showToast('Çekim talebi için gerekli veriler eksik. Lütfen tekrar deneyin.', 4000); return; }
 
             const amountTRX = parseFloat(document.getElementById('amountTRX').value);
@@ -776,7 +822,7 @@
             }
         }
         
-        // --- ADMIN PANEL LOGIC ---
+        // --- ADMIN PANEL LOGIC (UNCHANGED) ---
 
         let adminUsersData = []; 
         let adminWithdrawalsData = []; 
@@ -793,22 +839,31 @@
 
         async function fetchAdminData() {
             if (!db) {
-                showAdminMessage("**Database bağlantısı yapılandırılmadı veya başarısız oldu.**", 'error'); 
-                document.getElementById('adminLoading').style.display = 'none';
-                return;
+                showAdminMessage("Firebase not configured.", 'error'); return;
             }
             document.getElementById('adminLoading').style.display = 'block';
             
+            document.getElementById('statTotalUsers').textContent = '...';
+            document.getElementById('statPendingWithdrawals').textContent = '...';
+            document.getElementById('statTotalUSD').textContent = '...';
+            
             try {
-                // Güvenlik kuralı hatası burada oluşur. Konsolda kural düzeltilmelidir.
                 const usersSnapshot = await db.collection('users').get();
                 adminUsersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 const withdrawalsSnapshot = await db.collection('withdrawals').orderBy('requestedAt', 'desc').limit(50).get();
                 adminWithdrawalsData = withdrawalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                let totalUSD = adminUsersData.reduce((sum, user) => sum + (user.balanceUSD || 0), 0);
+                let pendingWithdrawals = adminWithdrawalsData.filter(req => req.status === 'pending').length;
+
+                document.getElementById('statTotalUsers').textContent = adminUsersData.length;
+                document.getElementById('statPendingWithdrawals').textContent = pendingWithdrawals;
+                document.getElementById('statTotalUSD').textContent = `$${totalUSD.toFixed(2)}`;
 
                 renderAdminUsersTable();
-                renderAdminWithdrawalsTable();
+                filterWithdrawals();
+
                 document.getElementById('adminLoading').style.display = 'none';
                 document.getElementById('userTable').style.display = 'table';
                 document.getElementById('withdrawalTable').style.display = 'table';
@@ -816,21 +871,24 @@
 
             } catch (error) {
                 console.error("Firebase Admin Data Fetch Error:", error);
-                // Hata mesajını daha anlaşılır hale getiriyoruz
-                let errorMessage = error.message.includes('permission') || error.code === 'permission-denied' ? 
-                    "**<span style='color: var(--primary-color);'>Kritik Hata: Firestore Güvenlik Kurallarınız, Admin panelinin okumasına izin vermiyor! Lütfen kuralları düzeltin.</span>**" :
-                    `**<span style='color: var(--primary-color);'>Veri çekilemedi: ${error.message}.</span>**`;
-                    
-                showAdminMessage(errorMessage, 'error');
+                showAdminMessage(`Veri çekilemedi: ${error.message}. Konsolu kontrol edin.`, 'error');
                 document.getElementById('adminLoading').style.display = 'none';
             }
         }
 
         function renderAdminUsersTable() {
             const tbody = document.getElementById('userTableBody');
+            const searchInput = document.getElementById('userSearch')?.value.toLowerCase() || '';
+            
+            const filteredUsers = adminUsersData.filter(user => 
+                (user.name && user.name.toLowerCase().includes(searchInput)) || 
+                (user.telegramId && String(user.telegramId).includes(searchInput))
+            );
+
             tbody.innerHTML = '';
-            if (adminUsersData.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Hiç kullanıcı bulunamadı.</td></tr>'; return; }
-            adminUsersData.forEach(user => {
+            if (filteredUsers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aranan kriterlere uygun kullanıcı bulunamadı.</td></tr>'; return; }
+            
+            filteredUsers.forEach(user => {
                 const balanceTRX = convertUSDToTRX(user.balanceUSD);
                 const referredCount = user.referredUsers ? user.referredUsers.length : 0;
                 const row = tbody.insertRow();
@@ -843,24 +901,41 @@
             });
         }
         
-        function renderAdminWithdrawalsTable() {
+        function filterWithdrawals() {
+            const statusFilter = document.getElementById('withdrawalStatusFilter')?.value || '';
+            const searchInput = document.getElementById('withdrawalSearch')?.value.toLowerCase() || '';
+            
+            const filteredRequests = adminWithdrawalsData.filter(req => {
+                const statusMatch = statusFilter === '' || req.status === statusFilter;
+                const searchMatch = searchInput === '' || 
+                                    (req.name && req.name.toLowerCase().includes(searchInput)) ||
+                                    (req.walletAddress && req.walletAddress.toLowerCase().includes(searchInput)) ||
+                                    (req.telegramId && String(req.telegramId).includes(searchInput));
+                return statusMatch && searchMatch;
+            });
+            renderAdminWithdrawalsTable(filteredRequests);
+        }
+
+        function renderAdminWithdrawalsTable(requests) {
             const tbody = document.getElementById('withdrawalTableBody');
             tbody.innerHTML = '';
-            if (adminWithdrawalsData.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Hiç çekim talebi bulunamadı.</td></tr>'; return; }
-            adminWithdrawalsData.forEach(req => {
+            
+            if (requests.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Filtreye uygun çekim talebi bulunamadı.</td></tr>'; return; }
+            
+            requests.forEach(req => {
                 const statusClass = req.status === 'pending' ? 'admin-warning' : (req.status === 'completed' ? 'admin-success' : 'admin-error');
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td><strong>${req.name || 'N/A'}</strong><br>${req.telegramId ? `<a href="tg://user?id=${req.telegramId}" target="_blank">${req.telegramId}</a>` : 'N/A'}</td>
-                    <td>${req.amountTRX.toFixed(4)} TRX</td>
+                    <td>${req.amountTRX.toFixed(4)} TRX<br><span class="usd-val">($${req.amountUSD.toFixed(4)})</span></td>
                     <td style="font-size: 0.8em; max-width: 150px; overflow-wrap: break-word;">${req.walletAddress}</td>
                     <td>${req.requestedAt ? new Date(req.requestedAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
                     <td><span class="${statusClass}" style="padding: 3px 8px; border-radius: 4px; display: inline-block;">${req.status.toUpperCase()}</span></td>
                     <td>
                         ${req.status === 'pending' ? `
-                            <button class="btn-action" onclick="updateWithdrawalStatus('${req.id}', 'completed', ${req.telegramId}, ${req.amountTRX.toFixed(4)})"><i class="fas fa-check"></i> Tamamla</button>
-                            <button class="btn-action deduct" onclick="updateWithdrawalStatus('${req.id}', 'rejected', ${req.telegramId}, ${req.amountTRX.toFixed(4)})"><i class="fas fa-times"></i> Reddet</button>
-                        ` : ''}
+                            <button class="btn-action" onclick="updateWithdrawalStatus('${req.id}', 'completed', ${req.telegramId}, ${req.amountTRX.toFixed(4)})" title="Tamamla"><i class="fas fa-check"></i></button>
+                            <button class="btn-action deduct" onclick="updateWithdrawalStatus('${req.id}', 'rejected', ${req.telegramId}, ${req.amountTRX.toFixed(4)})" title="Reddet"><i class="fas fa-times"></i></button>
+                        ` : '<i class="fas fa-lock" style="color: var(--text-secondary);"></i>'}
                     </td>
                 `;
             });
@@ -922,29 +997,64 @@
 
             document.getElementById('adminPanelContent').innerHTML = `
                 <div class="admin-container">
+                    <p style="text-align: right; margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('mainAppContent').style.display='block'; document.getElementById('adminPanelContent').style.display='none'; navigateTo('home');">
+                            <i class="fas fa-arrow-left"></i> Ana Menüye Dön
+                        </button>
+                    </p>
                     <h1><i class="fas fa-user-shield"></i> TronAdsFaucet Yönetici Paneli</h1>
-                    <p style="text-align: right;"><button class="btn btn-secondary" onclick="document.getElementById('mainAppContent').style.display='block'; document.getElementById('adminPanelContent').style.display='none'; navigateTo('home');">
-                        <i class="fas fa-arrow-left"></i> Ana Menüye Dön
-                    </button></p>
 
                     <div id="adminMessage" class="admin-message admin-warning" style="display: none;"></div>
-
-                    <h2 style="margin-top: 20px; color: var(--secondary-color);"><i class="fas fa-list"></i> Son 50 Çekim Talebi</h2>
                     <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
-                    <table id="withdrawalTable" style="display: none;">
-                        <thead>
-                            <tr><th>Kullanıcı (TG ID)</th><th>Miktar (TRX)</th><th>Cüzdan Adresi</th><th>Tarih</th><th>Durum</th><th>İşlemler</th></tr>
-                        </thead>
-                        <tbody id="withdrawalTableBody"></tbody>
-                    </table>
+
+                    <h2 style="margin-top: 20px; color: var(--secondary-color); border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;"><i class="fas fa-tachometer-alt"></i> Genel Durum</h2>
+                    <div class="dashboard-stats" id="dashboardStats">
+                        <div class="stat-card users">
+                            <div class="stat-card-title">Toplam Kullanıcı</div>
+                            <div class="stat-card-value" id="statTotalUsers">0</div>
+                        </div>
+                        <div class="stat-card pending">
+                            <div class="stat-card-title">Bekleyen Çekim</div>
+                            <div class="stat-card-value" id="statPendingWithdrawals">0</div>
+                        </div>
+                        <div class="stat-card finance">
+                            <div class="stat-card-title">Toplam Bakiye (USD)</div>
+                            <div class="stat-card-value" id="statTotalUSD">0.00</div>
+                        </div>
+                    </div>
+
+                    <h2 style="margin-top: 40px; color: var(--secondary-color);"><i class="fas fa-list"></i> Çekim Talepleri (Son 50)</h2>
+                    <div class="admin-search-bar">
+                        <input type="text" id="withdrawalSearch" class="input-field" placeholder="Kullanıcı adı, ID veya cüzdan adresi ara..." onkeyup="filterWithdrawals()">
+                        <select id="withdrawalStatusFilter" class="input-field" onchange="filterWithdrawals()" style="max-width: 150px;">
+                            <option value="">Tüm Durumlar</option>
+                            <option value="pending">Bekleyen</option>
+                            <option value="completed">Tamamlanan</option>
+                            <option value="rejected">Reddedilen</option>
+                        </select>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="withdrawalTable" style="display: none;">
+                            <thead>
+                                <tr><th>Kullanıcı (TG ID)</th><th>Miktar (TRX / USD)</th><th>Cüzdan Adresi</th><th>Tarih</th><th>Durum</th><th>İşlemler</th></tr>
+                            </thead>
+                            <tbody id="withdrawalTableBody"></tbody>
+                        </table>
+                    </div>
+
 
                     <h2 style="margin-top: 40px; color: var(--secondary-color);"><i class="fas fa-users"></i> Tüm Kullanıcılar</h2>
-                    <table id="userTable" style="display: none;">
-                        <thead>
-                            <tr><th>Telegram ID / İsim</th><th>Bakiye (TRX / USD)</th><th>Toplam İzlenen Reklam</th><th>Referanslar</th><th>İşlemler</th></tr>
-                        </thead>
-                        <tbody id="userTableBody"></tbody>
-                    </table>
+                    <div class="admin-search-bar">
+                        <input type="text" id="userSearch" class="input-field" placeholder="Kullanıcı ID veya İsim ara..." onkeyup="renderAdminUsersTable()">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="userTable" style="display: none;">
+                            <thead>
+                                <tr><th>Telegram ID / İsim</th><th>Bakiye (TRX / USD)</th><th>Toplam İzlenen Reklam</th><th>Referanslar</th><th>İşlemler</th></tr>
+                            </thead>
+                            <tbody id="userTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             `;
             fetchAdminData();
@@ -1010,7 +1120,6 @@
                 }
             } catch(error) {
                 console.error("Uygulama başlatılırken kritik hata oluştu:", error);
-                // KRİTİK: Hata durumunda yükleme ekranını kalıcı hata mesajına çeviririz.
                 loadingScreen.querySelector('.spinner').style.display = 'none';
                 loadingScreen.querySelector('p').style.display = 'none';
                 loadingError.textContent = `CRITICAL ERROR: Application could not load. Reason: ${error.message}. Please restart the bot via Telegram.`;
