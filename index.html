@@ -70,7 +70,8 @@
         .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
         .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
         .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
+        /* Logo/Görünüm İyileştirmesi için Shadow Güncellendi */
+        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); background: var(--primary-color); }
         .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
         .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
         .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
@@ -96,9 +97,21 @@
         .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
         .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
-        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 700px; /* Ensures horizontal scroll on small screens */ }
+        .admin-container table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 0; /* Düzeltme: Kaydırma kabına alındığı için margin-top kaldırıldı. */ 
+            min-width: 700px; /* Ensures horizontal scroll on small screens */ 
+        }
         .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
-        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
+        .admin-container th { 
+            background-color: var(--border-color); 
+            color: var(--primary-color); 
+            font-weight: 700; 
+            position: sticky; /* Düzeltme: Dikey kaydırmada başlıkları sabitlemek için eklendi. */
+            top: 0; 
+            z-index: 10; 
+        }
         .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
         .admin-container .btn-action.deduct { background: var(--primary-color); }
         .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
@@ -110,9 +123,13 @@
         .balance { font-weight: 600; color: #4CAF50; }
         .usd-val { font-size: 0.8em; color: var(--text-secondary); }
 
-        /* New Style for Scrollable Admin Tables */
+        /* New Style for Scrollable Admin Tables - Kaydırma özelliği burada aktif */
         .scroll-container {
             overflow-x: auto;
+            /* Dikey kaydırma eklendi */
+            max-height: 450px; /* Tablolar için sabit maksimum yükseklik */
+            overflow-y: auto;  /* Dikey kaydırma çubuğu */
+            
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius-sm);
             margin-top: 15px;
@@ -587,8 +604,8 @@
             `;
             document.getElementById('copyReferralCodeBtn')?.addEventListener('click', () => { copyToClipboard(document.getElementById('referralCodeDisplay').value, 'Code copied!'); });
             document.getElementById('shareReferralLinkBtn')?.addEventListener('click', () => { 
-                // Using Telegram.WebApp.openTelegramLink for better WebApp integration
-                Telegram.WebApp.openTelegramLink(telegramShareUrl.replace('https://t.me/share/url?url=', ''));
+                // DÜZELTME: openLink metodu ile standart Telegram paylaşım URL'si kullanıldı.
+                Telegram.WebApp.openLink(telegramShareUrl);
             });
         }
 
