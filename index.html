@@ -385,14 +385,24 @@
             if (!db) return null;
             try {
                 const userRef = db.collection('users').doc(String(tgId));
+                // Timeout is good practice but ensure Firestore is available and rules allow read.
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
                 
-                return doc.exists ? doc.data() : null;
+                // Check if doc exists and return data
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log(`User with ID ${tgId} not found. Will create new user.`);
+                    return null;
+                }
+
             } catch (error) {
+                // If the fetch fails (network, rules, timeout), it's caught here.
                 console.error("Firebase fetchUser Error:", error);
-                return null;
+                // The error is now thrown, which will be caught in loadUserState to show an error screen.
+                throw new Error(`Failed to fetch user data: ${error.message}`); 
             }
         }
 
@@ -403,6 +413,7 @@
                 await userRef.set(user, { merge: true });
             } catch (error) {
                 console.error("Firebase saveUser Error:", error);
+                showToast("Error: Could not save data to Firebase.", 5000);
             }
         }
         
@@ -425,6 +436,7 @@
             if (refCodeFromUrl && db) { 
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
+                    // Referral applied only if user is new or hasn't been referred yet (handled in loadUserState)
                     await applyReferral(newUser, referrer);
                     newUser.referredBy = referrer.referralCode; 
                 }
@@ -454,6 +466,7 @@
         async function applyReferral(refereeUser, referrerUser) {
             if (!db) return; 
             try {
+                // Referee receives bonus instantly (will be saved with the new user object or later)
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
                 
                 const referrerRef = db.collection('users').doc(String(referrerUser.telegramId));
@@ -478,7 +491,8 @@
                 showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonus from referral!`);
             } catch (error) {
                  console.error("Firebase applyReferral Error:", error);
-                 refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD;
+                 // Revert referee bonus if transaction failed
+                 refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD; 
                  return false;
             }
             return true;
@@ -494,12 +508,15 @@
                 });
             } catch (error) {
                  console.error("Firebase submitWithdrawalRequest Error:", error);
+                 showToast("Error submitting withdrawal request.", 5000);
             }
         }
 
         async function fetchWithdrawals() {
             if (!db) return [];
             try {
+                // ⚠️ CRITICAL NOTE: This query requires a Firestore Composite Index on the 'withdrawals' collection
+                // (status ASC, requestedAt DESC). Without this index, the query will fail silently and return no data.
                 const snapshot = await db.collection('withdrawals')
                     .where('status', '==', 'pending')
                     .orderBy('requestedAt', 'desc')
@@ -511,6 +528,7 @@
                 }));
             } catch (error) {
                 console.error("Firebase fetchWithdrawals Error:", error);
+                showToast("Error fetching withdrawal requests (Admin). Check Console/Indexes.", 6000);
                 return [];
             }
         }
@@ -534,7 +552,8 @@
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
-            const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
+            // Check both 'start' and 'ref' for backwards compatibility/flexibility
+            const refCodeFromUrl = urlParams.get('start')?.split(' ')[0] || urlParams.get('ref'); 
 
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
                 throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
@@ -553,6 +572,7 @@
                 user = await createNewUser(tgUser, refCodeFromUrl);
             }
             
+            // Daily reset logic
             const today = new Date().toDateString();
             if (user.lastAdWatchDate !== today) {
                 user.adsWatchedToday = 0;
@@ -560,6 +580,7 @@
                 await saveUser(user); 
             }
             
+            // Check for referral if not already referred
             if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
@@ -567,6 +588,8 @@
                     if(success) {
                         user.referredBy = referrer.referralCode; 
                         await saveUser(user); 
+                    } else {
+                        console.warn("Referral link application failed due to transaction error.");
                     }
                 }
             }
@@ -574,13 +597,13 @@
             currentUser = user; 
         }
         
-        function saveUserStateLocalOrFirebase() {
+        async function saveUserStateLocalOrFirebase() {
             if (currentUser && currentUser.telegramId && db) { 
-                saveUser(currentUser); 
+                await saveUser(currentUser); // Wait for save operation to complete
             } else {
                 console.warn("User state could not be saved to Firebase. DB or TG ID missing.");
             }
-            updateUI();
+            updateUI(); // Update UI after saving the state
         }
 
         async function fetchTRXPrice() {
@@ -602,7 +625,9 @@
 
         function updateUI() {
             if (!currentUser) return;
-            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
+            // Handle case where balanceUSD might be undefined or null
+            const balanceUSD = currentUser.balanceUSD || 0; 
+            const balanceTRX = convertUSDToTRX(balanceUSD).toFixed(4);
             
             profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
             
@@ -611,13 +636,14 @@
 
             userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
             
-            adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
-            adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
-            totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime;
+            // Use logical OR for null/undefined fields
+            adsWatchedTodayEl.textContent = currentUser.adsWatchedToday || 0;
+            adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0));
+            totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime || 0;
 
             const watchBtn = document.getElementById('watchDailyAdBtn');
             if (watchBtn) {
-                const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
+                const adsLeft = ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0);
                 const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
                 watchBtn.disabled = (adsLeft <= 0);
                 watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${earnedTRX} TRX` : `Daily Limit Reached`;
@@ -643,7 +669,7 @@
                 <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ad</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Watch an advertisement daily and earn <strong>${earnedTRX} TRX</strong> (worth $${USD_PER_AD.toFixed(3)}). You have <strong>${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}</strong> ads left today.
+                        Watch an advertisement daily and earn <strong>${earnedTRX} TRX</strong> (worth $${USD_PER_AD.toFixed(3)}). You have <strong>${Math.max(0, ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0))}</strong> ads left today.
                     </p>
                     <button class="btn btn-primary" id="watchDailyAdBtn">
                         Watch Ad & Earn ${earnedTRX} TRX
@@ -745,7 +771,8 @@
         }
 
         function renderWithdrawPage() {
-            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
+            const balanceUSD = currentUser.balanceUSD || 0;
+            const balanceTRX = convertUSDToTRX(balanceUSD).toFixed(4);
             const minWithdrawTRX = MIN_WITHDRAW_TRX;
             const canWithdraw = parseFloat(balanceTRX) >= minWithdrawTRX;
             
@@ -753,7 +780,7 @@
                 <h2 class="section-title"><i class="fas fa-wallet"></i> Withdraw TRX</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Your current balance: <span class="balance">${balanceTRX} TRX</span> <span class="usd-val">($${currentUser.balanceUSD.toFixed(2)})</span>.
+                        Your current balance: <span class="balance">${balanceTRX} TRX</span> <span class="usd-val">($${balanceUSD.toFixed(2)})</span>.
                         Minimum withdrawal amount: <strong>${minWithdrawTRX} TRX</strong>.
                         Withdrawals are processed manually within 24 hours.
                     </p>
@@ -779,10 +806,9 @@
         function handleWatchDailyAd() {
             if (!currentUser) return;
             
-            const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
+            const adsLeft = ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0);
             if (adsLeft <= 0) {
                 showToast('Daily ad limit reached. Come back tomorrow!');
-                // Konsol Uyarısı Eklendi:
                 console.warn('Daily ad limit reached. User attempted to watch ad but limit is 0.');
                 return;
             }
@@ -795,7 +821,6 @@
                 watchBtn.disabled = true; 
                 showToast("Ad loading (Adexora)... Please wait.");
                 
-                // Set a 10s timeout just in case the Adexora script completely freezes
                 const adTimeout = setTimeout(() => {
                     if (watchBtn.disabled) {
                         console.warn("Adexora ad call timed out (10s). Re-enabling button.");
@@ -807,30 +832,27 @@
 
                 window[ADEXORA_AD_FUNCTION_NAME]()
                 .then(() => {
-                    // This block runs when Adexora *believes* the ad was successfully shown.
                     clearTimeout(adTimeout);
                     rewardUserForAd();
                 })
                 .catch(error => {
-                    // This block runs if the user dismisses the ad or Adexora reports an error.
                     clearTimeout(adTimeout);
                     console.error("Adexora ad error or dismissed:", error);
                     showToast('Ad failed or was dismissed. Please try again.', 4000);
                 })
                 .finally(() => {
-                    // This re-enables the button whether the ad succeeded or failed.
                     watchBtn.disabled = false;
                     updateUI(); 
                 });
             } else {
-                // Fallback to Simulation Ad if Adexora function is not loaded (e.g., script blocked)
+                // Fallback to Simulation Ad if Adexora function is not loaded
                 console.warn("Adexora function not found. Falling back to simulation.");
                 showToast("Adexora not loaded or blocked. Simulating Ad...", 5000);
                 showAdAndRewardSimulation();
             }
         }
 
-        function handleWithdrawal() {
+        async function handleWithdrawal() {
             const walletAddress = document.getElementById('walletAddressInput').value.trim();
             const amountInput = document.getElementById('withdrawAmountInput').value;
             const amountTRX = parseFloat(amountInput);
@@ -850,7 +872,7 @@
                 return;
             }
             
-            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD);
+            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD || 0);
             if (amountTRX > balanceTRX) {
                 errorEl.textContent = `Insufficient balance. You have ${balanceTRX.toFixed(4)} TRX.`;
                 errorEl.style.display = 'block';
@@ -868,13 +890,13 @@
                 amountUSD: amountUSD
             };
             
-            submitWithdrawalRequest(withdrawalRequest);
-            saveUserStateLocalOrFirebase();
+            await submitWithdrawalRequest(withdrawalRequest);
+            await saveUserStateLocalOrFirebase();
             
             showToast(`Withdrawal request for ${amountTRX.toFixed(4)} TRX submitted!`);
             
             document.getElementById('walletAddressInput').value = '';
-            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD).toFixed(4); 
+            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD || 0).toFixed(4); 
             
             navigateTo('home');
         }
@@ -895,7 +917,7 @@
 
             if (currentUser.referredBy) {
                 messageEl.textContent = `You have already been referred by code: ${currentUser.referredBy}.`;
-                messageEl.className = 'error-message';
+                messageEl.className = 'admin-message admin-success'; // Change to success style as it's a statement
                 messageEl.style.display = 'block';
                 return;
             }
@@ -916,6 +938,16 @@
                 return;
             }
             
+            // Re-fetch current user data to ensure it's up-to-date before applying
+            const latestUser = await fetchUser(currentUser.telegramId);
+            if(latestUser.referredBy) {
+                 currentUser = latestUser;
+                 messageEl.textContent = `You have already been referred by code: ${currentUser.referredBy}.`;
+                 messageEl.className = 'admin-message admin-success';
+                 messageEl.style.display = 'block';
+                 return;
+            }
+
             const success = await applyReferral(currentUser, referrer);
             
             if (success) {
@@ -926,6 +958,7 @@
                 messageEl.className = 'admin-message admin-success';
                 messageEl.style.display = 'block';
                 
+                // Re-render to hide the input field
                 renderReferralPage(); 
             } else {
                 messageEl.textContent = 'An error occurred while applying the referral. Please try again later.';
@@ -982,7 +1015,7 @@
             adminContentEl.innerHTML = `
                 <div class="admin-container">
                     <h1>Admin Panel</h1>
-                    <p class="admin-warning" style="display:block; text-align: center;">Loading withdrawal requests...</p>
+                    <p class="admin-warning" style="display:block; text-align: center;">Loading withdrawal requests... (Ensure Firestore Index is created: withdrawals -> status ASC, requestedAt DESC)</p>
                     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                         <button class="btn btn-primary" id="closeAdminPanelBtn" style="flex: 1;">
                             <i class="fas fa-arrow-left"></i> Back to Main App
@@ -1068,6 +1101,7 @@
                         row.remove();
                         
                         if (withdrawalListEl.querySelector('tbody') && withdrawalListEl.querySelector('tbody').children.length === 0) {
+                             // Re-render if the table becomes empty
                              renderAdminPanel();
                         }
 
@@ -1096,7 +1130,7 @@
                     </p>
                     <div class="input-group">
                         <label class="input-label">JS Code to Execute</label>
-                        <textarea class="input-field" id="consoleInput" rows="5" placeholder="e.g., currentUser.balanceUSD += 10; saveUserStateLocalOrFirebase();"></textarea>
+                        <textarea class="input-field" id="consoleInput" rows="5" placeholder="e.g., currentUser.balanceUSD = 10; saveUserStateLocalOrFirebase();"></textarea>
                     </div>
                     <button class="btn btn-primary" id="executeCodeBtn">
                         <i class="fas fa-play"></i> Execute Code
@@ -1113,7 +1147,6 @@
 
             document.getElementById('executeCodeBtn').addEventListener('click', handleExecuteCode);
             document.getElementById('backToWithdrawalsBtn').addEventListener('click', () => {
-                // Rerender the main admin panel to show withdrawal requests again
                 renderAdminPanel(); 
             });
         }
@@ -1126,7 +1159,6 @@
                 // eval() is used as requested by the user to execute arbitrary code for the admin console feature.
                 const result = eval(code); // eslint-disable-line no-eval
                 
-                // Show successful toast for simple operations like balance change
                 if (code.includes('saveUserStateLocalOrFirebase')) {
                     showToast('Code executed and user state saved/UI updated!', 4000);
                 }
@@ -1161,6 +1193,7 @@
                     });
                 });
                 
+                // Initial UI update and navigation
                 updateUI();
                 navigateTo('home');
                 
