@@ -70,9 +70,8 @@
         .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
         .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
         .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); display: flex; align-items: center; justify-content: center; overflow: hidden;}
+        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
         .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
-        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
         .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
         .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
         .points-display { display: inline-flex; align-items: center; background: rgba(230, 57, 70, 0.15); padding: 8px 20px; border-radius: 50px; margin-top: 10px; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; border: 1px solid var(--primary-color); }
@@ -95,11 +94,14 @@
         .copy-btn:hover { background: #356683; }
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: var(--border-radius-sm); opacity: 0; transition: opacity 0.5s; z-index: 1000; font-size: 0.9rem; }
         .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
+        
+        /* Admin Panel Styles */
         .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
-        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .admin-table-container { max-height: 400px; overflow-y: auto; margin-top: 20px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); }
+        .admin-container table { width: 100%; border-collapse: collapse; }
         .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
-        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
+        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; position: sticky; top: 0; z-index: 10; }
         .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
         .admin-container .btn-action.deduct { background: var(--primary-color); }
         .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
@@ -211,12 +213,12 @@
         const REFERRAL_BONUS_REFERRER_USD = 0.005;
         const REFERRAL_BONUS_REFEREE_USD = 0.001;
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
-        // TELEGRAM BOT ID GÜNCELLEMESİ (ID kısmı 7354534121 yerine 8248345263 oldu)
-        const TELEGRAM_BOT_TOKEN = "8248345263:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
+        const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
         const TELEGRAM_CHAT_ID = "-1002783990004";
         const ADMIN_TELEGRAM_ID = "7904032877"; 
         const ADEXORA_AD_FUNCTION_NAME = 'showAdexora';
         const FALLBACK_TRX_PRICE = 0.12;
+        const BOT_ID = "8248345263"; // Yeni eklenen bot ID kontrolü
 
         // !!! FIREBASE CONFIGURATION - USER PROVIDED !!!
         const firebaseConfig = {
@@ -279,7 +281,7 @@
             try {
                 const userRef = db.collection('users').doc(String(tgId));
                 // Adds a 5-second timeout to prevent getting stuck
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000);
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
                 
@@ -317,7 +319,12 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // URL tabanlı referans uygulaması kaldırıldı. Kullanıcı kodu manuel girecek.
+            if (refCodeFromUrl && db) { 
+                const referrer = await getReferrerByCode(refCodeFromUrl);
+                if (referrer && referrer.telegramId !== tgId) {
+                    await applyReferral(newUser, referrer);
+                }
+            }
             
             await saveUser(newUser); 
             return newUser;
@@ -340,8 +347,8 @@
         async function applyReferral(refereeUser, referrerUser) {
             if (!db) return; 
             try {
-                // Referee bonusunu yerel olarak güncelle (daha sonra saveUser ile kaydedilecek)
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
+                refereeUser.referredBy = referrerUser.referralCode;
                 
                 const referrerRef = db.collection('users').doc(String(referrerUser.telegramId));
                 await db.runTransaction(async (transaction) => {
@@ -350,10 +357,8 @@
                     
                     const currentReferrerData = referrerDoc.data();
                     const updatedReferredUsers = currentReferrerData.referredUsers || [];
-                    
-                    // Sadece bir kez referans eklendiğinden emin ol
-                    if (!updatedReferredUsers.includes(refereeUser.telegramId)) {
-                        updatedReferredUsers.push(refereeUser.telegramId); // referans kod yerine TG ID kullanılıyor
+                    if (!updatedReferredUsers.includes(refereeUser.referralCode)) {
+                        updatedReferredUsers.push(refereeUser.referralCode);
                     }
 
                     transaction.update(referrerRef, {
@@ -362,7 +367,7 @@
                     });
                 });
 
-                showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonusu referanstan kazanıldı!`);
+                showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonus from referral!`);
             } catch (error) {
                  console.error("Firebase applyReferral Error:", error);
             }
@@ -386,7 +391,7 @@
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
-            const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref'); // Bu satır artık sadece başlangıç parametrelerini okur, otomatik uygulamaz.
+            const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
 
             // 1. Check Telegram WebApp User
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
@@ -397,13 +402,25 @@
             const tgUser = Telegram.WebApp.initDataUnsafe.user;
             const tgId = tgUser.id;
             
-            // 2. Check Firebase Connection
+            // 2. Check if user is accessing from correct bot
+            if (Telegram.WebApp.initDataUnsafe.user && Telegram.WebApp.initDataUnsafe.user.id) {
+                const webAppData = Telegram.WebApp.initDataUnsafe;
+                if (webAppData.user && webAppData.user.id.toString() !== BOT_ID) {
+                    // Check if this is a referral from the correct bot
+                    if (refCodeFromUrl) {
+                        // Allow access but don't apply referral bonus if not from correct bot
+                        console.log("Referral detected but not from correct bot, skipping bonus");
+                    }
+                }
+            }
+            
+            // 3. Check Firebase Connection
             if (!db) {
                 // **CRITICAL:** If Firebase connection failed, stop the app and show an error.
                 throw new Error("**Database connection failed. Please check internet or contact support.**");
             }
 
-            // 3. Fetch/Create User Data
+            // 4. Fetch/Create User Data
             let user = await fetchUser(tgId); // This function includes a 5s timeout
             
             if (!user) {
@@ -425,7 +442,20 @@
                 await saveUser(user); 
             }
             
-            // URL tabanlı referans kodu uygulama kısmı kaldırıldı. Kullanıcı manuel girecek.
+            // Apply referral bonus only if coming from correct bot
+            if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
+                // Check if this is a referral from the correct bot
+                if (Telegram.WebApp.initDataUnsafe.user && Telegram.WebApp.initDataUnsafe.user.id.toString() === BOT_ID) {
+                    const referrer = await getReferrerByCode(refCodeFromUrl);
+                    if (referrer && referrer.telegramId !== tgId) {
+                        await applyReferral(user, referrer);
+                        user.referredBy = referrer.referralCode; 
+                        await saveUser(user); 
+                    }
+                } else {
+                    console.log("Referral detected but not from correct bot, skipping bonus");
+                }
+            }
             
             currentUser = user; // Successfully loaded
 
@@ -463,17 +493,6 @@
             if (!currentUser) return;
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             
-            // --- START: PROFILE PICTURE LOGIC ---
-            const profilePicEl = document.getElementById('profilePic');
-            if (currentUser.photoUrl) {
-                // Eğer photoUrl varsa, içeriyi temizle ve <img> ekle
-                profilePicEl.innerHTML = `<img src="${currentUser.photoUrl}" alt="Profile Picture">`;
-            } else {
-                // Yoksa varsayılan ikonu göster
-                profilePicEl.innerHTML = '<i class="fas fa-user-circle"></i>';
-            }
-            // --- END: PROFILE PICTURE LOGIC ---
-
             profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
             
             const editNameBtn = document.getElementById('editNameBtn');
@@ -536,6 +555,8 @@
         }
 
         function renderReferralPage() {
+            const referralLink = `https://t.me/share/url?url=https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}&text=⚡ Earn TRX easily every day by watching ads with TronAdsFaucet! Click the link to join now:`;
+
             const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
             const earnedUSD = referredUsersCount * REFERRAL_BONUS_REFERRER_USD;
             const earnedTRX = convertUSDToTRX(earnedUSD).toFixed(4);
@@ -547,534 +568,490 @@
                 <h2 class="section-title"><i class="fas fa-share-alt"></i> Refer & Earn</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Arkadaşlarınızı davet edin ve her başarılı referans için **${referrerBonusTRX} TRX** (değeri $${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}) kazanın. Onlar da **${refereeBonusTRX} TRX** bonus alsın!
+                        Invite friends and earn **${referrerBonusTRX} TRX** (worth $${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}) for each successful referral. They get **${refereeBonusTRX} TRX** (worth $${REFERRAL_BONUS_REFEREE_USD.toFixed(3)}) as a welcome bonus!
                     </p>
-                    
-                    <div class="referral-container" style="margin-bottom: 30px;">
-                        <label class="input-label" style="font-size: 1rem; color: var(--primary-color);"><i class="fas fa-key"></i> Sizin Referans Kodunuz</label>
+                    <div class="input-group">
+                        <label class="input-label">Your Referral Code</label>
                         <div class="referral-input-group">
-                            <input type="text" id="referralCodeDisplay" class="referral-input" value="${currentUser.referralCode}" readonly>
-                            <button class="copy-btn" id="copyReferralCodeBtn">Kopyala</button>
+                            <input type="text" class="referral-input" id="referralCodeInput" value="${currentUser.referralCode}" readonly>
+                            <button class="copy-btn" id="copyReferralCodeBtn"><i class="fas fa-copy"></i></button>
                         </div>
                     </div>
-
-                    ${!currentUser.referredBy ? `
-                        <h3 class="section-title" style="margin-top: 30px; border-left-color: var(--secondary-color);">Referans Kodu Uygula</h3>
-                        <form id="applyReferralForm">
-                            <div class="input-group">
-                                <label for="inputRefCode" class="input-label">Arkadaşınızın Referans Kodunu Girin (Tek Kullanımlık)</label>
-                                <input type="text" id="inputRefCode" class="input-field" placeholder="ÖRNEK KOD: A1B2C3" required style="text-transform: uppercase;">
-                            </div>
-                            <div id="referralMessage" class="error-message" style="display:none;"></div>
-                            <button type="submit" class="btn btn-secondary">Kodu Uygula ve Bonus Kazan</button>
-                        </form>
-                        ` : `
-                        <p class="task-description" style="text-align: center; margin-top: 30px; color: #4CAF50; font-weight: 600;">
-                            <i class="fas fa-check-circle"></i> Başarıyla **${currentUser.referredBy}** kodu ile kayıt oldunuz ve bonusunuzu aldınız.
-                        </p>
-                    `}
-                    <div class="referral-stats stats-display" style="border-top: 1px dashed var(--border-color); padding-top: 20px; margin-top: 20px;">
-                        <div class="stat-item">
-                            <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
-                            <div class="stat-label">Toplam Referans</div>
+                    <div class="input-group">
+                        <label class="input-label">Your Referral Link</label>
+                        <div class="referral-input-group">
+                            <input type="text" class="referral-input" id="referralLinkInput" value="${referralLink}" readonly>
+                            <button class="copy-btn" id="copyReferralLinkBtn"><i class="fas fa-copy"></i></button>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value" style="color: var(--secondary-color);">${earnedTRX}</div>
-                            <div class="stat-label">Kazanılan TRX</div>
-                        </div>
+                    </div>
+                    <div class="stats-display" style="margin-top: 20px;">
+                        <div class="stat-item"><div class="stat-value">${referredUsersCount}</div><div class="stat-label">Referred</div></div>
+                        <div class="stat-item"><div class="stat-value">${earnedTRX}</div><div class="stat-label">TRX Earned</div></div>
                     </div>
                 </div>
             `;
-            // Update Event Listeners
-            document.getElementById('copyReferralCodeBtn')?.addEventListener('click', () => { copyToClipboard(document.getElementById('referralCodeDisplay').value, 'Kod kopyalandı!'); });
-            document.getElementById('applyReferralForm')?.addEventListener('submit', handleApplyReferral);
+            document.getElementById('copyReferralCodeBtn').addEventListener('click', () => {
+                copyToClipboard(currentUser.referralCode, 'Referral code copied!');
+            });
+            document.getElementById('copyReferralLinkBtn').addEventListener('click', () => {
+                copyToClipboard(referralLink, 'Referral link copied!');
+            });
         }
 
         function renderWithdrawPage() {
-            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
-            const minWithdrawTRX = MIN_WITHDRAW_TRX;
+            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
+            const balanceUSD = currentUser.balanceUSD.toFixed(3);
+            const minWithdrawTRX = MIN_WITHDRAW_TRX.toFixed(2);
+            const canWithdraw = currentUser.balanceUSD >= MIN_WITHDRAW_TRX;
 
             mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Withdrawal</h2>
+                <h2 class="section-title"><i class="fas fa-wallet"></i> Withdraw TRX</h2>
                 <div class="task-card">
-                    <p class="task-description" style="margin-bottom: 5px;">
-                        Your current balance: <strong style="color: var(--primary-color);">${currentBalanceTRX.toFixed(4)} TRX</strong> (Worth: $${currentUser.balanceUSD.toFixed(4)})
-                    </p>
                     <p class="task-description">
-                        **<span style="color: var(--primary-color);">Minimum withdrawal amount is ${minWithdrawTRX.toFixed(2)} TRX.</span>**
+                        Your current balance: <strong>${balanceTRX} TRX</strong> ($${balanceUSD}).<br>
+                        Minimum withdrawal: <strong>${minWithdrawTRX} TRX</strong>.
                     </p>
-
-                    <form id="withdrawalForm">
-                        <div class="input-group">
-                            <label for="amountTRX" class="input-label">Amount (TRX)</label>
-                            <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="walletAddress" class="input-label">TRX (TRC20) Wallet Address</label>
-                            <input type="text" id="walletAddress" class="input-field" placeholder="T..." required>
-                        </div>
-                        
-                        <div id="withdrawalMessage" class="error-message" style="display:none;"></div>
-
-                        <button type="submit" class="btn btn-primary" id="submitWithdrawalBtn">
-                            <i class="fas fa-paper-plane"></i> Request Withdrawal
-                        </button>
-                    </form>
+                    <div class="input-group">
+                        <label class="input-label">TRON Wallet Address (TRX)</label>
+                        <input type="text" class="input-field" id="walletAddressInput" placeholder="e.g., TXXXXXXXXXXXXXXXXXXXXXXXX">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Amount to Withdraw (TRX)</label>
+                        <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.01" value="${canWithdraw ? minWithdrawTRX : '0'}" ${!canWithdraw ? 'disabled' : ''}>
+                    </div>
+                    <button class="btn ${canWithdraw ? 'btn-primary' : 'btn-secondary'}" id="submitWithdrawalBtn" ${!canWithdraw ? 'disabled' : ''}>
+                        ${canWithdraw ? 'Request Withdrawal' : `Minimum ${minWithdrawTRX} TRX Required`}
+                    </button>
+                    <div id="withdrawMessage"></div>
                 </div>
             `;
-
-            document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
-        }
-
-        // --- HANDLERS (Application) ---
-
-        function handleWatchDailyAd() {
-            if (currentUser.adsWatchedToday < ADS_PER_DAY_LIMIT) {
-                const adModal = document.getElementById('adModal');
-                
-                if (window[ADEXORA_AD_FUNCTION_NAME]) {
-                    // **CRITICAL FIX:** Activate overlay before showing the ad
-                    adModal.style.display = 'block';
-                    adModal.style.pointerEvents = 'auto';
-
-                    window[ADEXORA_AD_FUNCTION_NAME]()
-                        .then(() => {
-                            // Close overlay and disable click events after the ad finishes
-                            adModal.style.display = 'none';
-                            adModal.style.pointerEvents = 'none';
-
-                            currentUser.balanceUSD += USD_PER_AD;
-                            currentUser.adsWatchedToday += 1;
-                            currentUser.totalAdsWatchedLifetime += 1;
-                            
-                            saveUserStateLocalOrFirebase(); 
-                            
-                            const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
-                            showToast(`+${earnedTRX} TRX earned!`);
-                            
-                            sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
-                        })
-                        .catch(e => {
-                            // DO NOT FORGET to close the overlay even if an error occurs
-                            adModal.style.display = 'none';
-                            adModal.style.pointerEvents = 'none';
-                            
-                            console.error("Adexora Error:", e);
-                            showToast("Ad closed or failed. Please try again.", 4000);
-                        });
-                } else {
-                    // Simulation
-                    showToast("Ad system not ready. Simulating earnings...", 3000);
-                    currentUser.balanceUSD += USD_PER_AD;
-                    currentUser.adsWatchedToday += 1;
-                    currentUser.totalAdsWatchedLifetime += 1;
-                    saveUserStateLocalOrFirebase();
-                    const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
-                    showToast(`+${earnedTRX} TRX earned! (Simulated)`);
-                }
-            } else {
-                showToast("Daily limit reached!", 3000);
+            if (canWithdraw) {
+                document.getElementById('submitWithdrawalBtn').addEventListener('click', handleWithdrawal);
             }
         }
 
-        async function handleSubmitWithdrawal(e) {
-            e.preventDefault();
-            
-            // Critical checks for submission
-            if (!currentUser.telegramId || !db) { showToast('**<span style="color: var(--primary-color);">Missing required data for withdrawal request. Please try again.</span>**', 4000); return; }
-
-            const amountTRX = parseFloat(document.getElementById('amountTRX').value);
-            const account = document.getElementById('walletAddress').value.trim();
-            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
-            const withdrawalMessageEl = document.getElementById('withdrawalMessage');
-            
-            withdrawalMessageEl.style.display = 'none';
-
-            if (isNaN(amountTRX) || amountTRX <= 0) {
-                 withdrawalMessageEl.textContent = '**<span style="color: var(--primary-color);">Please enter a valid amount.</span>**';
-                 withdrawalMessageEl.style.display = 'block';
-                 return;
+        function promptForNewName() {
+            const newName = prompt("Enter your new name:", currentUser.name);
+            if (newName && newName.trim() !== '' && newName !== currentUser.name) {
+                currentUser.name = newName.trim();
+                saveUserStateLocalOrFirebase();
             }
+        }
 
-            if (amountTRX < MIN_WITHDRAW_TRX) {
-                withdrawalMessageEl.textContent = `**<span style="color: var(--primary-color);">Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.</span>**`;
-                withdrawalMessageEl.style.display = 'block';
+
+        // --- AD WATCHING LOGIC ---
+
+        async function handleWatchDailyAd() {
+            if (!currentUser) return;
+            const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
+            if (adsLeft <= 0) {
+                showToast("You've reached your daily ad limit. Come back tomorrow!");
                 return;
             }
 
-            if (amountTRX > currentBalanceTRX) {
-                withdrawalMessageEl.textContent = `**<span style="color: var(--primary-color);">Insufficient balance. Available: ${currentBalanceTRX.toFixed(4)} TRX.</span>**`;
-                withdrawalMessageEl.style.display = 'block';
-                return;
-            }
+            const watchBtn = document.getElementById('watchDailyAdBtn');
+            watchBtn.disabled = true;
+            watchBtn.textContent = "Loading Ad...";
 
-            if (!/^T[A-Za-z1-9]{33}$/.test(account)) {
-                withdrawalMessageEl.textContent = '**<span style="color: var(--primary-color);">Please enter a valid TRX (TRC20) wallet address.</span>**';
-                withdrawalMessageEl.style.display = 'block';
-                return;
-            }
-
-            const amountUSD = amountTRX * currentTRXPrice;
+            // **CRITICAL:** Show the overlay to prevent clicks
+            const adModal = document.getElementById('adModal');
+            adModal.style.display = 'block';
 
             try {
-                const requestData = {
-                    telegramId: currentUser.telegramId, name: currentUser.name, amountTRX: amountTRX, amountUSD: amountUSD,
-                    walletAddress: account, currentTRXPrice: currentTRXPrice
-                };
-                await submitWithdrawalRequest(requestData);
-            } catch (error) {
-                console.error("Firebase Withdrawal Request Error:", error);
-                showToast("**<span style='color: var(--primary-color);'>Withdrawal failed! (Firebase Error)</span>**", 5000);
-                return;
-            }
-
-            const withdrawalDetails = `
-🚨 *𝗡𝗘𝗪 𝗧𝗥𝗫 𝗪𝗜𝗧𝗛𝗗𝗥𝗔𝗪𝗔𝗟 𝗥𝗘𝗤𝗨𝗘𝗦𝗧* 🚨
-----------------------------------------
-👤 *𝗨𝘀𝗲𝗿 𝗡𝗮𝗺𝗲:* \`${escapeMarkdown(currentUser.name)}\`
-🆔 *𝗧𝗚 𝗨𝘀𝗲𝗿 𝗜𝗗:* \`${currentUser.telegramId || 'N/A'}\`
-⚡ *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗧𝗥𝗫):* ${amountTRX.toFixed(4)}
-💵 *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗨𝗦𝗗):* $${amountUSD.toFixed(4)}
-🏦 *𝗧𝗥𝗫 𝗪𝗮𝗹𝗹𝗲𝘁:* \`${escapeMarkdown(account)}\`
-----------------------------------------
-⚖️ 𝗖𝘂𝗿𝗿𝗲𝗻𝘁 𝗧𝗥𝗫 𝗣𝗿𝗶𝗰𝗲: $${currentTRXPrice.toFixed(4)}
-📈 𝗔𝗱𝘀 𝗪𝗮𝘁𝗰𝗵𝗲𝗱: ${currentUser.totalAdsWatchedLifetime}
-🛠️ *𝗔𝗱𝗺𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻:* [Admin Contact](tg://user?id=${ADMIN_TELEGRAM_ID})
-----------------------------------------
-            `;
-            
-            sendToTelegram(withdrawalDetails, false);
-
-            currentUser.balanceUSD = parseFloat((currentUser.balanceUSD - amountUSD).toFixed(8)); 
-            saveUserStateLocalOrFirebase(); 
-            
-            mainContent.innerHTML = `
-                <div class="task-card" style="text-align: center;">
-                    <h2 style="color: #4CAF50;"><i class="fas fa-check-circle"></i> Request Sent!</h2>
-                    <p style="margin: 20px 0;">Your withdrawal request for **${amountTRX.toFixed(4)} TRX** has been successfully submitted. Your balance has been updated. The Admin will process the payment soon.</p>
-                    <div class="btn-group" style="display: flex; gap: 10px; justify-content: center;">
-                        <button class="btn btn-secondary" onclick="navigateTo('home')" style="width: auto;"><i class="fas fa-home"></i> Go Home</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function handleApplyReferral(e) {
-            e.preventDefault();
-            
-            if (currentUser.referredBy) { 
-                showToast("Zaten bir referans kodu kullandınız.", 4000);
-                return;
-            }
-
-            const inputRefCode = document.getElementById('inputRefCode').value.trim().toUpperCase();
-            const messageEl = document.getElementById('referralMessage');
-            messageEl.style.display = 'none';
-
-            if (!inputRefCode) { return; }
-            
-            if (inputRefCode === currentUser.referralCode) {
-                messageEl.textContent = 'Kendi kodunuzu kullanamazsınız!';
-                messageEl.style.display = 'block';
-                return;
-            }
-            
-            const referrer = await getReferrerByCode(inputRefCode); 
-
-            if (referrer) {
-                if (referrer.telegramId === currentUser.telegramId) {
-                    messageEl.textContent = 'Kendi kodunuzu kullanamazsınız!';
-                    messageEl.style.display = 'block';
-                    return;
+                // **CRITICAL:** Check if the ad function exists
+                if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
+                    await window[ADEXORA_AD_FUNCTION_NAME]();
+                    await creditAdReward();
+                } else {
+                    throw new Error("Ad function not found. Please check the ad script.");
                 }
-
-                // Referral işlemi başarılı
-                await applyReferral(currentUser, referrer);
-                currentUser.referredBy = inputRefCode; // Yerel durumu güncelle
-                await saveUser(currentUser); // Veritabanına kaydet
-                
-                showToast("Referans kodu başarıyla uygulandı ve bonusunuz eklendi!", 5000);
-                navigateTo('referral'); // Sayfayı yeniden yükle
-            } else {
-                // Kod bulunamadı
-                messageEl.textContent = 'Geçersiz veya bulunamayan referans kodu.';
-                messageEl.style.display = 'block';
+            } catch (error) {
+                console.error("Ad Error:", error);
+                showToast("Ad failed to load. Please try again.", 4000);
+            } finally {
+                // **CRITICAL:** Hide the overlay and re-enable the button
+                adModal.style.display = 'none';
+                watchBtn.disabled = false;
+                watchBtn.textContent = `Watch Ad & Earn ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX`;
             }
         }
-        
-        function sendToTelegram(message, isSilent) {
+
+        async function creditAdReward() {
+            if (!currentUser) return;
+            
+            const today = new Date().toDateString();
+            if (currentUser.lastAdWatchDate !== today) {
+                currentUser.adsWatchedToday = 0;
+                currentUser.lastAdWatchDate = today;
+            }
+            
+            currentUser.balanceUSD += USD_PER_AD;
+            currentUser.adsWatchedToday++;
+            currentUser.totalAdsWatchedLifetime++;
+            
+            await saveUserStateLocalOrFirebase();
+            showToast(`+${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX earned! Ads today: ${currentUser.adsWatchedToday}/${ADS_PER_DAY_LIMIT}`);
+            
+            // Send notification to Telegram channel
+            sendTelegramNotification(`👀 ${currentUser.name} watched an ad and earned ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX. Balance: ${convertUSDToTRX(currentUser.balanceUSD).toFixed(4)} TRX`);
+        }
+
+
+        // --- WITHDRAWAL HANDLING ---
+
+        async function handleWithdrawal() {
+            const walletAddress = document.getElementById('walletAddressInput').value.trim();
+            const amountInput = document.getElementById('withdrawAmountInput').value;
+            const amountTRX = parseFloat(amountInput);
+            const amountUSD = amountTRX * currentTRXPrice;
+            const messageEl = document.getElementById('withdrawMessage');
+
+            if (!walletAddress) {
+                messageEl.innerHTML = `<div class="error-message">Please enter your TRON wallet address.</div>`;
+                return;
+            }
+            if (!/^T[A-Za-z0-9]{33}$/.test(walletAddress)) {
+                messageEl.innerHTML = `<div class="error-message">Please enter a valid TRON wallet address (starts with T, 34 characters).</div>`;
+                return;
+            }
+            if (isNaN(amountTRX) || amountTRX < MIN_WITHDRAW_TRX) {
+                messageEl.innerHTML = `<div class="error-message">Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.</div>`;
+                return;
+            }
+            if (amountTRX > convertUSDToTRX(currentUser.balanceUSD)) {
+                messageEl.innerHTML = `<div class="error-message">Insufficient balance.</div>`;
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitWithdrawalBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+
+            try {
+                const withdrawalRequest = {
+                    telegramId: currentUser.telegramId,
+                    name: currentUser.name,
+                    walletAddress: walletAddress,
+                    amountTRX: amountTRX,
+                    amountUSD: amountUSD,
+                    status: 'pending'
+                };
+
+                await submitWithdrawalRequest(withdrawalRequest);
+                
+                currentUser.balanceUSD -= amountUSD;
+                await saveUserStateLocalOrFirebase();
+
+                messageEl.innerHTML = `<div style="background: rgba(76, 175, 80, 0.15); color: #4CAF50; border: 1px solid #4CAF50; padding: 10px; border-radius: var(--border-radius-sm);">
+                    Withdrawal request submitted! You will receive ${amountTRX.toFixed(4)} TRX within 24 hours.
+                </div>`;
+
+                // Send notification to Telegram channel
+                sendTelegramNotification(
+                    `💸 *Withdrawal Request*\n` +
+                    `👤 *User:* ${escapeMarkdown(currentUser.name)}\n` +
+                    `🆔 *ID:* ${currentUser.telegramId}\n` +
+                    `💰 *Amount:* ${amountTRX.toFixed(4)} TRX ($${amountUSD.toFixed(3)})\n` +
+                    `📬 *Wallet:* \`${walletAddress}\``
+                );
+
+                document.getElementById('walletAddressInput').value = '';
+                document.getElementById('withdrawAmountInput').value = MIN_WITHDRAW_TRX.toFixed(2);
+
+            } catch (error) {
+                console.error("Withdrawal Error:", error);
+                messageEl.innerHTML = `<div class="error-message">Withdrawal request failed. Please try again.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Request Withdrawal";
+            }
+        }
+
+
+        // --- TELEGRAM NOTIFICATIONS ---
+
+        function sendTelegramNotification(message) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+            
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
             const payload = {
                 chat_id: TELEGRAM_CHAT_ID,
                 text: message,
-                parse_mode: 'MarkdownV2',
-                disable_notification: isSilent,
+                parse_mode: 'MarkdownV2'
             };
 
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            }).catch(e => console.error("Telegram API Error:", e));
+            }).catch(error => console.error("Telegram notification error:", error));
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        }
 
-        function promptForNewName() {
-            const newName = prompt("Enter your new name:", currentUser.name);
-            if (newName && newName.trim().length > 0) {
-                currentUser.name = newName.trim();
-                saveUserStateLocalOrFirebase();
-                showToast("Name updated!");
-            }
-        }
-        
-        // --- ADMIN PANEL LOGIC ---
+        // --- ADMIN PANEL ---
 
-        let adminUsersData = []; 
-        let adminWithdrawalsData = []; 
-
-        function showAdminMessage(msg, type = 'warning') {
-            const msgEl = document.getElementById('adminMessage');
-            if (msgEl) {
-                msgEl.textContent = msg;
-                msgEl.className = '';
-                msgEl.classList.add('admin-message', `admin-${type}`);
-                msgEl.style.display = 'block';
-            }
-        }
-
-        async function fetchAdminData() {
-            if (!db) {
-                showAdminMessage("**Database not configured.**", 'error'); return;
-            }
-            document.getElementById('adminLoading').style.display = 'block';
+        async function renderAdminPanel() {
+            document.getElementById('mainAppContent').style.display = 'none';
+            const adminPanelContent = document.getElementById('adminPanelContent');
+            adminPanelContent.style.display = 'block';
             
-            try {
-                const usersSnapshot = await db.collection('users').get();
-                adminUsersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const withdrawalsSnapshot = await db.collection('withdrawals').orderBy('requestedAt', 'desc').limit(50).get();
-                adminWithdrawalsData = withdrawalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                renderAdminUsersTable();
-                renderAdminWithdrawalsTable();
-                document.getElementById('adminLoading').style.display = 'none';
-                document.getElementById('withdrawalTable').style.display = 'table';
-                document.getElementById('userTable').style.display = 'table';
-                document.getElementById('adminMessage').style.display = 'none';
-
-            } catch (error) {
-                console.error("Firebase Admin Data Fetch Error:", error);
-                showAdminMessage(`**<span style="color: var(--primary-color);">Could not fetch data: ${error.message}.</span>**`, 'error');
-                document.getElementById('adminLoading').style.display = 'none';
+            // Get users and withdrawals data
+            let users = [];
+            let withdrawals = [];
+            
+            if (db) {
+                try {
+                    const usersSnapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(100).get();
+                    users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    
+                    const withdrawalsSnapshot = await db.collection('withdrawals').orderBy('requestedAt', 'desc').limit(100).get();
+                    withdrawals = withdrawalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } catch (error) {
+                    console.error("Error fetching admin data:", error);
+                }
             }
-        }
-
-        function renderAdminUsersTable() {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '';
-            if (adminUsersData.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found.</td></tr>'; return; }
-            adminUsersData.forEach(user => {
-                const balanceTRX = convertUSDToTRX(user.balanceUSD);
-                const referredCount = user.referredUsers ? user.referredUsers.length : 0;
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td><strong>${user.name || 'N/A'}</strong><br>${user.telegramId ? `<a href="tg://user?id=${user.telegramId}" target="_blank">${user.telegramId}</a>` : 'N/A'}</td>
-                    <td><span class="balance">${balanceTRX.toFixed(4)} TRX</span><br><span class="usd-val">($${user.balanceUSD.toFixed(4)})</span></td>
-                    <td>${user.totalAdsWatchedLifetime || 0}</td><td>${referredCount}</td>
-                    <td><button class="btn-action deduct" onclick="deductAdminBalance('${user.id}', ${user.balanceUSD})"><i class="fas fa-minus"></i> Deduct</button></td>
-                `;
+            
+            adminPanelContent.innerHTML = `
+                <div class="admin-container">
+                    <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
+                    
+                    <div class="input-group">
+                        <button class="btn btn-primary" id="backToAppBtn"><i class="fas fa-arrow-left"></i> Back to App</button>
+                    </div>
+                    
+                    <h2><i class="fas fa-users"></i> Users (${users.length})</h2>
+                    <div class="admin-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Balance</th>
+                                    <th>Ads Today</th>
+                                    <th>Total Ads</th>
+                                    <th>Referred</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${users.map(user => `
+                                    <tr>
+                                        <td>${user.telegramId}</td>
+                                        <td>${user.name || 'N/A'}</td>
+                                        <td><span class="balance">${convertUSDToTRX(user.balanceUSD || 0).toFixed(4)} TRX</span> <span class="usd-val">($${(user.balanceUSD || 0).toFixed(3)})</span></td>
+                                        <td>${user.adsWatchedToday || 0}</td>
+                                        <td>${user.totalAdsWatchedLifetime || 0}</td>
+                                        <td>${(user.referredUsers || []).length}</td>
+                                        <td>
+                                            <button class="btn-action add" onclick="adminAddBalance('${user.telegramId}')">+</button>
+                                            <button class="btn-action deduct" onclick="adminDeductBalance('${user.telegramId}')">-</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h2 style="margin-top: 30px;"><i class="fas fa-money-bill-wave"></i> Withdrawal Requests (${withdrawals.length})</h2>
+                    <div class="admin-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Wallet</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${withdrawals.map(wd => `
+                                    <tr>
+                                        <td>${wd.name || 'N/A'} (${wd.telegramId})</td>
+                                        <td style="font-family: monospace; font-size: 0.8rem;">${wd.walletAddress}</td>
+                                        <td><span class="balance">${(wd.amountTRX || 0).toFixed(4)} TRX</span> <span class="usd-val">($${(wd.amountUSD || 0).toFixed(3)})</span></td>
+                                        <td><span class="status-${wd.status}">${wd.status}</span></td>
+                                        <td>${wd.requestedAt ? new Date(wd.requestedAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                                        <td>
+                                            ${wd.status === 'pending' ? `
+                                                <button class="btn-action" onclick="adminProcessWithdrawal('${wd.id}', 'completed')">Complete</button>
+                                                <button class="btn-action deduct" onclick="adminProcessWithdrawal('${wd.id}', 'rejected')">Reject</button>
+                                            ` : ''}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="adminMessage" class="admin-message"></div>
+                </div>
+            `;
+            
+            document.getElementById('backToAppBtn').addEventListener('click', () => {
+                document.getElementById('mainAppContent').style.display = 'block';
+                adminPanelContent.style.display = 'none';
             });
         }
-        
-        function renderAdminWithdrawalsTable() {
-            const tbody = document.getElementById('withdrawalTableBody');
-            tbody.innerHTML = '';
-            if (adminWithdrawalsData.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No withdrawal requests found.</td></tr>'; return; }
-            adminWithdrawalsData.forEach(req => {
-                const statusClass = req.status === 'pending' ? 'admin-warning' : (req.status === 'completed' ? 'admin-success' : 'admin-error');
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td><strong>${req.name || 'N/A'}</strong><br>${req.telegramId ? `<a href="tg://user?id=${req.telegramId}" target="_blank">${req.telegramId}</a>` : 'N/A'}</td>
-                    <td>${req.amountTRX.toFixed(4)} TRX</td>
-                    <td style="font-size: 0.8em; max-width: 150px; overflow-wrap: break-word;">${req.walletAddress}</td>
-                    <td>${req.requestedAt ? new Date(req.requestedAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
-                    <td><span class="${statusClass}" style="padding: 3px 8px; border-radius: 4px; display: inline-block;">${req.status.toUpperCase()}</span></td>
-                    <td>
-                        ${req.status === 'pending' ? `
-                            <button class="btn-action" onclick="updateWithdrawalStatus('${req.id}', 'completed', ${req.telegramId}, ${req.amountTRX.toFixed(4)})"><i class="fas fa-check"></i> Complete</button>
-                            <button class="btn-action deduct" onclick="updateWithdrawalStatus('${req.id}', 'rejected', ${req.telegramId}, ${req.amountTRX.toFixed(4)})"><i class="fas fa-times"></i> Reject</button>
-                        ` : ''}
-                    </td>
-                `;
-            });
-        }
 
-        async function deductAdminBalance(userId, currentUSD) {
-            if (!db) { showAdminMessage("**No database connection.**", 'error'); return; }
-            const deductionTRX = parseFloat(prompt(`User ID: ${userId}\nTRX Balance: ${convertUSDToTRX(currentUSD).toFixed(4)} TRX\n\nHow many TRX do you want to deduct:`));
+        // Admin functions
+        async function adminAddBalance(userId) {
+            const amount = prompt("Enter amount in TRX to add:");
+            if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) return;
             
-            if (isNaN(deductionTRX) || deductionTRX <= 0) { showAdminMessage("**Please enter a valid TRX amount.**", 'warning'); return; }
-
-            const deductionUSD = deductionTRX * currentTRXPrice;
-            const newUSD = currentUSD - deductionUSD;
-
-            if (newUSD < 0) { showAdminMessage("**Balance goes below zero.**", 'error'); return; }
-
-            try {
-                 await db.collection('users').doc(userId).update({ balanceUSD: parseFloat(newUSD.toFixed(8)) });
-                 showAdminMessage(`Success: ${deductionTRX.toFixed(4)} TRX deducted.`, 'success');
-                 fetchAdminData();
-            } catch (error) {
-                console.error("Balance Deduction Error:", error);
-                showAdminMessage(`**<span style="color: var(--primary-color);">Error deducting balance: ${error.message}</span>**`, 'error');
-            }
-        }
-        
-        async function updateWithdrawalStatus(withdrawalId, status, telegramId, amountTRX) {
-            if (!db) { showAdminMessage("**No database connection.**", 'error'); return; }
-            try {
-                await db.collection('withdrawals').doc(withdrawalId).update({ status: status, processedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                
-                if (status === 'rejected') {
-                    const userRef = db.collection('users').doc(String(telegramId));
+            const amountUSD = parseFloat(amount) * currentTRXPrice;
+            
+            if (db) {
+                try {
+                    const userRef = db.collection('users').doc(String(userId));
                     await db.runTransaction(async (transaction) => {
                         const userDoc = await transaction.get(userRef);
-                        if (!userDoc.exists) throw "User not found for rejection!";
+                        if (!userDoc.exists) throw "User does not exist!";
+                        
                         const userData = userDoc.data();
-                        const amountUSD = amountTRX * currentTRXPrice;
-                        transaction.update(userRef, { balanceUSD: parseFloat((userData.balanceUSD + amountUSD).toFixed(8)) });
+                        const newBalance = (userData.balanceUSD || 0) + amountUSD;
+                        
+                        transaction.update(userRef, { balanceUSD: newBalance });
                     });
-                    showAdminMessage(`Request Rejected. ${amountTRX.toFixed(4)} TRX returned.`, 'warning');
-                } else if (status === 'completed') {
-                    showAdminMessage(`Request Successfully Completed.`, 'success');
+                    
+                    showAdminMessage(`Added ${amount} TRX to user ${userId}`, 'success');
+                    setTimeout(renderAdminPanel, 1000);
+                } catch (error) {
+                    console.error("Error adding balance:", error);
+                    showAdminMessage("Failed to add balance", 'error');
                 }
-                fetchAdminData();
-            } catch (error) {
-                console.error("Withdrawal Status Update Error:", error);
-                showAdminMessage(`**<span style="color: var(--primary-color);">Error during transaction: ${error.message}</span>**`, 'error');
             }
         }
 
-        function renderAdminPanel() {
-            if (!currentUser || currentUser.telegramId != ADMIN_TELEGRAM_ID) {
-                showToast("Unauthorized Access!", 3000); navigateTo('home'); return;
+        async function adminDeductBalance(userId) {
+            const amount = prompt("Enter amount in TRX to deduct:");
+            if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) return;
+            
+            const amountUSD = parseFloat(amount) * currentTRXPrice;
+            
+            if (db) {
+                try {
+                    const userRef = db.collection('users').doc(String(userId));
+                    await db.runTransaction(async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        if (!userDoc.exists) throw "User does not exist!";
+                        
+                        const userData = userDoc.data();
+                        const newBalance = (userData.balanceUSD || 0) - amountUSD;
+                        if (newBalance < 0) throw "Insufficient balance!";
+                        
+                        transaction.update(userRef, { balanceUSD: newBalance });
+                    });
+                    
+                    showAdminMessage(`Deducted ${amount} TRX from user ${userId}`, 'success');
+                    setTimeout(renderAdminPanel, 1000);
+                } catch (error) {
+                    console.error("Error deducting balance:", error);
+                    showAdminMessage("Failed to deduct balance", 'error');
+                }
             }
+        }
 
-            document.getElementById('mainAppContent').style.display = 'none';
-            document.getElementById('adminPanelContent').style.display = 'block';
-
-            document.getElementById('adminPanelContent').innerHTML = `
-                <div class="admin-container">
-                    <h1><i class="fas fa-user-shield"></i> TronAdsFaucet Admin Panel</h1>
-                    <p style="text-align: right;"><button class="btn btn-secondary" onclick="document.getElementById('mainAppContent').style.display='block'; document.getElementById('adminPanelContent').style.display='none'; navigateTo('home');">
-                        <i class="fas fa-arrow-left"></i> Ana Menüye Dön
-                    </button></p>
-
-                    <div id="adminMessage" class="admin-message admin-warning" style="display: none;"></div>
-
-                    <h2 style="margin-top: 20px; color: var(--secondary-color);"><i class="fas fa-list"></i> Son 50 Çekim Talebi</h2>
-                    <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
+        async function adminProcessWithdrawal(withdrawalId, status) {
+            if (db) {
+                try {
+                    const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+                    await withdrawalRef.update({ status: status });
                     
-                    <div style="overflow-x: auto;"> 
-                        <table id="withdrawalTable" style="display: none; min-width: 850px;">
-                            <thead>
-                                <tr><th>Kullanıcı (TG ID)</th><th>Miktar (TRX)</th><th>Cüzdan Adresi</th><th>Tarih</th><th>Durum</th><th>Eylemler</th></tr>
-                            </thead>
-                            <tbody id="withdrawalTableBody"></tbody>
-                        </table>
-                    </div>
-                    <h2 style="margin-top: 40px; color: var(--secondary-color);"><i class="fas fa-users"></i> Tüm Kullanıcılar</h2>
-                    
-                    <div style="overflow-x: auto;">
-                        <table id="userTable" style="display: none; min-width: 650px;">
-                            <thead>
-                                <tr><th>Telegram ID / İsim</th><th>Bakiye (TRX / USD)</th><th>İzlenen Toplam Reklam</th><th>Referanslar</th><th>Eylemler</th></tr>
-                            </thead>
-                            <tbody id="userTableBody"></tbody>
-                        </table>
-                    </div>
-                    </div>
-            `;
-            fetchAdminData();
+                    showAdminMessage(`Withdrawal ${status}`, 'success');
+                    setTimeout(renderAdminPanel, 1000);
+                } catch (error) {
+                    console.error("Error processing withdrawal:", error);
+                    showAdminMessage("Failed to process withdrawal", 'error');
+                }
+            }
+        }
+
+        function showAdminMessage(message, type) {
+            const messageEl = document.getElementById('adminMessage');
+            messageEl.textContent = message;
+            messageEl.className = `admin-message admin-${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
         }
 
 
-        // --- INITIALIZATION (STARTUP) ---
+        // --- THEME TOGGLE ---
 
-        document.addEventListener('DOMContentLoaded', async () => {
-             // 1. Set up and expand Telegram WebApp settings
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.ready();
-                Telegram.WebApp.expand();
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            function setTheme(isDark) {
+                document.body.classList.toggle('dark-mode', isDark);
+                themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
             }
+            
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme === 'dark');
+            } else {
+                setTheme(prefersDarkScheme.matches);
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                setTheme(!document.body.classList.contains('dark-mode'));
+            });
+            
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    setTheme(e.matches);
+                }
+            });
+        }
 
+
+        // --- INITIALIZATION ---
+
+        async function initApp() {
             try {
-                // 2. Fetch TRX Price
-                await fetchTRXPrice();
-
-                // 3. Load user state (Most critical step)
+                // 1. Show loading screen
+                loadingScreen.style.display = 'flex';
+                
+                // 2. Initialize Firebase and load user state
                 await loadUserState();
-
-                // If loading was successful (currentUser is not empty)
-                if (!currentUser) {
-                    throw new Error("**Application failed to initialize user state completely.**");
-                }
-
-                // 4. Assign DOM elements
+                
+                // 3. Fetch TRX price
+                await fetchTRXPrice();
+                
+                // 4. Cache DOM elements
                 profileNameDisplay = document.getElementById('profileNameDisplay');
                 userPointsDisplay = document.getElementById('userPointsDisplay');
                 adsWatchedTodayEl = document.getElementById('adsWatchedToday');
                 adsLeftTodayEl = document.getElementById('adsLeftToday');
                 totalAdsWatchedEl = document.getElementById('totalAdsWatched');
-                const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item');
                 
-                // 5. Load theme setting
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark') {
-                    document.body.classList.add('dark-mode');
-                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
-                } else {
-                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
-                }
-
-                // 6. Navigate to the page and update the UI
+                // 5. Initialize theme toggle
+                initThemeToggle();
+                
+                // 6. Set up navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => navigateTo(item.dataset.page));
+                });
+                
+                // 7. Render initial page
                 navigateTo('home');
-
-                // 7. Assign Event listeners
-                document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
-                bottomNavItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.page); }); });
-
-                // 8. Show the application and hide the loading screen
+                
+                // 8. Hide loading screen and show app
                 loadingScreen.style.display = 'none';
                 fullAppContainer.style.display = 'block';
                 
-                // Admin panel check
-                if (new URLSearchParams(window.location.search).get('panel') === 'admin') {
-                    if (currentUser && currentUser.telegramId == ADMIN_TELEGRAM_ID) {
-                        renderAdminPanel();
-                    } else {
-                        navigateTo('home');
-                    }
-                }
-            } catch(error) {
-                console.error("Critical error during application startup:", error);
-                // **CRITICAL:** In case of an error, change the loading screen to a persistent error message.
-                loadingScreen.querySelector('.spinner').style.display = 'none';
-                loadingScreen.querySelector('p').style.display = 'none';
-                loadingError.textContent = `CRITICAL ERROR: Application could not load. Reason: **${error.message}**. Please restart the bot via Telegram.`;
+            } catch (error) {
+                console.error("Initialization Error:", error);
+                loadingError.textContent = error.message || "An unexpected error occurred.";
                 loadingError.style.display = 'block';
-                loadingScreen.style.backgroundColor = '#FFF3CD'; 
-                loadingScreen.style.color = 'var(--primary-dark)';
-                loadingError.style.color = 'var(--primary-dark)';
-                Telegram.WebApp.showAlert('Application Failed to Load! Please restart via the bot.');
             }
-        });
+        }
+
+        // Start the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
