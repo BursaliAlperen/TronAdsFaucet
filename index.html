@@ -14,12 +14,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
     <style>
-        /* (STİL KODLARI BURADA BAŞLAR - DEĞİŞİKLİK YAPILMADI) */
+        /* Genel Tema Ayarları - KIRMIZI/BEYAZ TEMA */
         :root {
-            --primary-color: #E63946;
+            --primary-color: #E63946; /* Kırmızı */
             --primary-dark: #A82E37;
-            --secondary-color: #E63946;
-            --bg-light: #FFFFFF;
+            --secondary-color: #E63946; /* Kırmızı */
+            --bg-light: #FFFFFF; /* Beyaz */
             --bg-dark: #1F2937;
             --card-bg-light: #FFFFFF;
             --card-bg-dark: #374151;
@@ -99,14 +99,14 @@
         /* ADMIN PANEL - MOBİL UYUMLU */
         .admin-container { max-width: 100%; margin: auto; background: var(--card-bg); padding: 15px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); overflow-x: auto; }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.5rem; }
-        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 600px; }
-        .admin-container th, .admin-container td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-primary); }
+        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 650px; }
+        .admin-container th, .admin-container td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-primary); }
         .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
-        .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; font-size: 0.8rem; }
+        .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; font-size: 0.75rem; font-weight: 600; }
         .admin-container .btn-action.deduct { background: var(--primary-color); }
         .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
         .admin-container .btn-action:hover { background: #409244; }
-        .admin-message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 0.9rem; }
+        .admin-message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 0.9rem; font-weight: 600; }
         .admin-success { background: rgba(76, 175, 80, 0.15); color: #4CAF50; border: 1px solid #4CAF50; }
         .admin-error { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); }
         .admin-warning { background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px solid #FFC107; }
@@ -142,7 +142,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Reklam Modal Stili (Simülasyon için) */
+        /* Reklam Modal Stili */
         .ad-modal-overlay {
             position: fixed;
             top: 0;
@@ -234,20 +234,17 @@
     <script>
         // --- CONFIGURATION ---
         const APP_NAME = "TronAdsFaucet";
-        // BU DEĞERLER ARTIK FIREBASE'DEN ÇEKİLECEK! Başlangıç için varsayılan değerler
-        let ADS_PER_DAY_LIMIT = 100;
-        let USD_PER_AD = 0.001;
-        let REFERRAL_BONUS_REFERRER_USD = 0.005;
-        let REFERRAL_BONUS_REFEREE_USD = 0.001;
+        const ADS_PER_DAY_LIMIT = 100;
+        const USD_PER_AD = 0.001;
         const MIN_WITHDRAW_TRX = 0.01; 
-        
+        const REFERRAL_BONUS_REFERRER_USD = 0.005;
+        const REFERRAL_BONUS_REFEREE_USD = 0.001;
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
         const TELEGRAM_CHAT_ID = "-1002783990004";
         const ADMIN_TELEGRAM_ID = "7904032877"; 
         const ADEXORA_AD_FUNCTION_NAME = 'showAdexora';
         const FALLBACK_TRX_PRICE = 0.12;
-        const NON_TELEGRAM_USER_ID = 9999999999; 
 
         // !!! FIREBASE CONFIGURATION - USER PROVIDED !!!
         const firebaseConfig = {
@@ -309,28 +306,37 @@
             
             if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user) {
                 const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                
                 if (tgUser.photo_url) {
                     const img = new Image();
-                    img.onload = function() { profilePic.innerHTML = ''; profilePic.appendChild(img); };
-                    img.onerror = function() { profilePic.innerHTML = '<i class="fas fa-user-circle"></i>'; };
+                    img.onload = function() {
+                        profilePic.innerHTML = '';
+                        profilePic.appendChild(img);
+                    };
+                    img.onerror = function() {
+                        console.log("Telegram profile photo failed to load, using default icon");
+                        profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+                    };
                     img.src = tgUser.photo_url;
                     img.alt = 'Profile Picture';
-                    return;
+                } else {
+                    profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
                 }
-            } 
-            profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+            } else {
+                profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+            }
         }
 
         // --- REKLAM OYNATMA FONKSİYONU (Simülasyon) ---
-        function showAdAndReward() {
+        function showAdAndRewardSimulation() {
             const adModal = document.getElementById('adModal');
             const adCountdown = document.getElementById('adCountdown');
             const closeAdBtn = document.getElementById('closeAdBtn');
             const watchBtn = document.getElementById('watchDailyAdBtn');
             
             adModal.style.display = 'flex';
-            watchBtn.disabled = true;
-
+            if(watchBtn) watchBtn.disabled = true; 
+            
             let countdown = 5;
             adCountdown.textContent = countdown;
             
@@ -340,7 +346,9 @@
                 
                 if (countdown <= 0) {
                     clearInterval(adCountdownInterval);
+                    
                     rewardUserForAd();
+                    
                     closeAdBtn.style.display = 'block';
                 }
             }, 1000);
@@ -349,14 +357,14 @@
                 adModal.style.display = 'none';
                 closeAdBtn.style.display = 'none';
                 clearInterval(adCountdownInterval);
-                watchBtn.disabled = false;
+                if(watchBtn) watchBtn.disabled = false; 
+                updateUI();
             };
         }
         
         function rewardUserForAd() {
             if (!currentUser) return;
             
-            // Reklam ödülü artık USD_PER_AD değişkeninden geliyor
             currentUser.balanceUSD += USD_PER_AD;
             currentUser.adsWatchedToday += 1;
             currentUser.totalAdsWatchedLifetime = (currentUser.totalAdsWatchedLifetime || 0) + 1;
@@ -366,39 +374,15 @@
             const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
             showToast(`+${earnedTRX} TRX earned!`);
             
-            if(currentUser.telegramId !== NON_TELEGRAM_USER_ID) {
+            if(currentUser.telegramId) {
                 sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
             }
         }
 
         // --- FIREBASE DATA HANDLING ---
 
-        // YENİ FONKSİYON: Ayar Değerlerini Firebase'den Çeker
-        async function loadConfig() {
-            if (!db) return;
-            try {
-                const configRef = db.collection('config').doc('rewards');
-                const doc = await configRef.get();
-                
-                if (doc.exists) {
-                    const data = doc.data();
-                    // Global değişkenleri Firebase'den gelen değerlerle güncelle
-                    ADS_PER_DAY_LIMIT = data.adsPerDayLimit || ADS_PER_DAY_LIMIT;
-                    USD_PER_AD = data.usdPerAd || USD_PER_AD;
-                    REFERRAL_BONUS_REFERRER_USD = data.referralBonusReferrerUSD || REFERRAL_BONUS_REFERRER_USD;
-                    REFERRAL_BONUS_REFEREE_USD = data.referralBonusRefereeUSD || REFERRAL_BONUS_REFEREE_USD;
-                    console.log("Config loaded from Firebase:", data);
-                } else {
-                    console.warn("Config document 'rewards' not found in Firebase. Using default values.");
-                }
-            } catch (error) {
-                console.error("Firebase loadConfig Error:", error);
-            }
-        }
-
-
         async function fetchUser(tgId) {
-            if (!db) return null; 
+            if (!db) return null;
             try {
                 const userRef = db.collection('users').doc(String(tgId));
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
@@ -438,10 +422,14 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            // Eğer URL'den referans kodu geldiyse ve kullanıcı daha önce referans edilmediyse uygula
             if (refCodeFromUrl && db) { 
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
+                    // YENİ KAYIT OLDUĞU İÇİN REFERANS UYGULANIR
                     await applyReferral(newUser, referrer);
+                    // Oluşturulan kullanıcıya referans bilgisini ekle
+                    newUser.referredBy = referrer.referralCode; 
                 }
             }
             
@@ -454,7 +442,10 @@
             try {
                 const snapshot = await db.collection('users').where('referralCode', '==', code).limit(1).get();
                 if (!snapshot.empty) {
-                    return snapshot.docs[0].data();
+                    return {
+                        id: snapshot.docs[0].id,
+                        ...snapshot.docs[0].data()
+                    };
                 }
                 return null;
             } catch (error) {
@@ -463,30 +454,29 @@
             }
         }
 
-        // REFERANS MİKTARLARI BURADA KULLANILIR
         async function applyReferral(refereeUser, referrerUser) {
             if (!db) return; 
-            if (refereeUser.telegramId === NON_TELEGRAM_USER_ID || referrerUser.telegramId === NON_TELEGRAM_USER_ID) {
-                return; 
-            }
             try {
-                // REFEREE ödülü için REFERRAL_BONUS_REFEREE_USD kullanılır
+                // REFEREE ödülü: Yeni kullanıcıya bonusu ver
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
-                refereeUser.referredBy = referrerUser.referralCode;
                 
                 const referrerRef = db.collection('users').doc(String(referrerUser.telegramId));
+                
+                // Transaction ile referrer'ın hesabını güncelle
                 await db.runTransaction(async (transaction) => {
                     const referrerDoc = await transaction.get(referrerRef);
                     if (!referrerDoc.exists) throw "Referrer user does not exist!";
                     
                     const currentReferrerData = referrerDoc.data();
                     const updatedReferredUsers = currentReferrerData.referredUsers || [];
+                    
+                    // Referee'nin kodu referrer'ın listesine eklenir
                     if (!updatedReferredUsers.includes(refereeUser.referralCode)) {
                         updatedReferredUsers.push(refereeUser.referralCode);
                     }
 
                     transaction.update(referrerRef, {
-                        // REFERRER ödülü için REFERRAL_BONUS_REFERRER_USD kullanılır
+                        // REFERRER ödülü: Yönlendirene bonusu ver
                         balanceUSD: (currentReferrerData.balanceUSD || 0) + REFERRAL_BONUS_REFERRER_USD,
                         referredUsers: updatedReferredUsers
                     });
@@ -495,7 +485,11 @@
                 showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonus from referral!`);
             } catch (error) {
                  console.error("Firebase applyReferral Error:", error);
+                 // İşlem başarısız olursa, ödülü geri al (sadece referee bonusunu)
+                 refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD;
+                 return false;
             }
+            return true;
         }
         
         async function submitWithdrawalRequest(request) {
@@ -511,41 +505,61 @@
             }
         }
 
+        async function fetchWithdrawals() {
+            if (!db) return [];
+            try {
+                const snapshot = await db.collection('withdrawals')
+                    .where('status', '==', 'pending')
+                    .orderBy('requestedAt', 'desc')
+                    .get();
+                
+                return snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error("Firebase fetchWithdrawals Error:", error);
+                return [];
+            }
+        }
+
+        async function updateWithdrawalStatus(docId, status) {
+            if (!db) return false;
+            try {
+                await db.collection('withdrawals').doc(docId).update({
+                    status: status,
+                    processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    processedBy: currentUser.telegramId
+                });
+                return true;
+            } catch (error) {
+                console.error("Firebase updateWithdrawalStatus Error:", error);
+                return false;
+            }
+        }
+
 
         // --- DATA/STATE MANAGEMENT (Authentication and Load) ---
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
+            // URL'den gelen referans kodu (start=CODE veya ref=CODE)
             const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
 
-            let tgUser;
-            let tgId;
-            let isTelegram = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user);
-
-            // 1. Telegram WebApp Kullanıcısı Kontrolü ve Yedek Kullanıcı Atama
-            if (isTelegram) {
-                tgUser = Telegram.WebApp.initDataUnsafe.user;
-                tgId = tgUser.id;
-            } else {
-                tgId = NON_TELEGRAM_USER_ID; 
-                tgUser = {
-                    id: tgId,
-                    first_name: 'Web',
-                    last_name: 'User',
-                    username: 'web_user',
-                    is_bot: false
-                };
-                showToast("Guest Mode: Some features might be limited. Login via Telegram for full access.", 5000);
+            if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
+                throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
             }
             
-            // 2. Firebase Bağlantısı Kontrolü
+            const tgUser = Telegram.WebApp.initDataUnsafe.user;
+            const tgId = tgUser.id;
+            
             if (!db) {
                 throw new Error("Database connection failed. Please check internet or contact support.");
             }
 
-            // 3. Kullanıcı Verisini Çek/Oluştur
             let user = await fetchUser(tgId);
             
+            // Kullanıcı yoksa oluştur
             if (!user) {
                 user = await createNewUser(tgUser, refCodeFromUrl);
             }
@@ -558,18 +572,19 @@
                 await saveUser(user); 
             }
             
-            // Referans atama kontrolü (mevcut kullanıcılar için)
+            // Referans atama kontrolü (sadece mevcut kullanıcılar için, eğer daha önce referans edilmediyse)
             if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
-                    await applyReferral(user, referrer);
-                    user.referredBy = referrer.referralCode; 
-                    await saveUser(user); 
+                    const success = await applyReferral(user, referrer);
+                    if(success) {
+                        user.referredBy = referrer.referralCode; 
+                        await saveUser(user); 
+                    }
                 }
             }
             
             currentUser = user; 
-
         }
         
         function saveUserStateLocalOrFirebase() {
@@ -609,7 +624,6 @@
 
             userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
             
-            // Limit ve ödüller dinamik olarak çekildiği için bu kısımlar doğru çalışır.
             adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
             adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
             totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime;
@@ -666,7 +680,6 @@
         }
 
         function renderReferralPage() {
-            // Referans ödülleri dinamik olarak kullanılıyor
             const referralLink = `https://t.me/share/url?url=https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}&text=⚡ TronAdsFaucet ile her gün reklam izleyerek kolayca TRX kazan! Hemen katılmak için linke tıkla:`;
 
             const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
@@ -674,6 +687,8 @@
             const earnedTRX = convertUSDToTRX(earnedUSD).toFixed(4);
             const referrerBonusTRX = convertUSDToTRX(REFERRAL_BONUS_REFERRER_USD).toFixed(5);
             const refereeBonusTRX = convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5);
+            
+            const hasReferredBy = !!currentUser.referredBy;
 
 
             mainContent.innerHTML = `
@@ -701,6 +716,27 @@
                     </button>
                 </div>
                 
+                <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-link"></i> Manually Use Code</h2>
+                <div class="task-card">
+                    ${hasReferredBy ? `
+                        <p class="task-description" style="color:#4CAF50; font-weight:600;">
+                            <i class="fas fa-check-circle"></i> You have already been referred by code: <strong>${currentUser.referredBy}</strong>. You cannot use another code.
+                        </p>
+                    ` : `
+                        <p class="task-description">
+                            If you have a referral code, enter it below to claim your <strong>${refereeBonusTRX} TRX</strong> bonus.
+                        </p>
+                        <div class="input-group">
+                            <label class="input-label">Referral Code</label>
+                            <input type="text" class="input-field" id="manualReferralCodeInput" placeholder="Enter code here" maxlength="8" style="text-transform: uppercase;">
+                        </div>
+                        <button class="btn btn-primary" id="submitManualReferralBtn">
+                            Apply Code & Claim Bonus
+                        </button>
+                        <div class="error-message" id="manualReferralMessage" style="display:none;"></div>
+                    `}
+                </div>
+
                 <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-chart-line"></i> Referral Stats</h2>
                 <div class="task-card">
                     <div class="stats-display">
@@ -715,13 +751,16 @@
             document.getElementById('shareReferralBtn')?.addEventListener('click', () => {
                 window.open(referralLink, '_blank');
             });
+
+            if (!hasReferredBy) {
+                 document.getElementById('submitManualReferralBtn')?.addEventListener('click', handleManualReferral);
+            }
         }
 
         function renderWithdrawPage() {
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             const minWithdrawTRX = MIN_WITHDRAW_TRX;
             const canWithdraw = parseFloat(balanceTRX) >= minWithdrawTRX;
-            const isGuest = currentUser.telegramId === NON_TELEGRAM_USER_ID;
             
             mainContent.innerHTML = `
                 <h2 class="section-title"><i class="fas fa-wallet"></i> Withdraw TRX</h2>
@@ -731,22 +770,15 @@
                         Minimum withdrawal amount: <strong>${minWithdrawTRX} TRX</strong>.
                         Withdrawals are processed manually within 24 hours.
                     </p>
-                    ${isGuest ? `
-                        <div class="error-message">
-                            Withdrawal is only available for users logged in via Telegram.
-                        </div>
-                    ` : `
-                        <div class="input-group">
-                            <label class="input-label">TRON (TRX) Wallet Address</label>
-                            <input type="text" class="input-field" id="walletAddressInput" placeholder="T..." maxlength="34">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">Amount (TRX)</label>
-                            <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.001" value="${canWithdraw ? minWithdrawTRX : 0}">
-                        </div>
-                    `}
-                    
-                    <button class="btn btn-primary" id="submitWithdrawalBtn" ${!canWithdraw || isGuest ? 'disabled' : ''}>
+                    <div class="input-group">
+                        <label class="input-label">TRON (TRX) Wallet Address</label>
+                        <input type="text" class="input-field" id="walletAddressInput" placeholder="T..." maxlength="34">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Amount (TRX)</label>
+                        <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.001" value="${canWithdraw ? balanceTRX : 0}">
+                    </div>
+                    <button class="btn btn-primary" id="submitWithdrawalBtn" ${!canWithdraw ? 'disabled' : ''}>
                         <i class="fas fa-paper-plane"></i> Request Withdrawal
                     </button>
                     <div class="error-message" id="withdrawErrorMessage" style="display:none;"></div>
@@ -767,16 +799,28 @@
             }
             
             const watchBtn = document.getElementById('watchDailyAdBtn');
+            if (!watchBtn) return;
             
             if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
                 watchBtn.disabled = true; 
-                showToast("Ad loading...");
+                showToast("Ad loading (Adexora)... Please wait.");
+                
+                const adTimeout = setTimeout(() => {
+                    if (watchBtn.disabled) {
+                        console.warn("Adexora ad call timed out (10s). Re-enabling button.");
+                        showToast('Ad service unresponsive. Please try again.', 5000);
+                        watchBtn.disabled = false;
+                        updateUI();
+                    }
+                }, 10000);
 
                 window[ADEXORA_AD_FUNCTION_NAME]()
                 .then(() => {
+                    clearTimeout(adTimeout);
                     rewardUserForAd();
                 })
                 .catch(error => {
+                    clearTimeout(adTimeout);
                     console.error("Adexora ad error or dismissed:", error);
                     showToast('Ad failed or was dismissed. Please try again.', 4000);
                 })
@@ -785,12 +829,14 @@
                     updateUI(); 
                 });
             } else {
-                showToast("Adexora not loaded. Simulating Ad...");
-                showAdAndReward();
+                console.warn("Adexora function not found. Falling back to simulation.");
+                showToast("Adexora not loaded. Simulating Ad...", 5000);
+                showAdAndRewardSimulation();
             }
         }
 
         function handleWithdrawal() {
+            // ... (Handle Withdrawal mantığı aynı kalır)
             const walletAddress = document.getElementById('walletAddressInput').value.trim();
             const amountInput = document.getElementById('withdrawAmountInput').value;
             const amountTRX = parseFloat(amountInput);
@@ -798,12 +844,6 @@
             
             errorEl.style.display = 'none';
             
-            if (currentUser.telegramId === NON_TELEGRAM_USER_ID) {
-                errorEl.textContent = 'Withdrawal is only available for users logged in via Telegram.';
-                errorEl.style.display = 'block';
-                return;
-            }
-
             if (!walletAddress || walletAddress.length < 10) {
                 errorEl.textContent = 'Please enter a valid TRON wallet address.';
                 errorEl.style.display = 'block';
@@ -840,9 +880,68 @@
             showToast(`Withdrawal request for ${amountTRX.toFixed(4)} TRX submitted!`);
             
             document.getElementById('walletAddressInput').value = '';
-            document.getElementById('withdrawAmountInput').value = MIN_WITHDRAW_TRX;
+            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD).toFixed(4); // Kalan bakiyeyi yaz
             
             navigateTo('home');
+        }
+
+        // YENİ FONKSİYON: Manuel referans kodu girişi
+        async function handleManualReferral() {
+            const codeInput = document.getElementById('manualReferralCodeInput');
+            const messageEl = document.getElementById('manualReferralMessage');
+            const code = codeInput.value.trim().toUpperCase();
+            
+            messageEl.style.display = 'none';
+
+            if (!code || code.length !== 6) {
+                messageEl.textContent = 'Please enter a valid 6-character referral code.';
+                messageEl.className = 'error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            if (currentUser.referredBy) {
+                messageEl.textContent = `You have already been referred by code: ${currentUser.referredBy}.`;
+                messageEl.className = 'error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            if (code === currentUser.referralCode) {
+                messageEl.textContent = 'You cannot refer yourself.';
+                messageEl.className = 'error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            // Referans veren kullanıcıyı bul
+            const referrer = await getReferrerByCode(code);
+
+            if (!referrer) {
+                messageEl.textContent = 'Invalid referral code. Please check and try again.';
+                messageEl.className = 'error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+            
+            // Referansı uygula
+            const success = await applyReferral(currentUser, referrer);
+            
+            if (success) {
+                currentUser.referredBy = code; 
+                await saveUser(currentUser);
+                
+                messageEl.textContent = `Code applied successfully! You received ${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX.`;
+                messageEl.className = 'admin-message admin-success';
+                messageEl.style.display = 'block';
+                
+                // Sayfayı yenilemek en basit yoldur
+                renderReferralPage(); 
+            } else {
+                messageEl.textContent = 'An error occurred while applying the referral. Please try again later.';
+                messageEl.className = 'error-message';
+                messageEl.style.display = 'block';
+            }
         }
 
         function promptForNewName() {
@@ -879,8 +978,9 @@
             }
         }
 
-        // --- Admin Panel Fonksiyonu ---
-        function renderAdminPanel() {
+        async function renderAdminPanel() {
+            if (currentUser.telegramId != ADMIN_TELEGRAM_ID) return;
+
             const adminContentEl = document.getElementById('adminPanelContent');
             const mainAppContentEl = document.getElementById('mainAppContent');
             
@@ -889,11 +989,13 @@
             
             adminContentEl.innerHTML = `
                 <div class="admin-container">
-                    <h1>Admin Panel (WIP)</h1>
-                    <p>Bu panel henüz tam olarak bitirilmemiştir. Firebase verileri çekilip burada listelenmelidir.</p>
-                    <button class="btn btn-primary" id="closeAdminPanelBtn">
+                    <h1>Admin Panel</h1>
+                    <p class="admin-warning" style="display:block; text-align: center;">Loading withdrawal requests...</p>
+                    <button class="btn btn-primary" id="closeAdminPanelBtn" style="margin-bottom: 20px;">
                         <i class="fas fa-arrow-left"></i> Back to Main App
                     </button>
+                    <div id="withdrawalList"></div>
+                    <div id="adminMessage" class="admin-message admin-success" style="display:none;"></div>
                 </div>
             `;
             
@@ -902,40 +1004,103 @@
                 mainAppContentEl.style.display = 'block';
                 navigateTo('home');
             });
+
+            const withdrawalListEl = document.getElementById('withdrawalList');
+            const adminMessageEl = document.getElementById('adminMessage');
+            
+            const requests = await fetchWithdrawals();
+            
+            if (requests.length === 0) {
+                withdrawalListEl.innerHTML = '<p class="admin-warning" style="background:none; border:none; color:inherit; text-align: center;">No pending withdrawal requests found.</p>';
+            } else {
+                let tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User/Wallet</th>
+                                <th>Amount (TRX/USD)</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                requests.forEach(req => {
+                    const time = req.requestedAt && req.requestedAt.seconds ? new Date(req.requestedAt.seconds * 1000).toLocaleString() : 'N/A';
+                    tableHtml += `
+                        <tr data-id="${req.id}">
+                            <td>${String(req.userId).slice(-4)}</td>
+                            <td>${req.userName} / <small title="${req.walletAddress}">${req.walletAddress.slice(0, 10)}...</small></td>
+                            <td>${req.amountTRX.toFixed(4)} TRX ($${req.amountUSD.toFixed(2)})</td>
+                            <td>
+                                <small>${time}</small>
+                            </td>
+                            <td>
+                                <button class="btn-action process-btn" data-id="${req.id}">Paid</button>
+                                <button class="btn-action deduct reject-btn" data-id="${req.id}">Reject</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tableHtml += `</tbody></table>`;
+                withdrawalListEl.innerHTML = tableHtml;
+            }
+
+            adminContentEl.querySelector('.admin-warning').style.display = 'none';
+
+            document.querySelectorAll('.process-btn, .reject-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const docId = e.target.getAttribute('data-id');
+                    const status = e.target.classList.contains('process-btn') ? 'paid' : 'rejected';
+                    
+                    const success = await updateWithdrawalStatus(docId, status);
+                    
+                    if (success) {
+                        adminMessageEl.textContent = `Request ${docId.slice(-4)} marked as ${status}.`;
+                        adminMessageEl.className = `admin-message ${status === 'paid' ? 'admin-success' : 'admin-error'}`;
+                        adminMessageEl.style.display = 'block';
+                        
+                        const row = e.target.closest('tr');
+                        row.remove();
+                        
+                        if (withdrawalListEl.querySelector('tbody') && withdrawalListEl.querySelector('tbody').children.length === 0) {
+                             renderAdminPanel();
+                        }
+
+                    } else {
+                        adminMessageEl.textContent = `Error processing request ${docId.slice(-4)}.`;
+                        adminMessageEl.className = 'admin-message admin-error';
+                        adminMessageEl.style.display = 'block';
+                    }
+                });
+            });
         }
         
         // --- INITIALIZATION ---
+
         async function initApp() {
             try {
-                // 1. Firebase ayarlarını (Referans ödülleri dahil) yükle
-                await loadConfig();
-                
-                // 2. Kullanıcı verisini yükle
                 await loadUserState();
-                
-                // 3. TRX fiyatını al
                 await fetchTRXPrice();
                 
-                // 4. DOM elementlerini bağla
                 profileNameDisplay = document.getElementById('profileNameDisplay');
                 userPointsDisplay = document.getElementById('userPointsDisplay');
                 adsWatchedTodayEl = document.getElementById('adsWatchedToday');
                 adsLeftTodayEl = document.getElementById('adsLeftToday');
                 totalAdsWatchedEl = document.getElementById('totalAdsWatched');
                 
-                // 5. Tema ve Navigasyon butonlarını ayarla
                 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+                
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.addEventListener('click', function() {
                         navigateTo(this.getAttribute('data-page'));
                     });
                 });
                 
-                // 6. UI'ı güncelle ve ana sayfayı göster
                 updateUI();
                 navigateTo('home');
                 
-                // 7. Yükleme ekranını gizle, uygulamayı göster
                 loadingScreen.style.display = 'none';
                 fullAppContainer.style.display = 'block';
                 
@@ -948,7 +1113,6 @@
             }
         }
 
-        // Uygulamayı başlat
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
