@@ -3,164 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>⚡ TronAdsFaucet - Earn TRX</title>
+    <title>⚡️ TronAdsFaucet</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.5/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
     <style>
-        /* Genel Tema Ayarları */
         :root {
-            --primary-color: #E63946; /* Kırmızı */
-            --primary-dark: #A82E37;
-            --secondary-color: #457B9D; /* Mavi/TRON */
-            --bg-light: #F8F9FA;
-            --bg-dark: #1F2937;
+            /* Kırmızı-Beyaz Tema Renkleri */
+            --primary-color: #FF4136; /* Tron'a yakın parlak Kırmızı */
+            --primary-dark: #CC0000;
+            --secondary-color: #2ECC71; 
+            --accent-color: #FFDC00; 
+            --bg-light: #F9F9F9; /* Çok Açık Arka Plan */
+            --bg-dark: #1A1A1A; /* Koyu Tema Arka Planı */
             --card-bg-light: #FFFFFF;
-            --card-bg-dark: #374151;
-            --text-dark: #212529;
-            --text-light: #F8F9FA;
-            --border-color-light: #E9ECEF;
-            --border-radius: 16px;
-            --border-radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            --input-border: #CED4DA;
-            --input-bg: #FFFFFF;
-        }
-        body { font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
-        body:not(.dark-mode) { background-color: var(--bg-light); color: var(--text-dark); --header-bg: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); --card-bg: var(--card-bg-light); --text-primary: var(--text-dark); --text-secondary: #6C757D; --border-color: var(--border-color-light); --input-border: #CED4DA; --input-bg: #FFFFFF; }
-        body.dark-mode { background-color: var(--bg-dark); color: var(--text-light); --header-bg: linear-gradient(135deg, var(--primary-dark), #470005); --card-bg: var(--card-bg-dark); --text-primary: var(--text-light); --text-secondary: #D1D5DB; --border-color: #4B5563; --input-border: #4B5563; --input-bg: #4B5563; }
-        
-        .app-container { max-width: 480px; margin: 0 auto; position: relative; }
-        .header { height: 200px; background: var(--header-bg); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-light); border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15); z-index: 100; max-width: 480px; margin: 0 auto; border-top: 1px solid var(--border-color); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; flex: 1; transition: var(--transition); padding: 5px; min-width: 80px; }
-        .nav-item.active { color: var(--primary-color); transform: translateY(-3px); }
-        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; border-radius: var(--border-radius-sm); border: none; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 6px 15px rgba(230, 57, 70, 0.4); }
-        .btn-secondary { background: var(--secondary-color); color: white; }
-        /* Yeni Eklenen Stiller */
-        .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
-        .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
-        .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
-        .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
-        .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-        .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
-        .points-display { display: inline-flex; align-items: center; background: rgba(230, 57, 70, 0.15); padding: 8px 20px; border-radius: 50px; margin-top: 10px; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; border: 1px solid var(--primary-color); }
-        .stats-display { display: flex; justify-content: space-around; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border-color); }
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--primary-color); }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
-        .content-section { padding: 20px; margin-bottom: 80px; }
-        .section-title { display: flex; align-items: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); border-left: 4px solid var(--primary-color); padding-left: 10px; }
-        .task-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border: 1px solid var(--border-color); }
-        .task-description { margin-bottom: 25px; color: var(--text-secondary); font-size: 0.95rem; }
-        .input-group { margin-bottom: 20px; }
-        .input-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
-        .input-field { width: 100%; padding: 12px; border-radius: var(--border-radius-sm); border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 1rem; transition: border-color var(--transition); }
-        .input-field:focus { border-color: var(--primary-color); outline: none; }
-        .error-message { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px; border-radius: var(--border-radius-sm); margin-bottom: 15px; font-size: 0.9rem; }
-        .referral-input-group { display: flex; margin-bottom: 15px; }
-        .referral-input { flex: 1; padding: 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 0.95rem; }
-        .copy-btn { padding: 0 18px; background: var(--secondary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: var(--transition); }
-        .copy-btn:hover { background: #356683; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: var(--border-radius-sm); opacity: 0; transition: opacity 0.5s; z-index: 1000; font-size: 0.9rem; }
-        .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
-        /* Admin Panel Stilleri */
-        .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-        .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
-        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
-        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
-        .admin-container .btn-action { background: var(--secondary-color); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
-        .admin-container .btn-action:hover { background: #356683; }
-        .admin-message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 0.9rem; }
-        .admin-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .admin-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .admin-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .balance { font-weight: 600; color: #4CAF50; }
-        .usd-val { font-size: 0.8em; color: var(--text-secondary); }
+            --card-bg-dark: #222222;
+            --text-dark: #1A1A1A;
+            --text-light: #F9F9F9;
+            --border-color-light: #FFEDED; /* Çok açık kırmızı */
+            --border-color-dark: #333333;
 
+            /* Genel Ayarlar */
+            --border-radius: 16px; /* Daha gelişmiş görünüm için büyük */
+            --border-radius-sm: 10px;
+            --transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Yumuşak ve modern geçiş */
+        }
+
+        /* Dark Mode CSS */
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            --header-bg: linear-gradient(135deg, #1A1A1A, #333333);
+            --card-bg: var(--card-bg-dark);
+            --text-primary: var(--text-light);
+            --text-secondary: #B0B0B0;
+            --border-color: var(--border-color-dark);
+            --input-bg: #333333;
+            --input-border: #444444;
+            --button-bg-secondary: #333333;
+            --button-text-secondary: var(--primary-color);
+            --toggle-bg: #333333;
+        }
+
+        /* Light Mode CSS (Kırmızı-Beyaz) */
+        body:not(.dark-mode) {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            --header-bg: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            --card-bg: var(--card-bg-light);
+            --text-primary: var(--text-dark);
+            --text-secondary: #666666;
+            --border-color: #E0E0E0; /* Daha sade bir kenarlık */
+            --input-bg: #FFFFFF; 
+            --input-border: #E0E0E0;
+            --button-bg-secondary: #FFEDED;
+            --button-text-secondary: var(--primary-color);
+            --toggle-bg: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color var(--transition), color var(--transition);
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            background-color: var(--bg-light);
+        }
+
+        /* Header Section */
+        .header {
+            height: 190px;
+            background: var(--header-bg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: var(--text-light);
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Content Transition (Gelişmiş Animasyon) */
+        .content-section {
+            padding: 20px;
+            margin-bottom: 80px;
+            /* Sayfa Geçişi Animasyonu */
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            min-height: 300px; /* İçerik değişirken kaymayı önlemek için */
+        }
+        
+        .content-section.active-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Card Animation (Gelişmiş Animasyon) */
+        .profile-card {
+            transition: var(--transition);
+        }
+        
+        .profile-card:hover {
+            /* Kart üzerine gelince hafif kayma ve parlak gölge */
+            box-shadow: 0 12px 40px rgba(255, 65, 54, 0.15); 
+            transform: translateY(-5px);
+        }
+
+        /* Nav İkon Animasyonu (Gelişmiş İkon Efekti) */
+        .nav-item i {
+            transition: var(--transition);
+        }
+        .nav-item:hover i {
+            color: var(--primary-dark);
+            transform: scale(1.15) rotate(-3deg);
+        }
+        /* Aktif ikona nabız efekti */
+        .nav-item.active i {
+            animation: pulse 0.6s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* Diğer Stil Tanımlamaları (Kısaltıldı) */
+        .header-title { font-size: 1.8rem; font-weight: 800; z-index: 2; letter-spacing: 1px; display: flex; align-items: center; }
+        .tron-logo { width: 28px; height: 28px; margin-right: 10px; border-radius: 50%; background: white; padding: 3px; box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+        .tron-logo svg { display: block; }
+        .theme-toggle { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--toggle-bg); display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.1rem; cursor: pointer; z-index: 10; transition: var(--transition); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        .profile-section { margin-top: -60px; padding: 0 20px; position: relative; z-index: 2; }
+        .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
+        .profile-pic { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); transition: var(--transition); }
+        .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); }
+        .points-display { display: inline-flex; align-items: center; background: rgba(255, 65, 54, 0.1); padding: 8px 18px; border-radius: 50px; margin-top: 10px; font-weight: 800; color: var(--primary-color); font-size: 1.3rem; border: 2px solid var(--primary-color); box-shadow: 0 2px 5px rgba(255, 65, 54, 0.3); }
+        .stats-display { display: flex; justify-content: space-around; gap: 15px; margin-top: 25px; }
+        .stat-item { background: var(--input-bg); padding: 12px 10px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); flex: 1; transition: var(--transition); }
+        .stat-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); border-color: var(--primary-color); }
+        .stat-value { font-weight: 800; color: var(--primary-dark); margin-bottom: 4px; font-size: 1.2rem; transition: color 0.3s; }
+        body.dark-mode .stat-value { color: var(--primary-color); }
+        .stat-label { font-size: 0.8rem; opacity: 0.7; color: var(--text-secondary); }
+        .task-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); transition: var(--transition); }
+        .task-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
+        .btn { display: block; width: 100%; padding: 18px; border-radius: var(--border-radius); border: none; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: var(--transition); text-align: center; text-decoration: none; font-family: 'Inter', sans-serif; margin-top: 20px; position: relative; overflow: hidden; }
+        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 8px 20px rgba(255, 65, 54, 0.5); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(255, 65, 54, 0.6); }
+        .btn-primary:active { transform: translateY(-1px); }
+        .btn i { margin-right: 8px; transition: transform 0.3s; }
+        .btn:hover i { transform: scale(1.1) rotate(5deg); }
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); background: var(--card-bg); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1); z-index: 100; max-width: 480px; width: 100%; border-top: 1px solid var(--border-color); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; flex: 1; padding: 5px 0; transition: var(--transition); cursor: pointer; }
+        .nav-item i { font-size: 1.6rem; margin-bottom: 4px; transition: var(--transition); }
+        .nav-item.active { color: var(--primary-color); }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .ad-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .ad-modal { max-width: 350px; width: 90%; padding: 30px; background: var(--card-bg); border-radius: var(--border-radius); text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+        .ad-modal-title { color: var(--primary-dark); font-weight: 800; }
+        body.dark-mode .ad-modal-title { color: var(--primary-color); }
+        .section-title { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; }
+        .section-title i { margin-right: 12px; font-size: 1.4rem; }
+        .reward-badge { background: var(--primary-color); color: white; padding: 6px 15px; border-radius: 50px; font-size: 1rem; font-weight: 700; margin-top: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); display: inline-block; }
+        .input-field { width: 100%; padding: 14px 18px; border-radius: var(--border-radius-sm); font-size: 1rem; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); margin-top: 5px; }
+        .input-field:focus { outline: none; box-shadow: 0 0 0 3px rgba(255, 65, 54, 0.3); }
+        .input-group { margin-bottom: 15px; }
+        .input-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: var(--text-secondary); }
+        .referral-input-group .copy-btn { background: var(--primary-color); }
+        .referral-container { background: var(--input-bg); border-radius: var(--border-radius-sm); padding: 15px; margin-bottom: 20px; border: 2px dashed var(--primary-color); }
+        .referral-input-group { display: flex; margin-bottom: 10px; }
+        .referral-input { flex: 1; padding: 9px 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--card-bg); color: var(--text-primary); font-size: 0.9rem; height: auto; }
+        .copy-btn { padding: 0 14px; background: var(--primary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; transition: var(--transition); font-size: 0.9rem; }
+        .admin-stat-card { background: var(--input-bg); border-radius: var(--border-radius-sm); padding: 15px; margin-bottom: 10px; border-left: 5px solid var(--primary-color); font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .admin-request-item { background: var(--card-bg); padding: 15px; border-radius: var(--border-radius-sm); margin-bottom: 10px; border: 1px solid var(--border-color); }
+        .request-actions button { transition: transform 0.2s; padding: 10px; border-radius: var(--border-radius-sm); border: none; font-weight: 600; cursor: pointer; color: white; }
+        .request-actions .approve { background: var(--secondary-color); }
+        .request-actions .reject { background: var(--primary-dark); }
+        .request-actions button:hover { transform: scale(1.02); }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); z-index: 1000; opacity: 0; transition: all 0.3s ease; font-size: 0.85rem; max-width: 90%; text-align: center; }
+        .toast.show { opacity: 1; bottom: 90px; }
+        .error-message { color: var(--primary-color); font-weight: 600; }
+        .success-message { color: var(--secondary-color); font-weight: 600; }
     </style>
 </head>
 <body>
-
-    <div id="app-loading-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-light); display:flex; justify-content:center; align-items:center; z-index:9999;">
-        <i class="fas fa-spinner fa-spin" style="font-size:3rem; color:var(--primary-color);"></i>
-    </div>
-    
-    <div id="fullAppContainer" class="app-container" style="display:none;">
-        
-        <div id="mainAppContent">
-            <div class="header">
-                <button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
-                <h1 class="header-title">⚡ TronAdsFaucet</h1>
-                <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 5px; z-index: 2;">Earn TRON (TRX) daily!</p>
-            </div>
-
-            <div class="profile-section">
-                <div class="profile-card">
-                    <div class="profile-pic" id="profilePic"><i class="fas fa-user-circle"></i></div>
-                    <h1 class="profile-name" id="profileNameDisplay">Loading...</h1>
-                    <div class="points-display" id="userPointsDisplay"><i class="fas fa-dollar-sign"></i> 0 TRX</div>
-                    <div class="stats-display">
-                        <div class="stat-item"><div class="stat-value" id="adsWatchedToday">0</div><div class="stat-label">Ads Today</div></div>
-                        <div class="stat-item"><div class="stat-value" id="adsLeftToday">0</div><div class="stat-label">Left</div></div>
-                        <div class="stat-item"><div class="stat-value" id="totalAdsWatched">0</div><div class="stat-label">Total Ads</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-section" id="mainContent">
-                </div>
-
-            <div class="bottom-nav">
-                <a href="#" class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>Home</span></a>
-                <a href="#" class="nav-item" data-page="referral"><i class="fas fa-users"></i><span>Referral</span></a>
-                <a href="#" class="nav-item" data-page="withdraw"><i class="fas fa-wallet"></i><span>Withdraw</span></a>
-            </div>
-
-            <div class="ad-modal-overlay" id="adModal" style="display: none;"></div>
+    <div class="app-container">
+        <div class="header">
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <h1 class="header-title">
+                <svg viewBox="0 0 448 512" class="tron-logo" xmlns="http://www.w3.org/2000/svg"><path fill="#FF4136" d="M424.4 200.7H239.5L160 279.3H424.4V200.7zM424.4 311.3H160L239.5 390H424.4V311.3zM448 0H0v512h448V0zm-40 472H40V40h368v432zM199.5 160V112h-80v48h80zm0 240v48h-80v-48h80z"/></svg>
+                TronAdsFaucet
+            </h1>
+            <p style="font-size: 0.9rem; z-index: 2;" id="tronPriceDisplay">TRX/USD: Yükleniyor...</p>
         </div>
-        
-        <div id="adminPanelContent" style="display:none;"></div>
+
+        <div class="profile-section">
+            <div class="profile-card">
+                <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="Profile" class="profile-pic" id="profilePic">
+                <h1 class="profile-name" id="profileNameDisplay">
+                    Kullanıcı
+                    <i class="fas fa-check-circle verified-badge" style="color: var(--secondary-color); margin-left: 8px;"></i>
+                    <button class="edit-name-btn" id="editNameBtn">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </h1>
+                <div class="points-display" id="userPointsDisplay">
+                    <i class="fas fa-wallet" style="margin-right: 8px; color: var(--primary-dark);"></i> 0.0000 TRX
+                </div>
+                <div class="stats-display">
+                    <div class="stat-item">
+                        <div class="stat-value" id="adsWatchedToday">0</div>
+                        <div class="stat-label">Bugün İzlenen</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="adRewardValue">~0.0029 TRX</div>
+                        <div class="stat-label">Reklam Başı</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalAdsWatched">0</div>
+                        <div class="stat-label">Toplam İzlenen</div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+
+        <div class="content-section" id="mainContent">
+            </div>
+
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>Ana Sayfa</span>
+            </a>
+            <a href="#" class="nav-item" data-page="withdraw">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Çekim</span>
+            </a>
+            <a href="#" class="nav-item" data-page="referral">
+                <i class="fas fa-users"></i>
+                <span>Referans</span>
+            </a>
+            <a href="#" class="nav-item admin-only" data-page="admin" id="adminNav" style="display: none;">
+                <i class="fas fa-user-shield"></i>
+                <span>Admin</span>
+            </a>
+        </div>
+
+        <div class="ad-modal-overlay" id="adModal" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease;">
+            <div class="ad-modal">
+                <h3 class="ad-modal-title" id="adModalTitle">Reklam Yükleniyor...</h3>
+                <div class="spinner" id="adSpinner"></div>
+                <p class="ad-status" id="adStatusMessage">Lütfen reklamın yüklenmesini bekleyin.</p>
+                <button class="btn btn-primary" id="adCloseBtn" style="display: none;">Kapat & Ödülü Al</button>
+            </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
     </div>
-    
-    <div class="toast" id="toast"></div>
 
     <script>
-        // --- CONSTANTS ---
-        const ADS_PER_DAY_LIMIT = 100;
-        const USD_PER_AD = 0.001;
-        const WITHDRAW_MIN_TRX = 0.10; 
-        const REFERRAL_BONUS_REFERRER_USD = 0.005;
-        const REFERRAL_BONUS_REFEREE_USD = 0.001;
-        const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
-        const TELEGRAM_CHAT_ID = "-1002783990004";
-        const ADMIN_TELEGRAM_ID = "7904032877"; 
-        const ADEXORA_AD_FUNCTION_NAME = 'Adexora.showAd'; 
-        const FALLBACK_TRX_PRICE = 0.12;
+        // CONFIGURATION (AYARLAR)
+        const APP_NAME = "TronAdsFaucet";
+        const ADMIN_TELEGRAM_ID = 7904032877;
+        const REWARD_USD_PER_AD = 0.001; // $0.001 USD
+        const REFERRAL_BONUS_USD_REFERRER = 0.0005; // $0.0005 USD
+        const REFERRAL_BONUS_USD_REFEREE = 0.0002; // $0.0002 USD
+        const MIN_WITHDRAW_TRX = 0.10;
+        const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         
-        // --- GLOBAL STATE ---
-        let currentUser = {};
-        let currentTRXPrice = 0.0;
-        let adminUsersData = {};
+        // Telegram Bot/Kanal Bilgileri - Lütfen kendi bilgilerinizi giriniz
+        const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE"; // Bu sadece bir örnek token. Lütfen kendi tokenınızı kullanın.
+        const TELEGRAM_CHAT_ID = "-1002783990004"; // Admin Kanal ID'si
+        const DEVELOPER_TELEGRAM_PROFILE_LINK = "https://t.me/freeinternet_bd25"; 
 
-        // --- DOM Elements (Initialization'da atanır) ---
-        let profileNameDisplay, userPointsDisplay, adsWatchedTodayEl, adsLeftTodayEl, totalAdsWatchedEl, bottomNavItems;
-        const fullAppContainer = document.getElementById('fullAppContainer');
-        const mainContent = document.getElementById('mainContent');
-        const loadingScreen = document.getElementById('app-loading-screen');
-
-        // --- FIREBASE BAŞLATMA VE BAĞLANTI (Kendi Yapılandırmanız) ---
+        // Firebase Yapılandırması
         const firebaseConfig = {
             apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
             authDomain: "tronadsfaucet.firebaseapp.com",
@@ -171,646 +307,760 @@
             appId: "1:26180984735:web:e498a635c4f61bd0a167aa",
             measurementId: "G-WG3ETVHC78"
         };
+        
+        // GLOBAL STATE
+        let currentUser = {
+            name: 'Kullanıcı',
+            telegramId: null,
+            photoUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+            balanceTRX: 0.00,
+            adsWatchedToday: 0,
+            totalAdsWatchedLifetime: 0,
+            lastAdWatchDate: null,
+            referralCode: '',
+            referredBy: null,
+            referredUsers: {} 
+        };
+        let tronPriceUSD = 0.00;
+        let trxPerAd = 0.00;
+        let trxRefBonus = 0.00;
+        let trxRefeeBonus = 0.00;
 
-        firebase.initializeApp(firebaseConfig); 
-        const db = firebase.firestore();
-        const usersCollection = db.collection('users');
+        // Firebase'i başlat
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        const AD_FUNCTION_NAME = 'showAdexora'; 
 
+        // DOM ELEMENTS
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const profileNameDisplay = document.getElementById('profileNameDisplay');
+        const profilePic = document.getElementById('profilePic');
+        const userPointsDisplay = document.getElementById('userPointsDisplay');
+        const adsWatchedTodayEl = document.getElementById('adsWatchedToday');
+        const totalAdsWatchedEl = document.getElementById('totalAdsWatched');
+        const adRewardValueEl = document.getElementById('adRewardValue');
+        const tronPriceDisplay = document.getElementById('tronPriceDisplay');
+        const mainContent = document.getElementById('mainContent');
+        const bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item');
+        const adModal = document.getElementById('adModal');
+        const adModalTitle = document.getElementById('adModalTitle');
+        const adStatusMessage = document.getElementById('adStatusMessage');
+        const adCloseBtn = document.getElementById('adCloseBtn');
+        const toast = document.getElementById('toast');
+        const adminNav = document.getElementById('adminNav');
 
-        // --- UTILITY FUNCTIONS ---
-        function generateReferralCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
-        function convertUSDToTRX(usdAmount) { return currentTRXPrice > 0 ? usdAmount / currentTRXPrice : 0; }
-        function escapeMarkdown(text) { return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1'); }
-
+        // UTILS
         function showToast(message, duration = 3000) {
-            const toastEl = document.getElementById('toast');
-            if (toastEl) {
-                 toastEl.textContent = message;
-                 toastEl.style.opacity = 1;
-                 setTimeout(() => { toastEl.style.opacity = 0; }, duration);
-            } else {
-                 console.log("TOAST:", message);
-            }
-        }
-
-        async function fetchTRXPrice() {
-            try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
-                const data = await response.json();
-                if (data.tron && data.tron.usd) {
-                    currentTRXPrice = data.tron.usd;
-                } else {
-                    currentTRXPrice = FALLBACK_TRX_PRICE;
-                }
-            } catch (error) {
-                console.error("Error fetching TRX price, using fallback:", error);
-                currentTRXPrice = FALLBACK_TRX_PRICE;
-            }
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
         }
         
-        function sendToTelegram(message, isSilent) {
-            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-            const payload = {
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'MarkdownV2',
-                disable_notification: isSilent,
-            };
-
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(e => console.error("Telegram API Error:", e));
-        }
-
-        function copyToClipboard(text, successMessage) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(successMessage);
-            }, (err) => {
-                showToast('Failed to copy text: ' + err, 4000);
-            });
-        }
-
-
-        // --- DATA / STATE MANAGEMENT (FIREBASE KULLANIMI) ---
-
-        async function saveUserState() {
-            if (!currentUser || !currentUser.telegramId) return false;
-            
-            try {
-                const userRef = usersCollection.doc(currentUser.telegramId);
-                await userRef.set(currentUser, { merge: true }); 
-                return true;
-            } catch (error) {
-                console.error("Kullanıcı verisi Firebase'e kaydedilirken hata:", error);
-                showToast("Kaydetme hatası. Lütfen geliştiriciye bildirin.", 5000);
-                return false;
-            }
-        }
-
-        async function checkAndApplyReferral() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
-
-            if (refCodeFromUrl && !currentUser.referredBy && refCodeFromUrl !== currentUser.referralCode) {
-                const referrerQuery = await usersCollection.where('referralCode', '==', refCodeFromUrl).limit(1).get();
-
-                if (!referrerQuery.empty) {
-                    const referrerDoc = referrerQuery.docs[0];
-                    const referrerId = referrerDoc.id;
-                    let referrerUser = referrerDoc.data();
-
-                    currentUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
-                    currentUser.referredBy = refCodeFromUrl;
-
-                    referrerUser.balanceUSD = (referrerUser.balanceUSD || 0) + REFERRAL_BONUS_REFERRER_USD;
-                    referrerUser.referredUsers = referrerUser.referredUsers || [];
-                    
-                    if (!referrerUser.referredUsers.includes(currentUser.telegramId)) {
-                        referrerUser.referredUsers.push(currentUser.telegramId);
-                    }
-
-                    await usersCollection.doc(referrerId).set(referrerUser, { merge: true });
-                    
-                    showToast(`+${REFERRAL_BONUS_REFEREE_USD.toFixed(3)}$ (TRX) bonus from referral!`);
-                }
-            }
-        }
-
-        async function loadUserState() {
-            if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">Bu uygulama sadece Telegram Mini Uygulaması içinde çalışır.</p>`;
-                return false;
-            }
-            
-            const tgUser = Telegram.WebApp.initDataUnsafe.user;
-            const tgId = String(tgUser.id); 
-            const userRef = usersCollection.doc(tgId); 
-            
-            try {
-                const doc = await userRef.get();
-
-                if (doc.exists) {
-                    currentUser = doc.data();
-                    Object.assign(currentUser, {
-                        name: `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || currentUser.name,
-                        telegramId: tgId,
-                        photoUrl: tgUser.photo_url || currentUser.photoUrl,
-                    });
-
-                } else {
-                    currentUser = {
-                        telegramId: tgId,
-                        name: `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || `User${tgId}`,
-                        photoUrl: tgUser.photo_url || null,
-                        balanceUSD: 0,
-                        adsWatchedToday: 0,
-                        totalAdsWatchedLifetime: 0,
-                        lastAdWatchDate: new Date().toDateString(),
-                        referralCode: generateReferralCode(),
-                        referredBy: null,
-                        referredUsers: []
-                    };
-                }
-
-                const today = new Date().toDateString();
-                if (currentUser.lastAdWatchDate !== today) {
-                    currentUser.adsWatchedToday = 0;
-                    currentUser.lastAdWatchDate = today;
-                }
-
-                await checkAndApplyReferral();
+        /**
+         * Benzersiz ve kalıcı referans kodu üretir.
+         * Kodun Firebase'de başka bir kullanıcıda olmadığını teyit eder.
+         * @returns {Promise<string>} 6 haneli benzersiz alfa-nümerik kod.
+         */
+        async function generateUniqueReferralCode() {
+            const usersRef = db.ref('users');
+            let isUnique = false;
+            let code = '';
+            while (!isUnique) {
+                // 6 haneli alfa-nümerik kod üret
+                code = Math.random().toString(36).substring(2, 8).toUpperCase(); 
                 
-                await userRef.set(currentUser, { merge: true });
-
-                return true;
-
-            } catch (error) {
-                console.error("Kullanıcı verisi Firebase'den yüklenirken hata:", error);
-                loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">**Veri Hatası:** Veri tabanından yüklenemedi. Firebase kurallarınızı kontrol edin. (${error.message})</p>`;
-                return false;
+                // Firebase'de bu kodun olup olmadığını kontrol et
+                const snapshot = await usersRef.orderByChild('referralCode').equalTo(code).once('value');
+                if (!snapshot.exists()) {
+                    isUnique = true;
+                }
             }
-        }
-
-
-        // --- UI UPDATES & RENDERING ---
-        
-        function updateUI() {
-            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
-            
-            if (!profileNameDisplay || !userPointsDisplay) return;
-
-            profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
-            const editNameBtn = document.getElementById('editNameBtn');
-            if(editNameBtn) editNameBtn.addEventListener('click', promptForNewName);
-
-            userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
-            
-            const adsLeft = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
-            if (adsWatchedTodayEl) adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
-            if (adsLeftTodayEl) adsLeftTodayEl.textContent = adsLeft;
-            if (totalAdsWatchedEl) totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime;
-
-            const watchBtn = document.getElementById('watchDailyAdBtn');
-            if (watchBtn) {
-                watchBtn.disabled = (adsLeft <= 0);
-                watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${USD_PER_AD.toFixed(3)}$` : `Daily Limit Reached`;
-            }
-        }
-
-        function navigateTo(pageId) {
-            document.querySelectorAll('.app-page').forEach(page => {
-                page.style.display = 'none';
-            });
-            
-            document.querySelector('.bottom-nav .nav-item.active')?.classList.remove('active');
-            const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-            if(navItem) navItem.classList.add('active');
-
-            if (pageId === 'home') renderHomePage();
-            else if (pageId === 'referral') renderReferralPage();
-            else if (pageId === 'withdraw') renderWithdrawPage();
-
-            updateUI(); 
+            return code;
         }
         
-        // --- PAGE RENDER FUNCTIONS ---
-        
-        function renderHomePage() {
-            mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ads</h2>
-                <div class="task-card">
-                    <p class="task-description">
-                        Watch one advertisement daily and earn **${USD_PER_AD.toFixed(3)}$** (approx. ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX). You have **${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}** ads left today.
-                    </p>
-                    <button class="btn btn-primary" id="watchDailyAdBtn">
-                        Watch Ad & Earn ${USD_PER_AD.toFixed(3)}$
-                    </button>
-                </div>
-
-                <h2 class="section-title"><i class="fas fa-trophy"></i> Rewards & Bonus</h2>
-                <div class="task-card">
-                    <p class="task-description">
-                        Invite more users to increase your earnings! Get ${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}$ for every referral.
-                    </p>
-                    <button class="btn btn-secondary" onclick="navigateTo('referral')">
-                        <i class="fas fa-users"></i> Go to Referral
-                    </button>
-                </div>
-            `;
-            document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
+        function formatTRX(amount) {
+            return parseFloat(amount).toFixed(4);
         }
 
-        function renderReferralPage() {
-            const botUsername = 'TronAdsFaucetBot'; 
-            const referralLink = `https://t.me/share/url?url=https://t.me/${botUsername}?start=${currentUser.referralCode}&text=⚡ TronAdsFaucet ile her gün reklam izleyerek kolayca TRX kazan! Hemen katılmak için linke tıkla:`;
-
-            const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
-            const earnedUSD = referredUsersCount * REFERRAL_BONUS_REFERRER_USD;
-            const earnedTRX = convertUSDToTRX(earnedUSD).toFixed(4);
-
-            mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-share-alt"></i> Refer & Earn</h2>
-                <div class="task-card">
-                    <p class="task-description">
-                        Invite friends and earn **${REFERRAL_BONUS_REFERRER_USD.toFixed(3)}$** (approx. ${convertUSDToTRX(REFERRAL_BONUS_REFERRER_USD).toFixed(5)} TRX) for each successful referral. They get **${REFERRAL_BONUS_REFEREE_USD.toFixed(3)}$** bonus!
-                    </p>
-                    <div class="referral-container">
-                        <label class="input-label" style="font-size: 1rem; color: var(--primary-color);"><i class="fas fa-link"></i> Your Share Link</label>
-                        <div class="referral-input-group">
-                            <input type="text" id="referralLinkDisplay" class="referral-input" value="${referralLink}" readonly>
-                            <button class="copy-btn" id="copyReferralLinkBtn">Copy</button>
-                        </div>
-                        <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
-                            <i class="fas fa-paper-plane"></i> Share Now
-                        </button>
-                    </div>
-                    <div class="referral-stats stats-display" style="border-top: none; padding-top: 0; margin-top: 0;">
-                        <div class="stat-item">
-                            <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
-                            <div class="stat-label">Total Referrals</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" style="color: var(--secondary-color);">${earnedTRX}</div>
-                            <div class="stat-label">Earned TRX</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('copyReferralLinkBtn')?.addEventListener('click', () => { copyToClipboard(document.getElementById('referralLinkDisplay').value, 'Link copied!'); });
-            document.getElementById('shareReferralLinkBtn')?.addEventListener('click', () => { window.open(referralLink, '_blank'); });
+        function escapeMarkdown(text) {
+            // Telegram MarkdownV2 için gerekli kaçış karakterleri
+            return String(text).replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
         }
 
-        function renderWithdrawPage() {
-            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
-            const minWithdrawTRX = WITHDRAW_MIN_TRX;
-
-            mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Withdrawal</h2>
-                <div class="task-card">
-                    <p class="task-description" style="margin-bottom: 5px;">
-                        Your current balance: <strong style="color: var(--primary-color);">${currentBalanceTRX.toFixed(4)} TRX</strong> (Price: $${currentTRXPrice.toFixed(4)})
-                    </p>
-                    <p class="task-description">
-                        Minimum withdrawal amount is **${minWithdrawTRX.toFixed(2)} TRX**.
-                    </p>
-
-                    <form id="withdrawalForm">
-                        <div class="input-group">
-                            <label for="amountTRX" class="input-label">Amount (TRX)</label>
-                            <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="walletAddress" class="input-label">TRX (TRC20) Wallet Address</label>
-                            <input type="text" id="walletAddress" class="input-field" placeholder="T..." required>
-                        </div>
-                        
-                        <div id="withdrawalMessage" class="error-message" style="display:none;"></div>
-
-                        <button type="submit" class="btn btn-primary" id="submitWithdrawalBtn">
-                            <i class="fas fa-paper-plane"></i> Request Withdrawal
-                        </button>
-                    </form>
-                </div>
-            `;
-            document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
+        // FIREBASE İŞLEMLERİ
+        function saveUserState() {
+            if (!currentUser.telegramId) return;
+            // Bakiyeyi sayısallaştırarak kaydet
+            currentUser.balanceTRX = parseFloat(currentUser.balanceTRX.toFixed(8)); 
+            db.ref('users/' + currentUser.telegramId).set(currentUser)
+                .catch(error => console.error("Firebase'e kullanıcı kaydı hatası:", error));
         }
 
-        // --- HANDLERS ---
+        function setInitialTRXValues() {
+            // Fiyat bilgisini sabitliyoruz. Tarayıcıda Google API'sine bağlanamayız.
+            tronPriceUSD = 0.06; // Varsayılan fiyat (Yaklaşık)
+            trxPerAd = REWARD_USD_PER_AD / tronPriceUSD;
+            trxRefBonus = REFERRAL_BONUS_USD_REFERRER / tronPriceUSD;
+            trxRefeeBonus = REFERRAL_BONUS_USD_REFEREE / tronPriceUSD;
 
-        async function handleWatchDailyAd() {
-            if (currentUser.adsWatchedToday < ADS_PER_DAY_LIMIT) {
-                const adCallback = async () => {
-                    currentUser.balanceUSD += USD_PER_AD;
-                    currentUser.adsWatchedToday += 1;
-                    currentUser.totalAdsWatchedLifetime += 1;
+            tronPriceDisplay.textContent = `TRX/USD: $${tronPriceUSD.toFixed(5)} (Sabitlendi)`;
+            adRewardValueEl.textContent = `~${formatTRX(trxPerAd)} TRX`;
+        }
+
+        async function loadUserStateFromFirebase() {
+            let initialRefCode = null;
+
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user) {
+                const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                currentUser.telegramId = tgUser.id;
+                currentUser.name = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || `User${tgUser.id}`;
+                currentUser.photoUrl = tgUser.photo_url || currentUser.photoUrl;
+
+                // URL'den referans kodu al
+                const urlParams = new URLSearchParams(window.location.search);
+                initialRefCode = urlParams.get('start');
+                if (initialRefCode && initialRefCode.includes('=')) {
+                     initialRefCode = initialRefCode.split('=')[1];
+                }
+
+                const snapshot = await db.ref('users/' + currentUser.telegramId).once('value');
+                const userData = snapshot.val();
+
+                if (userData) {
+                    Object.assign(currentUser, userData);
+                    // Name/Photo'yu Telegram'dan güncelle
+                    currentUser.name = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || userData.name;
+                    currentUser.photoUrl = tgUser.photo_url || userData.photoUrl;
                     
-                    const saved = await saveUserState(); 
-                    if (saved) {
-                        updateUI();
-                        showToast(`+${USD_PER_AD.toFixed(3)}$ (${convertUSDToTRX(USD_PER_AD).toFixed(4)} TRX) earned!`);
-                        sendToTelegram(`✅ *Ad Watched:* User \`${escapeMarkdown(currentUser.name)}\` (${currentUser.telegramId || 'N/A'}) earned $${USD_PER_AD.toFixed(3)} / ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX.`, true);
+                    if (!currentUser.referredUsers) currentUser.referredUsers = {};
+                    if (!currentUser.withdrawalRequests) currentUser.withdrawalRequests = {};
+
+                    // Referans kodu zaten varsa, kalıcı olarak atanmış demektir.
+                    if (!currentUser.referralCode) {
+                        currentUser.referralCode = await generateUniqueReferralCode();
                     }
+                    saveUserState(); 
+                } else {
+                    // Yeni kullanıcı
+                    currentUser.balanceTRX = 0.00;
+                    // BURASI DEĞİŞTİ: Yeni kullanıcıya benzersiz kod atanıyor.
+                    currentUser.referralCode = await generateUniqueReferralCode(); 
+                    saveUserState(); 
+                }
+                
+                // Admin nav butonunu göster/gizle
+                if (currentUser.telegramId === ADMIN_TELEGRAM_ID) {
+                    adminNav.style.display = 'flex';
+                }
+
+            } 
+            
+            // Günlük sayaç sıfırlama
+            const today = new Date().toLocaleDateString('en-CA');
+            if (currentUser.lastAdWatchDate !== today) {
+                currentUser.adsWatchedToday = 0;
+                currentUser.lastAdWatchDate = today;
+                saveUserState();
+            }
+
+            // Referans kontrolü (yalnızca yeni kullanıcıysa ve URL'de kod varsa)
+            if (initialRefCode && !currentUser.referredBy && currentUser.referralCode && initialRefCode !== currentUser.referralCode) {
+                applyReferral(initialRefCode);
+            }
+        }
+        
+        async function applyReferral(referrerCode) {
+            if (!currentUser.telegramId || currentUser.referredBy || !currentUser.referralCode || referrerCode === currentUser.referralCode) return;
+
+            const usersRef = db.ref('users');
+            // Referans kodunu kullanan kullanıcıyı bul
+            const referrerSnapshot = await usersRef.orderByChild('referralCode').equalTo(referrerCode).once('value');
+            const referrerData = referrerSnapshot.val();
+
+            if (referrerData) {
+                const referrerId = Object.keys(referrerData)[0];
+                const referrerUser = referrerData[referrerId];
+
+                currentUser.balanceTRX += trxRefeeBonus;
+                currentUser.referredBy = referrerCode;
+                
+                referrerUser.balanceTRX = (referrerUser.balanceTRX || 0) + trxRefBonus;
+                referrerUser.referredUsers = referrerUser.referredUsers || {};
+                referrerUser.referredUsers[currentUser.telegramId] = { 
+                    name: currentUser.name, 
+                    code: currentUser.referralCode 
                 };
                 
-                const errorCallback = () => {
-                    showToast("Ad closed or failed. Please try again.", 4000);
-                };
-                
-                if (window[ADEXORA_AD_FUNCTION_NAME]) {
-                    window[ADEXORA_AD_FUNCTION_NAME](adCallback, errorCallback);
-                } else {
-                    showToast("Ad system not ready. Simulating earnings...", 3000);
-                    await adCallback();
-                }
+                await db.ref('users/' + currentUser.telegramId).update({ 
+                    balanceTRX: parseFloat(currentUser.balanceTRX.toFixed(8)), 
+                    referredBy: currentUser.referredBy 
+                });
+                await db.ref('users/' + referrerId).update({ 
+                    balanceTRX: parseFloat(referrerUser.balanceTRX.toFixed(8)), 
+                    referredUsers: referrerUser.referredUsers 
+                });
+
+                showToast(`Referans bonusu: +${formatTRX(trxRefeeBonus)} TRX!`);
+                sendTelegramReferralNotification(
+                    currentUser.name, currentUser.telegramId, trxRefeeBonus, 
+                    referrerUser.name, referrerId, trxRefBonus
+                );
+                updateUI();
+
             } else {
-                showToast("Daily limit reached!", 3000);
+                showToast("Geçersiz referans kodu.");
             }
         }
 
-        function handleSubmitWithdrawal(e) {
-            e.preventDefault();
-            const amountTRX = parseFloat(document.getElementById('amountTRX').value);
-            const account = document.getElementById('walletAddress').value.trim();
-            const currentBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
-            const withdrawalMessageEl = document.getElementById('withdrawalMessage');
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.expand();
+                Telegram.WebApp.enableClosingConfirmation();
+                Telegram.WebApp.ready();
+            }
             
-            withdrawalMessageEl.style.display = 'none';
+            setInitialTRXValues(); // Sabit fiyatı ayarla
+            await loadUserStateFromFirebase();
+            applyTheme(localStorage.getItem('tronAdsTheme') || 'light'); 
+            
+            // İlk yükleme, animasyonu atlamak için true gönderilir
+            navigateTo('home', true);
 
-            if (amountTRX < WITHDRAW_MIN_TRX) {
-                withdrawalMessageEl.textContent = `Minimum çekim ${WITHDRAW_MIN_TRX.toFixed(2)} TRX'tir.`;
-                withdrawalMessageEl.style.display = 'block';
-                return;
-            }
-
-            if (amountTRX > currentBalanceTRX) {
-                withdrawalMessageEl.textContent = `Yetersiz bakiye. Mevcut: ${currentBalanceTRX.toFixed(4)} TRX.`;
-                withdrawalMessageEl.style.display = 'block';
-                return;
-            }
-
-            if (!/^T[A-Za-z1-9]{33}$/.test(account)) {
-                withdrawalMessageEl.textContent = 'Lütfen geçerli bir TRX (TRC20) cüzdan adresi girin.';
-                withdrawalMessageEl.style.display = 'block';
-                return;
-            }
-
-            const amountUSD = amountTRX * currentTRXPrice;
-
-            window.Telegram.WebApp.showConfirm(`Confirm withdrawal of ${amountTRX.toFixed(4)} TRX to ${account}?`, async (isConfirmed) => {
-                if (isConfirmed) {
-                    const withdrawalDetails = `
-🚨 *𝗡𝗘𝗪 𝗧𝗥𝗫 𝗪𝗜𝗧𝗛𝗗𝗥𝗔𝗪𝗔𝗟 𝗥𝗘𝗤𝗨𝗘𝗦𝗧* 🚨
-----------------------------------------
-👤 *𝗨𝘀𝗲𝗿 𝗡𝗮𝗺𝗲:* \`${escapeMarkdown(currentUser.name)}\`
-🆔 *𝗧𝗚 𝗨𝘀𝗲𝗿 𝗜𝗗:* \`${currentUser.telegramId || 'N/A'}\`
-💵 *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗨𝗦𝗗):* $${amountUSD.toFixed(4)}
-⚡ *𝗔𝗺𝗼𝘂𝗻𝘁 (𝗧𝗥𝗫):* ${amountTRX.toFixed(4)}
-🏦 *𝗧𝗥𝗫 𝗪𝗮𝗹𝗹𝗲𝘁:* \`${escapeMarkdown(account)}\`
-----------------------------------------
-⚖️ 𝗖𝘂𝗿𝗿𝗲𝗻𝘁 𝗧𝗥𝗫 𝗣𝗿𝗶𝗰𝗲: $${currentTRXPrice.toFixed(4)}
-📈 𝗔𝗱𝘀 𝗪𝗮𝘁𝗰𝗵𝗲𝗱: ${currentUser.totalAdsWatchedLifetime}
-🛠️ *𝗔𝗱𝗺𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻:* [Verify & Send TRX](tg://user?id=${ADMIN_TELEGRAM_ID})
-----------------------------------------
-                    `;
-                    
-                    sendToTelegram(withdrawalDetails, false); 
-
-                    currentUser.balanceUSD -= amountUSD; 
-                    const saved = await saveUserState(); 
-
-                    if (saved) {
-                        updateUI();
-                        document.getElementById('amountTRX').value = '';
-                        document.getElementById('walletAddress').value = '';
-                        mainContent.innerHTML = `
-                            <div class="task-card" style="text-align: center;">
-                                <h2 style="color: #4CAF50;"><i class="fas fa-check-circle"></i> Request Sent!</h2>
-                                <p style="margin: 20px 0;">Your withdrawal request for **${amountTRX.toFixed(4)} TRX** has been successfully submitted. Your balance has been updated. The Admin will process the payment soon.</p>
-                                <button class="btn btn-secondary" onclick="navigateTo('home')" style="width: auto;"><i class="fas fa-home"></i> Go Home</button>
-                            </div>
-                        `;
-                    } else {
-                        currentUser.balanceUSD += amountUSD;
-                        showToast("Kayıt hatası nedeniyle çekim isteği iptal edildi. Tekrar deneyin.", 6000);
-                        updateUI();
-                    }
-                }
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            document.getElementById('editNameBtn').addEventListener('click', promptForNewName);
+            bottomNavItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    // Navigasyonda animasyon kullanılır (isInitialLoad = false)
+                    navigateTo(page);
+                });
             });
+            adCloseBtn.addEventListener('click', closeAdModalAndReward);
+        });
+
+        // THEME MANAGEMENT
+        function applyTheme(theme) {
+            document.body.classList.toggle('dark-mode', theme === 'dark');
+            themeToggleBtn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('tronAdsTheme', theme);
         }
-        
+
         function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark');
+        }
+
+        // UI UPDATES
+        function updateUI() {
+            // DOM güncellemesi her navigateTo çağrıldığında yapıldığı için butonu yeniden bağlamalıyız
+            profileNameDisplay.innerHTML = `
+                ${currentUser.name}
+                <i class="fas fa-check-circle verified-badge" style="color: var(--secondary-color); margin-left: 8px;"></i>
+                <button class="edit-name-btn" id="editNameBtn">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            `;
+            // Yeniden oluşturulan butonu tekrar dinlemeye al
+            document.getElementById('editNameBtn').addEventListener('click', promptForNewName);
+
+            userPointsDisplay.innerHTML = `<i class="fas fa-wallet" style="margin-right: 8px; color: var(--primary-dark);"></i> ${formatTRX(currentUser.balanceTRX)} TRX`;
+            adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
+            totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime;
+            adRewardValueEl.textContent = `~${formatTRX(trxPerAd)} TRX`;
+
+            if (currentUser.photoUrl) {
+                profilePic.src = currentUser.photoUrl;
+            }
         }
 
         function promptForNewName() {
-            window.Telegram.WebApp.showPopup({
-                title: 'Update Name',
-                message: 'Enter your new name:',
-                buttons: [{ id: 'ok', type: 'default', text: 'Save' }, { id: 'cancel', type: 'cancel', text: 'Cancel' }]
-            }, (buttonId) => {
-                if (buttonId === 'ok') {
-                    const name = document.querySelector('.popup-with-input input')?.value;
-                    if (name && name.trim().length > 0) {
-                        currentUser.name = name.trim();
-                        saveUserState();
-                        updateUI();
-                        showToast("Name updated!");
-                    }
-                }
-            });
-        }
-        
-        // --- ADMIN PANEL FUNCTIONS ---
-        
-        function showAdminMessage(msg, type = 'warning') {
-            const msgEl = document.getElementById('adminMessage');
-            if (msgEl) {
-                msgEl.textContent = msg;
-                msgEl.className = '';
-                msgEl.classList.add('admin-message', `admin-${type}`);
-                msgEl.style.display = 'block';
-                setTimeout(() => msgEl.style.display = 'none', 5000);
+            const newName = prompt("Yeni adınızı girin:", currentUser.name);
+            if (newName && newName.trim()) {
+                currentUser.name = newName.trim();
+                updateUI();
+                saveUserState();
+                showToast("Adınız başarıyla güncellendi!");
             }
         }
 
-        async function fetchAdminUsers() {
-            document.getElementById('adminLoading')?.style.display = 'block';
-            document.getElementById('userTable')?.style.display = 'none';
+        // NAVIGATION (Gelişmiş Animasyon Uygulaması)
+        function navigateTo(page, isInitialLoad = false) {
+            const currentActiveNavItem = document.querySelector('.bottom-nav .nav-item.active');
+            if (currentActiveNavItem) {
+                currentActiveNavItem.classList.remove('active');
+            }
+            const activeNavItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+            if (activeNavItem) activeNavItem.classList.add('active');
+
+            const pageRenderers = {
+                'home': renderHomePage,
+                'withdraw': renderWithdrawPage,
+                'referral': renderReferralPage,
+                'admin': renderAdminPage
+            };
             
-            try {
-                const snapshot = await usersCollection.get();
-                adminUsersData = {}; 
+            // Fonksiyon: İçeriği render et ve animasyonla göster
+            const renderAndFadeIn = () => {
+                if (pageRenderers[page]) pageRenderers[page]();
+                updateUI();
                 
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    adminUsersData[doc.id] = { telegramId: doc.id, ...user }; 
-                });
+                // DOM'un yeni içeriği algılamasını zorla (Animasyonu tetiklemek için kritik)
+                void mainContent.offsetWidth; 
+                mainContent.classList.add('active-content');
+            };
 
-                renderAdminUsersTable(adminUsersData);
-                document.getElementById('adminLoading').style.display = 'none';
-                document.getElementById('userTable').style.display = 'table';
-                showAdminMessage("Veriler Firebase'den başarıyla yüklendi.", 'success');
-
-            } catch (error) {
-                console.error("Firebase Veri Çekme Hatası:", error);
-                showAdminMessage(`Veri çekilemedi: ${error.message}. Firebase kurallarınızı kontrol edin.`, 'error');
-                document.getElementById('adminLoading').style.display = 'none';
+            if (isInitialLoad) {
+                // İlk yükleme: animasyonsuz ve hemen render et
+                renderAndFadeIn();
+            } else {
+                // Navigasyon: mevcut içeriği animasyonla gizle
+                mainContent.classList.remove('active-content');
+                
+                // 200ms sonra (CSS geçiş süresinin yarısı), yeni içeriği render et ve göster
+                setTimeout(() => {
+                    renderAndFadeIn();
+                }, 200); 
             }
         }
 
-        function renderAdminUsersTable(users) {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = '';
-            
-            const userList = Object.values(users).map(user => ({ deviceId: user.telegramId, ...user }));
-
-            if (userList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Hiç kullanıcı bulunamadı.</td></tr>';
-                return;
-            }
-
-            userList.forEach(user => {
-                const balanceTRX = convertUSDToTRX(user.balanceUSD || 0);
-                const referredCount = user.referredUsers ? user.referredUsers.length : 0;
-                const userId = user.telegramId || user.deviceId;
-                
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${userId}</td>
-                    <td>
-                        <strong>${user.name || 'Anonim'}</strong><br>
-                        ${user.telegramId ? `<a href="tg://user?id=${user.telegramId}" target="_blank">${user.telegramId}</a>` : 'N/A'}
-                    </td>
-                    <td>
-                        <span class="balance">${balanceTRX.toFixed(4)} TRX</span><br>
-                        <span class="usd-val">(${(user.balanceUSD || 0).toFixed(4)})</span>
-                    </td>
-                    <td>${user.totalAdsWatchedLifetime || 0}</td>
-                    <td>${referredCount}</td>
-                    <td>
-                        <button class="btn-action" onclick="deductAdminBalance('${userId}', ${user.balanceUSD || 0})">
-                            <i class="fas fa-minus"></i> Bakiye Düş
-                        </button>
-                    </td>
-                `;
-            });
-        }
-
-        async function deductAdminBalance(userId, currentUSD) {
-            const deductionTRX = parseFloat(prompt(`Kullanıcı ID: ${userId}\nTRX bakiyesi: ${convertUSDToTRX(currentUSD).toFixed(4)} TRX\n\nKaç TRX düşmek istersiniz (Ödeme miktarını girin):`));
-            
-            if (isNaN(deductionTRX) || deductionTRX <= 0) {
-                showAdminMessage("Geçerli bir TRX miktarı girin.", 'warning');
-                return;
-            }
-
-            const deductionUSD = deductionTRX * currentTRXPrice;
-            const newUSD = currentUSD - deductionUSD;
-
-            if (newUSD < 0) {
-                showAdminMessage("Kullanıcının bakiyesi eksiye düşüyor. İşlem iptal edildi.", 'error');
-                return;
-            }
-
-            try {
-                const userRef = usersCollection.doc(userId);
-                await userRef.update({ balanceUSD: newUSD });
-                
-                if (adminUsersData[userId]) {
-                    adminUsersData[userId].balanceUSD = newUSD;
-                }
-                
-                showAdminMessage(`Başarılı: ${deductionTRX.toFixed(4)} TRX düşüldü. Yeni bakiye: ${convertUSDToTRX(newUSD).toFixed(4)} TRX`, 'success');
-                fetchAdminUsers(); 
-            } catch (error) {
-                 console.error("Firebase Güncelleme Hatası:", error);
-                 showAdminMessage(`Veri Firebase'e kaydedilemedi: ${error.message}.`, 'error');
-            }
-        }
-        
-        function renderAdminPanel() {
-            document.getElementById('mainAppContent').style.display = 'none';
-            
-            document.getElementById('adminPanelContent').innerHTML = `
-                <div class="admin-container">
-                    <h1><i class="fas fa-user-shield"></i> TronAdsFaucet Yönetici Paneli</h1>
-                    <p>TRX/USD Fiyatı: <strong>$${currentTRXPrice.toFixed(4)}</strong></p>
-                    <button id="refreshBtn" class="btn-action"><i class="fas fa-sync-alt"></i> Verileri Yenile</button>
+        // PAGE RENDERERS
+        function renderHomePage() {
+            mainContent.innerHTML = `
+                <div class="task-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-bullhorn"></i> Reklam İzle & Kazan
+                    </h2>
+                    <p class="task-description">
+                        Basit bir reklam izleyerek her seferinde **${formatTRX(trxPerAd)} TRX** (yaklaşık $${REWARD_USD_PER_AD}) kazanın.
+                    </p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="reward-badge">Ödül: ${formatTRX(trxPerAd)} TRX</div>
+                    </div>
                     
-                    <div id="adminMessage" class="admin-message admin-warning" style="display: none;"></div>
+                    <button class="btn btn-primary" id="watchDailyAdBtn">
+                        <i class="fas fa-play-circle"></i> Reklam İzle & Kazan
+                    </button>
+                </div>`;
+            document.getElementById('watchDailyAdBtn').addEventListener('click', handleWatchDailyAd);
+        }
 
-                    <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Kullanıcı verileri Firebase'den yükleniyor...</div>
+        function renderWithdrawPage() {
+            mainContent.innerHTML = `
+                <div class="task-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-coins"></i> TRX Çekim Talebi
+                    </h2>
+                    <p class="task-description">
+                        Mevcut Bakiyeniz: <b>${formatTRX(currentUser.balanceTRX)} TRX</b><br>
+                        Minimum çekim tutarı: <b>${MIN_WITHDRAW_TRX.toFixed(2)} TRX</b> (Sadece TRON)
+                    </p>
+                    <div class="input-group">
+                        <label class="input-label">Çekilecek Miktar (TRX)</label>
+                        <input type="number" id="withdrawAmountInput" class="input-field" placeholder="En az ${MIN_WITHDRAW_TRX.toFixed(2)} TRX" value="">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">TRON (TRX) Cüzdan Adresi</label>
+                        <input type="text" id="withdrawAccountInput" class="input-field" placeholder="T ile başlayan cüzdan adresiniz">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Telegram Kullanıcı Adınız (Zorunlu)</label>
+                        <input type="text" id="withdrawUsernameInput" class="input-field" placeholder="@kullaniciadiniz">
+                    </div>
+                    <button class="btn btn-primary" id="submitWithdrawBtn">
+                        <i class="fas fa-paper-plane"></i> Çekim Talebi Gönder
+                    </button>
+                    <p class="status-message" id="withdrawStatusMsg"></p>
+                </div>`;
+            document.getElementById('submitWithdrawBtn').addEventListener('click', handleSubmitWithdrawal);
+        }
 
-                    <table id="userTable" style="display: none;">
-                        <thead>
-                            <tr>
-                                <th>TG ID / Key</th>
-                                <th>Telegram ID / İsim</th>
-                                <th>Bakiye (TRX / USD)</th>
-                                <th>Toplam İzlenen Reklam</th>
-                                <th>Referanslar</th>
-                                <th>İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody"></tbody>
-                    </table>
+        function renderReferralPage() {
+            // Referans kodu kalıcı ve benzersiz olduğu için direkt kullanılır
+            const referralLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}`;
+            const referredUsersCount = currentUser.referredUsers ? Object.keys(currentUser.referredUsers).length : 0;
+            const refEarnedTRX = referredUsersCount * trxRefBonus;
+
+            let referredUsersListHtml = '';
+            if (referredUsersCount > 0) {
+                referredUsersListHtml = `
+                    <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Davet Edilenler (${referredUsersCount})</h3>
+                    <ul style="list-style: none; padding: 0;">`;
+                
+                Object.values(currentUser.referredUsers).forEach(refUser => {
+                    referredUsersListHtml += `
+                        <li style="padding: 10px; border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between;">
+                            <span><i class="fas fa-user-check" style="margin-right: 8px; color: var(--secondary-color);"></i> ${refUser.name || 'Bilinmeyen Kullanıcı'}</span>
+                            <span style="font-weight: 600; color: var(--primary-color);">${refUser.code}</span>
+                        </li>`;
+                });
+                referredUsersListHtml += `</ul>`;
+            } else {
+                referredUsersListHtml = `
+                    <div style="text-align: center; padding: 20px 0; color: var(--text-secondary); opacity: 0.8; font-size: 0.95rem;">
+                        <i class="fas fa-ghost" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Henüz kimseyi davet etmediniz. Linkinizi paylaşın!</p>
+                    </div>`;
+            }
+
+            mainContent.innerHTML = `
+                <div class="task-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-users-cog"></i> Referans Sistemi
+                    </h2>
+                    <p class="task-description">
+                        Davet ettiğiniz her aktif kullanıcı için yaklaşık <b>${formatTRX(trxRefBonus)} TRX</b> kazanın. Yeni kullanıcı da <b>${formatTRX(trxRefeeBonus)} TRX</b> bonusla başlar!
+                    </p>
+                    <div class="referral-container">
+                        <label class="input-label">Sizin Kalıcı Referans Linkiniz</label>
+                        <div class="referral-input-group">
+                            <input type="text" id="referralLinkDisplay" class="referral-input" value="${referralLink}" readonly>
+                            <button class="copy-btn" id="copyReferralLinkBtn"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">**Linkiniz: https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}**</p>
+                        
+                        <div class="stats-display">
+                            <div class="stat-item" style="text-align: center;">
+                                <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
+                                <div class="stat-label">Toplam Davet</div>
+                            </div>
+                            <div class="stat-item" style="text-align: center;">
+                                <div class="stat-value">${formatTRX(refEarnedTRX)}</div>
+                                <div class="stat-label">Referans TRX Kazancı</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
+                            <i class="fas fa-share-alt"></i> Linki Telegram'da Paylaş
+                        </button>
+                    </div>
+                    ${referredUsersListHtml}
+                </div>`;
+
+            document.getElementById('copyReferralLinkBtn').addEventListener('click', () => {
+                const referralLinkInput = document.getElementById('referralLinkDisplay');
+                navigator.clipboard.writeText(referralLinkInput.value);
+                showToast('Referans linki kopyalandı!');
+            });
+            document.getElementById('shareReferralLinkBtn').addEventListener('click', () => {
+                 if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(`Bu Tron Faucet'a katıl ve reklam izleyerek TRX kazan! Hemen başla:`)}`);
+                } else {
+                    navigator.clipboard.writeText(referralLink);
+                    showToast('Telegram WebApp bulunamadı, link kopyalandı!');
+                }
+            });
+        }
+        
+        // ADMIN PAGE RENDERER
+        function renderAdminPage() {
+            if (currentUser.telegramId !== ADMIN_TELEGRAM_ID) {
+                mainContent.innerHTML = `<div class="task-card error-message" style="text-align:center; padding: 20px; font-weight: bold;">Yetkisiz Erişim!</div>`;
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <h2 class="section-title"><i class="fas fa-user-lock"></i> Admin Paneli</h2>
+                <div class="task-card" id="adminStatsCard">Yükleniyor...</div>
+                
+                <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Bekleyen Çekim Talepleri</h3>
+                <ul class="admin-request-list" id="withdrawalRequestsList">
+                    <li>Yükleniyor...</li>
+                </ul>`;
+            
+            loadAdminData();
+        }
+
+        async function loadAdminData() {
+            const statsCard = document.getElementById('adminStatsCard');
+            const requestsList = document.getElementById('withdrawalRequestsList');
+            
+            // İstatistikleri yükle
+            const usersSnapshot = await db.ref('users').once('value');
+            const totalUsers = usersSnapshot.numChildren();
+            let totalBalance = 0;
+            let totalAds = 0;
+            let totalReferrals = 0;
+            
+            usersSnapshot.forEach(userSnap => {
+                const user = userSnap.val();
+                totalBalance += user.balanceTRX || 0;
+                totalAds += user.totalAdsWatchedLifetime || 0;
+                totalReferrals += user.referredUsers ? Object.keys(user.referredUsers).length : 0;
+            });
+
+            statsCard.innerHTML = `
+                <div class="admin-stat-card">
+                    <b>Toplam Kullanıcı:</b> ${totalUsers}
+                </div>
+                <div class="admin-stat-card">
+                    <b>Toplam Bakiye (TRX):</b> ${formatTRX(totalBalance)}
+                </div>
+                <div class="admin-stat-card">
+                    <b>Toplam İzlenen Reklam:</b> ${totalAds}
+                </div>
+                <div class="admin-stat-card">
+                    <b>Toplam Referans:</b> ${totalReferrals}
                 </div>
             `;
-            document.getElementById('adminPanelContent').style.display = 'block';
-            document.getElementById('refreshBtn')?.addEventListener('click', fetchAdminUsers);
-            fetchAdminUsers();
+            
+            // Çekim taleplerini yükle
+            const requestsSnapshot = await db.ref('withdrawalRequests').orderByChild('status').equalTo('Pending').once('value');
+            const requestsData = requestsSnapshot.val();
+
+            if (!requestsData) {
+                requestsList.innerHTML = '<li style="text-align: center; padding: 10px; color: var(--text-secondary);">Bekleyen çekim talebi yok.</li>';
+                return;
+            }
+
+            requestsList.innerHTML = '';
+            Object.keys(requestsData).forEach(reqId => {
+                const req = requestsData[reqId];
+                const item = document.createElement('li');
+                item.className = 'admin-request-item';
+                item.innerHTML = `
+                    <div class="request-detail" style="font-size: 0.9rem;">
+                       <span style="font-weight: 700;">${formatTRX(req.amountTRX)} TRX</span> &rarr; <span style="font-family: monospace; font-size: 0.85rem;">${req.walletAddress.substring(0, 10)}...</span>
+                    </div>
+                    <div class="request-detail" style="font-size: 0.85rem; margin-top: 5px;">
+                       👤 ${req.userName} | ID: ${req.telegramId}
+                    </div>
+                    <div class="request-actions" style="margin-top: 10px; display: flex; justify-content: space-between;">
+                        <button class="approve" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-right: 5px;">Onayla</button>
+                        <button class="reject" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-left: 5px;">Reddet</button>
+                    </div>
+                `;
+                requestsList.appendChild(item);
+            });
+            
+            requestsList.querySelectorAll('.approve').forEach(btn => btn.addEventListener('click', handleAdminAction));
+            requestsList.querySelectorAll('.reject').forEach(btn => btn.addEventListener('click', handleAdminAction));
+        }
+
+        async function handleAdminAction(event) {
+            const btn = event.target;
+            const reqId = btn.dataset.id;
+            const userId = parseInt(btn.dataset.userId);
+            const amountTRX = parseFloat(btn.dataset.amount);
+            const action = btn.classList.contains('approve') ? 'Approved' : 'Rejected';
+
+            if (!confirm(`${reqId.substring(0, 8)} ID'li ${formatTRX(amountTRX)} TRX talebi ${action === 'Approved' ? 'ONAYLIYOR' : 'REDDEDİYOR'} musunuz?`)) return;
+
+            // Talebin durumunu güncelle
+            await db.ref('withdrawalRequests/' + reqId).update({ status: action, adminId: currentUser.telegramId, resolutionTime: new Date().toISOString() });
+            
+            if (action === 'Rejected') {
+                // Reddedilirse bakiyeyi geri yükle
+                const userRef = db.ref('users/' + userId);
+                const userSnap = await userRef.once('value');
+                const user = userSnap.val();
+                
+                if (user) {
+                    const newBalance = (user.balanceTRX || 0) + amountTRX;
+                    await userRef.update({ balanceTRX: parseFloat(newBalance.toFixed(8)) });
+                    showToast(`Reddedildi. Bakiye geri yüklendi: +${formatTRX(amountTRX)} TRX`, 5000);
+                }
+            } else {
+                 showToast(`Talep Onaylandı. Lütfen ödemeyi yapın.`, 5000);
+            }
+            
+            loadAdminData(); 
         }
 
 
-        // --- INITIALIZATION ---
+        // AD HANDLING (REKLAM İŞLEMLERİ)
+        function handleWatchDailyAd() {
+            openAdModal("Reklam Başlatılıyor...");
+            adModalTitle.textContent = "Reklam Başlatılıyor...";
+            adStatusMessage.textContent = "Lütfen bekleyin...";
+            adCloseBtn.style.display = 'none';
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isAdminPanel = urlParams.get('panel') === 'admin';
+            if (window[AD_FUNCTION_NAME] && typeof window[AD_FUNCTION_NAME] === 'function') {
+                window[AD_FUNCTION_NAME]()
+                    .then(() => {
+                        // Başarılı (Reklam İzleme Tamamlandı)
+                        adModalTitle.textContent = "Tebrikler! 🎉";
+                        adStatusMessage.textContent = `Reklam başarıyla tamamlandı. ${formatTRX(trxPerAd)} TRX kazanmak için butona basın.`;
+                        adCloseBtn.style.display = 'block';
+                        adCloseBtn.textContent = "Kapat & Ödülü Al";
+                        adCloseBtn.dataset.rewardStatus = 'success';
+                    })
+                    .catch(e => {
+                        // Hata (Kullanıcı Kapattı/Hata Oluştu)
+                        console.error("Adexora Reklam Hatası:", e);
+                        adModalTitle.textContent = "İşlem Başarısız ❌";
+                        adStatusMessage.textContent = "Reklamı tam izlemediniz veya bir hata oluştu. Ödül verilmedi.";
+                        adCloseBtn.style.display = 'block';
+                        adCloseBtn.textContent = "Kapat";
+                        adCloseBtn.dataset.rewardStatus = 'fail';
+                    });
+            } else {
+                // Simülasyon
+                showToast("Adexora kodu bulunamadı. 5 sn simülasyon başlatıldı.");
+                adModalTitle.textContent = "Reklam Simülasyonu ⏱️";
+                adStatusMessage.textContent = "Simülasyon devam ediyor... (5sn)";
+                setTimeout(() => {
+                    adModalTitle.textContent = "Simülasyon Tamamlandı! 🎉";
+                    adStatusMessage.textContent = `Simülasyon başarılı. ${formatTRX(trxPerAd)} TRX kazanmak için kapatın.`;
+                    adCloseBtn.style.display = 'block';
+                    adCloseBtn.textContent = "Kapat & Ödülü Al";
+                    adCloseBtn.dataset.rewardStatus = 'success';
+                }, 5000);
+            }
+        }
+
+        function openAdModal(title) {
+            adModalTitle.textContent = title;
+            adCloseBtn.style.display = 'none';
+            adModal.style.opacity = '1';
+            adModal.style.pointerEvents = 'all';
+        }
+
+        function closeAdModalAndReward() {
+            adModal.style.opacity = '0';
+            adModal.style.pointerEvents = 'none';
+            const rewardStatus = adCloseBtn.dataset.rewardStatus;
             
-            // 1. TRX Fiyatını çek
-            await fetchTRXPrice();
+            if (rewardStatus === 'success') {
+                // Ödülü ver ve sayaçları güncelle
+                currentUser.balanceTRX += trxPerAd;
+                currentUser.adsWatchedToday++;
+                currentUser.totalAdsWatchedLifetime++;
+                currentUser.lastAdWatchDate = new Date().toLocaleDateString('en-CA');
 
-            if (isAdminPanel) {
-                if (urlParams.get('adminid') === ADMIN_TELEGRAM_ID) {
-                    renderAdminPanel();
-                    document.body.style.backgroundColor = '#f4f7f9';
-                    document.body.classList.remove('dark-mode'); 
-                    loadingScreen.style.display = 'none';
-                    fullAppContainer.style.display = 'block';
-                } else {
-                     loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">Erişim Reddedildi. Geçersiz Yönetici ID'si.</p>`;
-                }
+                updateUI();
+                saveUserState();
+                showToast(`+${formatTRX(trxPerAd)} TRX kazandınız!`);
+            } else if (rewardStatus === 'fail') {
+                showToast("Reklam ödülü verilmedi.");
+            }
+            adCloseBtn.dataset.rewardStatus = '';
+        }
+
+        // WITHDRAWAL HANDLING (ÇEKİM İŞLEMLERİ)
+        async function handleSubmitWithdrawal() {
+            if (!currentUser.telegramId) {
+                showToast("Çekim talebi için Telegram kullanıcısı olmalısınız.");
                 return;
             }
             
-            // 2. Ana Uygulama Yükle
-            try {
-                if (window.Telegram && Telegram.WebApp) Telegram.WebApp.expand();
+            const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+            const walletAddress = document.getElementById('withdrawAccountInput').value.trim();
+            const telegramUsername = document.getElementById('withdrawUsernameInput').value.trim();
+            const statusMsg = document.getElementById('withdrawStatusMsg');
 
-                const loaded = await loadUserState(); 
-                
-                if (!loaded) {
-                    return; 
-                }
-                
-                // DOM elementlerini ata
-                profileNameDisplay = document.getElementById('profileNameDisplay');
-                userPointsDisplay = document.getElementById('userPointsDisplay');
-                adsWatchedTodayEl = document.getElementById('adsWatchedToday');
-                adsLeftTodayEl = document.getElementById('adsLeftToday');
-                totalAdsWatchedEl = document.getElementById('totalAdsWatched');
-                bottomNavItems = document.querySelectorAll('.bottom-nav .nav-item');
-                
-                // Tema ayarını yükle
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark') {
-                    document.body.classList.add('dark-mode');
-                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
-                } else {
-                    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
-                }
+            statusMsg.className = 'status-message';
+            statusMsg.textContent = '';
 
-                // Event listeners ata
-                document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
-                bottomNavItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.page); }); });
-
-                // Sayfaya yönlendir ve UI'ı güncelle
-                navigateTo('home');
-
-                // Yükleme ekranını gizle ve uygulamayı göster
-                loadingScreen.style.display = 'none';
-                fullAppContainer.style.display = 'block';
-
-            } catch(error) {
-                console.error("Uygulama başlatılırken kritik hata oluştu:", error);
-                loadingScreen.innerHTML = `<p style="color:var(--primary-color); font-size:1.2rem;">**Kritik Hata:** Uygulama yüklenemedi. Konsolu kontrol edin.</p><p style="color:#333;">${error.message}</p>`;
+            if (isNaN(amount) || amount <= 0 || amount > 1000000) {
+                statusMsg.textContent = "Lütfen geçerli bir miktar girin.";
+                statusMsg.classList.add('error-message');
+                return;
             }
-        });
+            if (amount < MIN_WITHDRAW_TRX) {
+                statusMsg.textContent = `Minimum çekim ${MIN_WITHDRAW_TRX.toFixed(2)} TRX'tir.`;
+                statusMsg.classList.add('error-message');
+                return;
+            }
+            if (amount > currentUser.balanceTRX) {
+                statusMsg.textContent = "Yeterli bakiyeniz yok.";
+                statusMsg.classList.add('error-message');
+                return;
+            }
+            if (!walletAddress || !walletAddress.startsWith('T') || walletAddress.length < 30) {
+                statusMsg.textContent = "Lütfen geçerli bir TRON (TRX) cüzdan adresi girin (T ile başlamalı).";
+                statusMsg.classList.add('error-message');
+                return;
+            }
+            if (!telegramUsername || !telegramUsername.startsWith('@') || telegramUsername.length < 4) {
+                statusMsg.textContent = "Lütfen geçerli bir Telegram Kullanıcı Adı girin (@ ile başlamalı).";
+                statusMsg.classList.add('error-message');
+                return;
+            }
+
+            // Bakiyeden düş
+            currentUser.balanceTRX -= amount;
+            
+            // Firebase'e çekim talebini kaydet
+            const withdrawalRequest = {
+                telegramId: currentUser.telegramId,
+                userName: currentUser.name,
+                telegramUsername: telegramUsername,
+                amountTRX: amount,
+                walletAddress: walletAddress,
+                status: 'Pending', 
+                timestamp: new Date().toISOString()
+            };
+
+            await db.ref('withdrawalRequests').push(withdrawalRequest);
+
+            // Telegram Admin Kanalına Bildirim Gönder
+            sendTelegramWithdrawalNotification(withdrawalRequest);
+
+            updateUI();
+            saveUserState();
+
+            statusMsg.textContent = "Çekim talebiniz başarıyla gönderildi ve inceleniyor!";
+            statusMsg.classList.add('success-message');
+            document.getElementById('withdrawAmountInput').value = "";
+            document.getElementById('withdrawAccountInput').value = "";
+            document.getElementById('withdrawUsernameInput').value = "";
+        }
+
+        // TELEGRAM BİLDİRİMLERİ (Syntax hatası giderildi: Template Literal yerine String Birleştirme kullanıldı)
+        function sendToTelegram(message) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+                console.warn("Telegram Bot ayarları eksik. Bildirim gönderilemedi.");
+                return;
+            }
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'MarkdownV2'
+                })
+            })
+            .catch(error => console.error('Telegram mesajı gönderme hatası:', error));
+        }
+
+        function sendTelegramWithdrawalNotification(req) {
+            const message = "🚨 *YENİ ÇEKİM TALEBİ* 🚨\n" +
+                "------------------------------------\n" +
+                // Kullanıcı adına tıklanabilir link (tg://user?id=) ekleniyor
+                "👤 *Kullanıcı:* \\[\`" + escapeMarkdown(req.userName) + "\`\\](tg://user?id=" + req.telegramId + ")\n" +
+                "🆔 *Telegram ID:* `" + req.telegramId + "`\n" +
+                "💰 *Miktar:* " + formatTRX(req.amountTRX) + " TRX\n" +
+                "💳 *Cüzdan:* `" + escapeMarkdown(req.walletAddress) + "`\n" +
+                "📱 *Kullanıcı Adı:* `" + escapeMarkdown(req.telegramUsername) + "`\n" +
+                "------------------------------------\n" +
+                "⏰ *Talep Zamanı:* " + new Date(req.timestamp).toLocaleString('tr-TR');
+            sendToTelegram(message);
+        }
+
+        function sendTelegramReferralNotification(refereeName, refereeId, refereeBonus, referrerName, referrerId, referrerBonus) {
+            const message = "🎉 *YENİ REFERANS* 🎉\n" +
+                "------------------------------------\n" +
+                // Yeni Kullanıcı
+                "👥 *Yeni Kullanıcı:* \\[\`" + escapeMarkdown(refereeName) + "\`\\](tg://user?id=" + refereeId + ")\n" +
+                "🌟 *Kazanılan:* " + formatTRX(refereeBonus) + " TRX\n" +
+                "Davet Eden:\n" +
+                // Davet Eden
+                "👤 *Davet Eden:* \\[\`" + escapeMarkdown(referrerName) + "\`\\](tg://user?id=" + referrerId + ")\n" +
+                "🌟 *Kazanılan:* " + formatTRX(referrerBonus) + " TRX\n" +
+                "------------------------------------\n" +
+                "⏰ *Zaman:* " + new Date().toLocaleString('tr-TR');
+            sendToTelegram(message);
+        }
+
     </script>
 </body>
 </html>
