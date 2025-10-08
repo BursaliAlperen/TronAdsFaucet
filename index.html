@@ -14,12 +14,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
     <style>
-        /* Genel Tema Ayarları - KIRMIZI/BEYAZ TEMA */
+        /* (STİL KODLARI BURADA BAŞLAR - DEĞİŞİKLİK YAPILMADI) */
         :root {
-            --primary-color: #E63946; /* Kırmızı */
+            --primary-color: #E63946;
             --primary-dark: #A82E37;
-            --secondary-color: #E63946; /* Kırmızı */
-            --bg-light: #FFFFFF; /* Beyaz */
+            --secondary-color: #E63946;
+            --bg-light: #FFFFFF;
             --bg-dark: #1F2937;
             --card-bg-light: #FFFFFF;
             --card-bg-dark: #374151;
@@ -142,7 +142,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Reklam Modal Stili */
+        /* Reklam Modal Stili (Simülasyon için) */
         .ad-modal-overlay {
             position: fixed;
             top: 0;
@@ -217,7 +217,7 @@
 
             <div class="ad-modal-overlay" id="adModal">
                 <div class="ad-modal-content">
-                    <h2>Watching Advertisement</h2>
+                    <h2>Watching Advertisement (Simulation)</h2>
                     <p>Please wait while the ad is loading...</p>
                     <div class="ad-countdown" id="adCountdown">5</div>
                     <p>Do not close this window to earn your reward!</p>
@@ -234,17 +234,20 @@
     <script>
         // --- CONFIGURATION ---
         const APP_NAME = "TronAdsFaucet";
-        const ADS_PER_DAY_LIMIT = 100;
-        const USD_PER_AD = 0.001;
+        // BU DEĞERLER ARTIK FIREBASE'DEN ÇEKİLECEK! Başlangıç için varsayılan değerler
+        let ADS_PER_DAY_LIMIT = 100;
+        let USD_PER_AD = 0.001;
+        let REFERRAL_BONUS_REFERRER_USD = 0.005;
+        let REFERRAL_BONUS_REFEREE_USD = 0.001;
         const MIN_WITHDRAW_TRX = 0.01; 
-        const REFERRAL_BONUS_REFERRER_USD = 0.005;
-        const REFERRAL_BONUS_REFEREE_USD = 0.001;
+        
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
         const TELEGRAM_CHAT_ID = "-1002783990004";
         const ADMIN_TELEGRAM_ID = "7904032877"; 
         const ADEXORA_AD_FUNCTION_NAME = 'showAdexora';
         const FALLBACK_TRX_PRICE = 0.12;
+        const NON_TELEGRAM_USER_ID = 9999999999; 
 
         // !!! FIREBASE CONFIGURATION - USER PROVIDED !!!
         const firebaseConfig = {
@@ -280,7 +283,6 @@
             console.log("Firebase initialized successfully.");
         } catch(e) {
             console.error("Firebase Initialization Error:", e);
-            // db remains undefined/null if initialization fails
         }
 
         // --- UTILITY FUNCTIONS ---
@@ -305,48 +307,30 @@
         function loadProfilePicture() {
             if (!currentUser) return;
             
-            // Telegram'dan profil fotoğrafını al
             if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user) {
                 const tgUser = Telegram.WebApp.initDataUnsafe.user;
-                
-                // Telegram profil fotoğrafı URL'sini kontrol et
                 if (tgUser.photo_url) {
-                    // Telegram profil fotoğrafını yükle
                     const img = new Image();
-                    img.onload = function() {
-                        // Fotoğraf başarıyla yüklendi, ikonu kaldır ve fotoğrafı göster
-                        profilePic.innerHTML = '';
-                        profilePic.appendChild(img);
-                    };
-                    img.onerror = function() {
-                        // Fotoğraf yüklenemedi, varsayılan ikonu kullan
-                        console.log("Telegram profile photo failed to load, using default icon");
-                        profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
-                    };
+                    img.onload = function() { profilePic.innerHTML = ''; profilePic.appendChild(img); };
+                    img.onerror = function() { profilePic.innerHTML = '<i class="fas fa-user-circle"></i>'; };
                     img.src = tgUser.photo_url;
                     img.alt = 'Profile Picture';
-                } else {
-                    // Telegram profil fotoğrafı yok, varsayılan ikonu kullan
-                    console.log("No Telegram profile photo available, using default icon");
-                    profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
+                    return;
                 }
-            } else {
-                // Telegram WebApp yok, varsayılan ikonu kullan
-                console.log("Telegram WebApp not available, using default icon");
-                profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
-            }
+            } 
+            profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
         }
 
-        // --- REKLAM OYNATMA FONKSİYONU ---
+        // --- REKLAM OYNATMA FONKSİYONU (Simülasyon) ---
         function showAdAndReward() {
             const adModal = document.getElementById('adModal');
             const adCountdown = document.getElementById('adCountdown');
             const closeAdBtn = document.getElementById('closeAdBtn');
+            const watchBtn = document.getElementById('watchDailyAdBtn');
             
-            // Modal'ı göster
             adModal.style.display = 'flex';
-            
-            // Geri sayımı başlat
+            watchBtn.disabled = true;
+
             let countdown = 5;
             adCountdown.textContent = countdown;
             
@@ -356,48 +340,67 @@
                 
                 if (countdown <= 0) {
                     clearInterval(adCountdownInterval);
-                    
-                    // Reklam bitti, ödülü ver
                     rewardUserForAd();
-                    
-                    // Kapat butonunu göster
                     closeAdBtn.style.display = 'block';
                 }
             }, 1000);
             
-            // Kapat butonu event listener'ı
             closeAdBtn.onclick = function() {
                 adModal.style.display = 'none';
                 closeAdBtn.style.display = 'none';
                 clearInterval(adCountdownInterval);
+                watchBtn.disabled = false;
             };
         }
         
         function rewardUserForAd() {
             if (!currentUser) return;
             
-            // Kullanıcıya ödül ver
+            // Reklam ödülü artık USD_PER_AD değişkeninden geliyor
             currentUser.balanceUSD += USD_PER_AD;
             currentUser.adsWatchedToday += 1;
             currentUser.totalAdsWatchedLifetime = (currentUser.totalAdsWatchedLifetime || 0) + 1;
             
-            // Kullanıcıyı kaydet ve UI'ı güncelle
             saveUserStateLocalOrFirebase();
             
             const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
             showToast(`+${earnedTRX} TRX earned!`);
             
-            // Telegram'a bildirim gönder
-            sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
+            if(currentUser.telegramId !== NON_TELEGRAM_USER_ID) {
+                sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
+            }
         }
 
         // --- FIREBASE DATA HANDLING ---
 
+        // YENİ FONKSİYON: Ayar Değerlerini Firebase'den Çeker
+        async function loadConfig() {
+            if (!db) return;
+            try {
+                const configRef = db.collection('config').doc('rewards');
+                const doc = await configRef.get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Global değişkenleri Firebase'den gelen değerlerle güncelle
+                    ADS_PER_DAY_LIMIT = data.adsPerDayLimit || ADS_PER_DAY_LIMIT;
+                    USD_PER_AD = data.usdPerAd || USD_PER_AD;
+                    REFERRAL_BONUS_REFERRER_USD = data.referralBonusReferrerUSD || REFERRAL_BONUS_REFERRER_USD;
+                    REFERRAL_BONUS_REFEREE_USD = data.referralBonusRefereeUSD || REFERRAL_BONUS_REFEREE_USD;
+                    console.log("Config loaded from Firebase:", data);
+                } else {
+                    console.warn("Config document 'rewards' not found in Firebase. Using default values.");
+                }
+            } catch (error) {
+                console.error("Firebase loadConfig Error:", error);
+            }
+        }
+
+
         async function fetchUser(tgId) {
-            if (!db) return null; // Firebase connection check
+            if (!db) return null; 
             try {
                 const userRef = db.collection('users').doc(String(tgId));
-                // 5 saniyelik bir timeout ekleyerek takılı kalmayı engelleriz
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
@@ -405,7 +408,6 @@
                 return doc.exists ? doc.data() : null;
             } catch (error) {
                 console.error("Firebase fetchUser Error:", error);
-                // Eğer hata olursa veya timeout olursa null döner
                 return null;
             }
         }
@@ -461,9 +463,14 @@
             }
         }
 
+        // REFERANS MİKTARLARI BURADA KULLANILIR
         async function applyReferral(refereeUser, referrerUser) {
             if (!db) return; 
+            if (refereeUser.telegramId === NON_TELEGRAM_USER_ID || referrerUser.telegramId === NON_TELEGRAM_USER_ID) {
+                return; 
+            }
             try {
+                // REFEREE ödülü için REFERRAL_BONUS_REFEREE_USD kullanılır
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
                 refereeUser.referredBy = referrerUser.referralCode;
                 
@@ -479,7 +486,8 @@
                     }
 
                     transaction.update(referrerRef, {
-                        balanceUSD: currentReferrerData.balanceUSD + REFERRAL_BONUS_REFERRER_USD,
+                        // REFERRER ödülü için REFERRAL_BONUS_REFERRER_USD kullanılır
+                        balanceUSD: (currentReferrerData.balanceUSD || 0) + REFERRAL_BONUS_REFERRER_USD,
                         referredUsers: updatedReferredUsers
                     });
                 });
@@ -510,38 +518,39 @@
             const urlParams = new URLSearchParams(window.location.search);
             const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
 
-            // 1. Telegram WebApp Kullanıcısı Kontrolü
-            if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                // KRİTİK: Telegram kullanıcısı yoksa, uygulamayı durdur ve hata göster.
-                throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
+            let tgUser;
+            let tgId;
+            let isTelegram = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user);
+
+            // 1. Telegram WebApp Kullanıcısı Kontrolü ve Yedek Kullanıcı Atama
+            if (isTelegram) {
+                tgUser = Telegram.WebApp.initDataUnsafe.user;
+                tgId = tgUser.id;
+            } else {
+                tgId = NON_TELEGRAM_USER_ID; 
+                tgUser = {
+                    id: tgId,
+                    first_name: 'Web',
+                    last_name: 'User',
+                    username: 'web_user',
+                    is_bot: false
+                };
+                showToast("Guest Mode: Some features might be limited. Login via Telegram for full access.", 5000);
             }
-            
-            const tgUser = Telegram.WebApp.initDataUnsafe.user;
-            const tgId = tgUser.id;
             
             // 2. Firebase Bağlantısı Kontrolü
             if (!db) {
-                // KRİTİK: Firebase bağlantısı başarısız olduysa, uygulamayı durdur ve hata göster.
                 throw new Error("Database connection failed. Please check internet or contact support.");
             }
 
             // 3. Kullanıcı Verisini Çek/Oluştur
-            let user = await fetchUser(tgId); // Bu fonksiyon 5s timeout içerir
+            let user = await fetchUser(tgId);
             
             if (!user) {
-                // Eğer fetchUser timeout nedeniyle null döndürdüyse
-                if (tgId) {
-                     // Yeni kullanıcı oluşturmadan önce fetchUser'ın hata alıp almadığını kontrol etmeliyiz.
-                     // fetchUser içinde zaten bir timeout var. Eğer hala null ise, ya yeni kullanıcıdır ya da ciddi bir ağ sorunu var.
-                     // Yeni kullanıcı olduğunu varsayarak devam edebiliriz.
-                    user = await createNewUser(tgUser, refCodeFromUrl);
-                } else {
-                    // Ciddi bir hata varsa veya TG ID çekilememişse, uygulama takılır.
-                    throw new Error("Failed to retrieve or create user data from database.");
-                }
+                user = await createNewUser(tgUser, refCodeFromUrl);
             }
             
-            // Kullanıcı verisi başarıyla çekildi veya oluşturuldu
+            // Günlük sıfırlama kontrolü
             const today = new Date().toDateString();
             if (user.lastAdWatchDate !== today) {
                 user.adsWatchedToday = 0;
@@ -549,6 +558,7 @@
                 await saveUser(user); 
             }
             
+            // Referans atama kontrolü (mevcut kullanıcılar için)
             if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
@@ -558,16 +568,14 @@
                 }
             }
             
-            currentUser = user; // Başarıyla yüklendi
+            currentUser = user; 
 
         }
         
         function saveUserStateLocalOrFirebase() {
-            // Misafir modu olmadığı için sadece Firebase'e kaydetmeyi deneriz.
             if (currentUser && currentUser.telegramId && db) { 
                 saveUser(currentUser); 
             } else {
-                // Eğer burada bir sorun varsa, bir uyarı verebiliriz ancak kritik bir hata saymayız.
                 console.warn("User state could not be saved to Firebase. DB or TG ID missing.");
             }
             updateUI();
@@ -601,6 +609,7 @@
 
             userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
             
+            // Limit ve ödüller dinamik olarak çekildiği için bu kısımlar doğru çalışır.
             adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
             adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
             totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime;
@@ -613,7 +622,6 @@
                 watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${earnedTRX} TRX` : `Daily Limit Reached`;
             }
             
-            // Profil fotoğrafını yükle
             loadProfilePicture();
         }
 
@@ -653,12 +661,12 @@
                     </div>
                 ` : ''}
             `;
-            // KRİTİK: Buton Event Listener'lar render işleminden hemen sonra bağlanmalı
             document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
             document.getElementById('openAdminPanelBtn')?.addEventListener('click', renderAdminPanel);
         }
 
         function renderReferralPage() {
+            // Referans ödülleri dinamik olarak kullanılıyor
             const referralLink = `https://t.me/share/url?url=https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}&text=⚡ TronAdsFaucet ile her gün reklam izleyerek kolayca TRX kazan! Hemen katılmak için linke tıkla:`;
 
             const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
@@ -702,7 +710,6 @@
                     </div>
                 </div>
             `;
-            // KRİTİK: Buton Event Listener'lar render işleminden hemen sonra bağlanmalı
             document.getElementById('copyReferralCodeBtn')?.addEventListener('click', () => copyToClipboard(currentUser.referralCode, 'Referral code copied!'));
             document.getElementById('copyReferralLinkBtn')?.addEventListener('click', () => copyToClipboard(`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}`, 'Referral link copied!'));
             document.getElementById('shareReferralBtn')?.addEventListener('click', () => {
@@ -714,6 +721,7 @@
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             const minWithdrawTRX = MIN_WITHDRAW_TRX;
             const canWithdraw = parseFloat(balanceTRX) >= minWithdrawTRX;
+            const isGuest = currentUser.telegramId === NON_TELEGRAM_USER_ID;
             
             mainContent.innerHTML = `
                 <h2 class="section-title"><i class="fas fa-wallet"></i> Withdraw TRX</h2>
@@ -723,21 +731,27 @@
                         Minimum withdrawal amount: <strong>${minWithdrawTRX} TRX</strong>.
                         Withdrawals are processed manually within 24 hours.
                     </p>
-                    <div class="input-group">
-                        <label class="input-label">TRON (TRX) Wallet Address</label>
-                        <input type="text" class="input-field" id="walletAddressInput" placeholder="T..." maxlength="34">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Amount (TRX)</label>
-                        <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.001" value="${canWithdraw ? minWithdrawTRX : 0}">
-                    </div>
-                    <button class="btn btn-primary" id="submitWithdrawalBtn" ${!canWithdraw ? 'disabled' : ''}>
+                    ${isGuest ? `
+                        <div class="error-message">
+                            Withdrawal is only available for users logged in via Telegram.
+                        </div>
+                    ` : `
+                        <div class="input-group">
+                            <label class="input-label">TRON (TRX) Wallet Address</label>
+                            <input type="text" class="input-field" id="walletAddressInput" placeholder="T..." maxlength="34">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Amount (TRX)</label>
+                            <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.001" value="${canWithdraw ? minWithdrawTRX : 0}">
+                        </div>
+                    `}
+                    
+                    <button class="btn btn-primary" id="submitWithdrawalBtn" ${!canWithdraw || isGuest ? 'disabled' : ''}>
                         <i class="fas fa-paper-plane"></i> Request Withdrawal
                     </button>
                     <div class="error-message" id="withdrawErrorMessage" style="display:none;"></div>
                 </div>
             `;
-            // KRİTİK: Buton Event Listener'lar render işleminden hemen sonra bağlanmalı
             document.getElementById('submitWithdrawalBtn')?.addEventListener('click', handleWithdrawal);
         }
 
@@ -752,21 +766,26 @@
                 return;
             }
             
-            // Adexora reklamını dene
+            const watchBtn = document.getElementById('watchDailyAdBtn');
+            
             if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
-                try {
-                    window[ADEXORA_AD_FUNCTION_NAME]();
-                    // Reklam gösterildikten sonra ödül ver
-                    setTimeout(() => {
-                        rewardUserForAd();
-                    }, 1000);
-                } catch (error) {
-                    console.error("Adexora ad error:", error);
-                    // Adexora çalışmazsa simülasyon reklam göster
-                    showAdAndReward();
-                }
+                watchBtn.disabled = true; 
+                showToast("Ad loading...");
+
+                window[ADEXORA_AD_FUNCTION_NAME]()
+                .then(() => {
+                    rewardUserForAd();
+                })
+                .catch(error => {
+                    console.error("Adexora ad error or dismissed:", error);
+                    showToast('Ad failed or was dismissed. Please try again.', 4000);
+                })
+                .finally(() => {
+                    watchBtn.disabled = false;
+                    updateUI(); 
+                });
             } else {
-                // Adexora yoksa simülasyon reklam göster
+                showToast("Adexora not loaded. Simulating Ad...");
                 showAdAndReward();
             }
         }
@@ -779,6 +798,12 @@
             
             errorEl.style.display = 'none';
             
+            if (currentUser.telegramId === NON_TELEGRAM_USER_ID) {
+                errorEl.textContent = 'Withdrawal is only available for users logged in via Telegram.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
             if (!walletAddress || walletAddress.length < 10) {
                 errorEl.textContent = 'Please enter a valid TRON wallet address.';
                 errorEl.style.display = 'block';
@@ -854,27 +879,52 @@
             }
         }
 
+        // --- Admin Panel Fonksiyonu ---
+        function renderAdminPanel() {
+            const adminContentEl = document.getElementById('adminPanelContent');
+            const mainAppContentEl = document.getElementById('mainAppContent');
+            
+            mainAppContentEl.style.display = 'none';
+            adminContentEl.style.display = 'block';
+            
+            adminContentEl.innerHTML = `
+                <div class="admin-container">
+                    <h1>Admin Panel (WIP)</h1>
+                    <p>Bu panel henüz tam olarak bitirilmemiştir. Firebase verileri çekilip burada listelenmelidir.</p>
+                    <button class="btn btn-primary" id="closeAdminPanelBtn">
+                        <i class="fas fa-arrow-left"></i> Back to Main App
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('closeAdminPanelBtn').addEventListener('click', () => {
+                adminContentEl.style.display = 'none';
+                mainAppContentEl.style.display = 'block';
+                navigateTo('home');
+            });
+        }
+        
         // --- INITIALIZATION ---
-
         async function initApp() {
             try {
-                // 1. Kullanıcı verisini yükle
+                // 1. Firebase ayarlarını (Referans ödülleri dahil) yükle
+                await loadConfig();
+                
+                // 2. Kullanıcı verisini yükle
                 await loadUserState();
                 
-                // 2. TRX fiyatını al
+                // 3. TRX fiyatını al
                 await fetchTRXPrice();
                 
-                // 3. DOM elementlerini bağla
+                // 4. DOM elementlerini bağla
                 profileNameDisplay = document.getElementById('profileNameDisplay');
                 userPointsDisplay = document.getElementById('userPointsDisplay');
                 adsWatchedTodayEl = document.getElementById('adsWatchedToday');
                 adsLeftTodayEl = document.getElementById('adsLeftToday');
                 totalAdsWatchedEl = document.getElementById('totalAdsWatched');
                 
-                // 4. Tema değiştirme butonunu ayarla
+                // 5. Tema ve Navigasyon butonlarını ayarla
                 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-                
-                // 5. Navigasyon butonlarını ayarla
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.addEventListener('click', function() {
                         navigateTo(this.getAttribute('data-page'));
