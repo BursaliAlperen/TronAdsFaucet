@@ -179,7 +179,7 @@
     <div id="loadingScreen">
         <div class="spinner"></div>
         <p style="font-weight: 600;">Loading application data...</p>
-        <p id="loadingError" style="color: var(--primary-color); margin-top: 10px; display: none; font-size: 0.9rem; text-align: center; max-width: 80%;">Hata oluştu. Lütfen botu yeniden başlatın veya konsolu kontrol edin.</p>
+        <p id="loadingError" style="color: var(--primary-color); margin-top: 10px; display: none; font-size: 0.9rem; text-align: center; max-width: 80%;">Initialization Error: Please restart the bot or check console.</p>
     </div>
 
     <div id="fullAppContainer" class="app-container" style="display: none;">
@@ -300,7 +300,7 @@
             });
         }
 
-        // --- PROFİL FOTOĞRAFI YÜKLEME ---
+        // --- PROFILE PICTURE LOADING ---
         function loadProfilePicture() {
             if (!currentUser) return;
             
@@ -327,7 +327,7 @@
             }
         }
 
-        // --- REKLAM OYNATMA FONKSİYONU (Simülasyon) ---
+        // --- AD PLAYBACK FUNCTION (Simulation) ---
         function showAdAndRewardSimulation() {
             const adModal = document.getElementById('adModal');
             const adCountdown = document.getElementById('adCountdown');
@@ -422,13 +422,10 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Eğer URL'den referans kodu geldiyse ve kullanıcı daha önce referans edilmediyse uygula
             if (refCodeFromUrl && db) { 
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
-                    // YENİ KAYIT OLDUĞU İÇİN REFERANS UYGULANIR
                     await applyReferral(newUser, referrer);
-                    // Oluşturulan kullanıcıya referans bilgisini ekle
                     newUser.referredBy = referrer.referralCode; 
                 }
             }
@@ -457,12 +454,10 @@
         async function applyReferral(refereeUser, referrerUser) {
             if (!db) return; 
             try {
-                // REFEREE ödülü: Yeni kullanıcıya bonusu ver
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
                 
                 const referrerRef = db.collection('users').doc(String(referrerUser.telegramId));
                 
-                // Transaction ile referrer'ın hesabını güncelle
                 await db.runTransaction(async (transaction) => {
                     const referrerDoc = await transaction.get(referrerRef);
                     if (!referrerDoc.exists) throw "Referrer user does not exist!";
@@ -470,13 +465,11 @@
                     const currentReferrerData = referrerDoc.data();
                     const updatedReferredUsers = currentReferrerData.referredUsers || [];
                     
-                    // Referee'nin kodu referrer'ın listesine eklenir
                     if (!updatedReferredUsers.includes(refereeUser.referralCode)) {
                         updatedReferredUsers.push(refereeUser.referralCode);
                     }
 
                     transaction.update(referrerRef, {
-                        // REFERRER ödülü: Yönlendirene bonusu ver
                         balanceUSD: (currentReferrerData.balanceUSD || 0) + REFERRAL_BONUS_REFERRER_USD,
                         referredUsers: updatedReferredUsers
                     });
@@ -485,7 +478,6 @@
                 showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonus from referral!`);
             } catch (error) {
                  console.error("Firebase applyReferral Error:", error);
-                 // İşlem başarısız olursa, ödülü geri al (sadece referee bonusunu)
                  refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD;
                  return false;
             }
@@ -538,12 +530,10 @@
             }
         }
 
-
         // --- DATA/STATE MANAGEMENT (Authentication and Load) ---
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
-            // URL'den gelen referans kodu (start=CODE veya ref=CODE)
             const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
 
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
@@ -559,12 +549,10 @@
 
             let user = await fetchUser(tgId);
             
-            // Kullanıcı yoksa oluştur
             if (!user) {
                 user = await createNewUser(tgUser, refCodeFromUrl);
             }
             
-            // Günlük sıfırlama kontrolü
             const today = new Date().toDateString();
             if (user.lastAdWatchDate !== today) {
                 user.adsWatchedToday = 0;
@@ -572,7 +560,6 @@
                 await saveUser(user); 
             }
             
-            // Referans atama kontrolü (sadece mevcut kullanıcılar için, eğer daha önce referans edilmediyse)
             if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
@@ -611,7 +598,7 @@
             }
         }
         
-        // --- UI RENDER (Uygulama) ---
+        // --- UI RENDER (Application) ---
 
         function updateUI() {
             if (!currentUser) return;
@@ -787,7 +774,7 @@
             document.getElementById('submitWithdrawalBtn')?.addEventListener('click', handleWithdrawal);
         }
 
-        // --- EVENT HANDLERS ---
+        // --- EVENT HANDLERS (The Ad logic is here) ---
 
         function handleWatchDailyAd() {
             if (!currentUser) return;
@@ -801,10 +788,12 @@
             const watchBtn = document.getElementById('watchDailyAdBtn');
             if (!watchBtn) return;
             
+            // Adexora Promise-based ad attempt
             if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
                 watchBtn.disabled = true; 
                 showToast("Ad loading (Adexora)... Please wait.");
                 
+                // Set a 10s timeout just in case the Adexora script completely freezes
                 const adTimeout = setTimeout(() => {
                     if (watchBtn.disabled) {
                         console.warn("Adexora ad call timed out (10s). Re-enabling button.");
@@ -816,27 +805,30 @@
 
                 window[ADEXORA_AD_FUNCTION_NAME]()
                 .then(() => {
+                    // This block runs when Adexora *believes* the ad was successfully shown.
                     clearTimeout(adTimeout);
                     rewardUserForAd();
                 })
                 .catch(error => {
+                    // This block runs if the user dismisses the ad or Adexora reports an error.
                     clearTimeout(adTimeout);
                     console.error("Adexora ad error or dismissed:", error);
                     showToast('Ad failed or was dismissed. Please try again.', 4000);
                 })
                 .finally(() => {
+                    // This re-enables the button whether the ad succeeded or failed.
                     watchBtn.disabled = false;
                     updateUI(); 
                 });
             } else {
+                // Fallback to Simulation Ad if Adexora function is not loaded (e.g., script blocked)
                 console.warn("Adexora function not found. Falling back to simulation.");
-                showToast("Adexora not loaded. Simulating Ad...", 5000);
+                showToast("Adexora not loaded or blocked. Simulating Ad...", 5000);
                 showAdAndRewardSimulation();
             }
         }
 
         function handleWithdrawal() {
-            // ... (Handle Withdrawal mantığı aynı kalır)
             const walletAddress = document.getElementById('walletAddressInput').value.trim();
             const amountInput = document.getElementById('withdrawAmountInput').value;
             const amountTRX = parseFloat(amountInput);
@@ -880,12 +872,11 @@
             showToast(`Withdrawal request for ${amountTRX.toFixed(4)} TRX submitted!`);
             
             document.getElementById('walletAddressInput').value = '';
-            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD).toFixed(4); // Kalan bakiyeyi yaz
+            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD).toFixed(4); 
             
             navigateTo('home');
         }
 
-        // YENİ FONKSİYON: Manuel referans kodu girişi
         async function handleManualReferral() {
             const codeInput = document.getElementById('manualReferralCodeInput');
             const messageEl = document.getElementById('manualReferralMessage');
@@ -914,7 +905,6 @@
                 return;
             }
 
-            // Referans veren kullanıcıyı bul
             const referrer = await getReferrerByCode(code);
 
             if (!referrer) {
@@ -924,7 +914,6 @@
                 return;
             }
             
-            // Referansı uygula
             const success = await applyReferral(currentUser, referrer);
             
             if (success) {
@@ -935,7 +924,6 @@
                 messageEl.className = 'admin-message admin-success';
                 messageEl.style.display = 'block';
                 
-                // Sayfayı yenilemek en basit yoldur
                 renderReferralPage(); 
             } else {
                 messageEl.textContent = 'An error occurred while applying the referral. Please try again later.';
