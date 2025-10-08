@@ -14,24 +14,24 @@
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
     <style>
         :root {
-            /* Kırmızı-Beyaz Tema Renkleri */
-            --primary-color: #FF4136; /* Tron'a yakın parlak Kırmızı */
+            /* Red-White Theme Colors */
+            --primary-color: #FF4136; /* Bright Red, close to Tron's color */
             --primary-dark: #CC0000;
             --secondary-color: #2ECC71; 
             --accent-color: #FFDC00; 
-            --bg-light: #F9F9F9; /* Çok Açık Arka Plan */
-            --bg-dark: #1A1A1A; /* Koyu Tema Arka Planı */
+            --bg-light: #F9F9F9; /* Very Light Background */
+            --bg-dark: #1A1A1A; /* Dark Theme Background */
             --card-bg-light: #FFFFFF;
             --card-bg-dark: #222222;
             --text-dark: #1A1A1A;
             --text-light: #F9F9F9;
-            --border-color-light: #FFEDED; /* Çok açık kırmızı */
+            --border-color-light: #FFEDED; 
             --border-color-dark: #333333;
 
-            /* Genel Ayarlar */
-            --border-radius: 16px; /* Daha gelişmiş görünüm için büyük */
+            /* General Settings */
+            --border-radius: 16px; 
             --border-radius-sm: 10px;
-            --transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Yumuşak ve modern geçiş */
+            --transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
         }
 
         /* Dark Mode CSS */
@@ -50,7 +50,7 @@
             --toggle-bg: #333333;
         }
 
-        /* Light Mode CSS (Kırmızı-Beyaz) */
+        /* Light Mode CSS (Red-White) */
         body:not(.dark-mode) {
             background-color: var(--bg-light);
             color: var(--text-dark);
@@ -58,7 +58,7 @@
             --card-bg: var(--card-bg-light);
             --text-primary: var(--text-dark);
             --text-secondary: #666666;
-            --border-color: #E0E0E0; /* Daha sade bir kenarlık */
+            --border-color: #E0E0E0; 
             --input-bg: #FFFFFF; 
             --input-border: #E0E0E0;
             --button-bg-secondary: #FFEDED;
@@ -102,15 +102,14 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* Content Transition (Gelişmiş Animasyon) */
+        /* Content Transition */
         .content-section {
             padding: 20px;
             margin-bottom: 80px;
-            /* Sayfa Geçişi Animasyonu */
             opacity: 0;
             transform: translateY(15px);
             transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-            min-height: 300px; /* İçerik değişirken kaymayı önlemek için */
+            min-height: 300px;
         }
         
         .content-section.active-content {
@@ -118,18 +117,17 @@
             transform: translateY(0);
         }
 
-        /* Card Animation (Gelişmiş Animasyon) */
+        /* Card Animation */
         .profile-card {
             transition: var(--transition);
         }
         
         .profile-card:hover {
-            /* Kart üzerine gelince hafif kayma ve parlak gölge */
             box-shadow: 0 12px 40px rgba(255, 65, 54, 0.15); 
             transform: translateY(-5px);
         }
 
-        /* Nav İkon Animasyonu (Gelişmiş İkon Efekti) */
+        /* Nav Icon Animation */
         .nav-item i {
             transition: var(--transition);
         }
@@ -137,7 +135,7 @@
             color: var(--primary-dark);
             transform: scale(1.15) rotate(-3deg);
         }
-        /* Aktif ikona nabız efekti */
+        /* Active icon pulse effect */
         .nav-item.active i {
             animation: pulse 0.6s infinite alternate;
         }
@@ -147,7 +145,7 @@
             to { transform: scale(1.05); opacity: 1; }
         }
 
-        /* Diğer Stil Tanımlamaları (Kısaltıldı) */
+        /* Other Style Definitions (Shortened) */
         .header-title { font-size: 1.8rem; font-weight: 800; z-index: 2; letter-spacing: 1px; display: flex; align-items: center; }
         .tron-logo { width: 28px; height: 28px; margin-right: 10px; border-radius: 50%; background: white; padding: 3px; box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
         .tron-logo svg { display: block; }
@@ -214,14 +212,14 @@
                 <svg viewBox="0 0 448 512" class="tron-logo" xmlns="http://www.w3.org/2000/svg"><path fill="#FF4136" d="M424.4 200.7H239.5L160 279.3H424.4V200.7zM424.4 311.3H160L239.5 390H424.4V311.3zM448 0H0v512h448V0zm-40 472H40V40h368v432zM199.5 160V112h-80v48h80zm0 240v48h-80v-48h80z"/></svg>
                 TronAdsFaucet
             </h1>
-            <p style="font-size: 0.9rem; z-index: 2;" id="tronPriceDisplay">TRX/USD: Yükleniyor...</p>
+            <p style="font-size: 0.9rem; z-index: 2;" id="tronPriceDisplay">TRX/USD: Loading...</p>
         </div>
 
         <div class="profile-section">
             <div class="profile-card">
                 <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="Profile" class="profile-pic" id="profilePic">
                 <h1 class="profile-name" id="profileNameDisplay">
-                    Kullanıcı
+                    User
                     <i class="fas fa-check-circle verified-badge" style="color: var(--secondary-color); margin-left: 8px;"></i>
                     <button class="edit-name-btn" id="editNameBtn">
                         <i class="fas fa-pencil-alt"></i>
@@ -233,15 +231,15 @@
                 <div class="stats-display">
                     <div class="stat-item">
                         <div class="stat-value" id="adsWatchedToday">0</div>
-                        <div class="stat-label">Bugün İzlenen</div>
+                        <div class="stat-label">Watched Today</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value" id="adRewardValue">~0.0029 TRX</div>
-                        <div class="stat-label">Reklam Başı</div>
+                        <div class="stat-label">Per Ad</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value" id="totalAdsWatched">0</div>
-                        <div class="stat-label">Toplam İzlenen</div>
+                        <div class="stat-label">Total Watched</div>
                     </div>
                 </div> 
             </div>
@@ -253,15 +251,15 @@
         <div class="bottom-nav">
             <a href="#" class="nav-item active" data-page="home">
                 <i class="fas fa-home"></i>
-                <span>Ana Sayfa</span>
+                <span>Home</span>
             </a>
             <a href="#" class="nav-item" data-page="withdraw">
                 <i class="fas fa-hand-holding-usd"></i>
-                <span>Çekim</span>
+                <span>Withdraw</span>
             </a>
             <a href="#" class="nav-item" data-page="referral">
                 <i class="fas fa-users"></i>
-                <span>Referans</span>
+                <span>Referral</span>
             </a>
             <a href="#" class="nav-item admin-only" data-page="admin" id="adminNav" style="display: none;">
                 <i class="fas fa-user-shield"></i>
@@ -271,10 +269,10 @@
 
         <div class="ad-modal-overlay" id="adModal" style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease;">
             <div class="ad-modal">
-                <h3 class="ad-modal-title" id="adModalTitle">Reklam Yükleniyor...</h3>
+                <h3 class="ad-modal-title" id="adModalTitle">Ad Loading...</h3>
                 <div class="spinner" id="adSpinner"></div>
-                <p class="ad-status" id="adStatusMessage">Lütfen reklamın yüklenmesini bekleyin.</p>
-                <button class="btn btn-primary" id="adCloseBtn" style="display: none;">Kapat & Ödülü Al</button>
+                <p class="ad-status" id="adStatusMessage">Please wait for the ad to load.</p>
+                <button class="btn btn-primary" id="adCloseBtn" style="display: none;">Close & Claim Reward</button>
             </div>
         </div>
 
@@ -282,21 +280,21 @@
     </div>
 
     <script>
-        // CONFIGURATION (AYARLAR)
+        // CONFIGURATION
         const APP_NAME = "TronAdsFaucet";
         const ADMIN_TELEGRAM_ID = 7904032877;
-        const REWARD_USD_PER_AD = 0.001; // $0.001 USD
+        const REWARD_USD_PER_AD = 0.0005; // GÜNCELLENDİ: Reklam başı $0.0005 USD
         const REFERRAL_BONUS_USD_REFERRER = 0.0005; // $0.0005 USD
         const REFERRAL_BONUS_USD_REFEREE = 0.0002; // $0.0002 USD
-        const MIN_WITHDRAW_TRX = 0.10;
+        const MIN_WITHDRAW_TRX = 0.01; // GÜNCELLENDİ: Minimum çekim 0.01 TRX
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         
-        // Telegram Bot/Kanal Bilgileri - Lütfen kendi bilgilerinizi giriniz
-        const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE"; // Bu sadece bir örnek token. Lütfen kendi tokenınızı kullanın.
-        const TELEGRAM_CHAT_ID = "-1002783990004"; // Admin Kanal ID'si
+        // Telegram Bot/Channel Info
+        const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE"; 
+        const TELEGRAM_CHAT_ID = "-1002783990004"; 
         const DEVELOPER_TELEGRAM_PROFILE_LINK = "https://t.me/freeinternet_bd25"; 
 
-        // Firebase Yapılandırması
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
             authDomain: "tronadsfaucet.firebaseapp.com",
@@ -310,7 +308,7 @@
         
         // GLOBAL STATE
         let currentUser = {
-            name: 'Kullanıcı',
+            name: 'User',
             telegramId: null,
             photoUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
             balanceTRX: 0.00,
@@ -326,7 +324,7 @@
         let trxRefBonus = 0.00;
         let trxRefeeBonus = 0.00;
 
-        // Firebase'i başlat
+        // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -361,19 +359,19 @@
         }
         
         /**
-         * Benzersiz ve kalıcı referans kodu üretir.
-         * Kodun Firebase'de başka bir kullanıcıda olmadığını teyit eder.
-         * @returns {Promise<string>} 6 haneli benzersiz alfa-nümerik kod.
+         * Generates a unique and persistent referral code.
+         * Confirms that the code is not already in use by another user in Firebase.
+         * @returns {Promise<string>} 6-digit unique alphanumeric code.
          */
         async function generateUniqueReferralCode() {
             const usersRef = db.ref('users');
             let isUnique = false;
             let code = '';
             while (!isUnique) {
-                // 6 haneli alfa-nümerik kod üret
+                // Generate 6-digit alphanumeric code
                 code = Math.random().toString(36).substring(2, 8).toUpperCase(); 
                 
-                // Firebase'de bu kodun olup olmadığını kontrol et
+                // Check if this code exists in Firebase
                 const snapshot = await usersRef.orderByChild('referralCode').equalTo(code).once('value');
                 if (!snapshot.exists()) {
                     isUnique = true;
@@ -387,27 +385,27 @@
         }
 
         function escapeMarkdown(text) {
-            // Telegram MarkdownV2 için gerekli kaçış karakterleri
+            // Escape characters required for Telegram MarkdownV2
             return String(text).replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
         }
 
-        // FIREBASE İŞLEMLERİ
+        // FIREBASE OPERATIONS
         function saveUserState() {
             if (!currentUser.telegramId) return;
-            // Bakiyeyi sayısallaştırarak kaydet
+            // Save balance with fixed precision
             currentUser.balanceTRX = parseFloat(currentUser.balanceTRX.toFixed(8)); 
             db.ref('users/' + currentUser.telegramId).set(currentUser)
-                .catch(error => console.error("Firebase'e kullanıcı kaydı hatası:", error));
+                .catch(error => console.error("Error saving user to Firebase:", error));
         }
 
         function setInitialTRXValues() {
-            // Fiyat bilgisini sabitliyoruz. Tarayıcıda Google API'sine bağlanamayız.
-            tronPriceUSD = 0.06; // Varsayılan fiyat (Yaklaşık)
+            // Price info is hardcoded as Google API cannot be called directly in the browser.
+            tronPriceUSD = 0.06; // Default price (Approximate)
             trxPerAd = REWARD_USD_PER_AD / tronPriceUSD;
             trxRefBonus = REFERRAL_BONUS_USD_REFERRER / tronPriceUSD;
             trxRefeeBonus = REFERRAL_BONUS_USD_REFEREE / tronPriceUSD;
 
-            tronPriceDisplay.textContent = `TRX/USD: $${tronPriceUSD.toFixed(5)} (Sabitlendi)`;
+            tronPriceDisplay.textContent = `TRX/USD: $${tronPriceUSD.toFixed(5)} (Hardcoded)`;
             adRewardValueEl.textContent = `~${formatTRX(trxPerAd)} TRX`;
         }
 
@@ -420,7 +418,7 @@
                 currentUser.name = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || `User${tgUser.id}`;
                 currentUser.photoUrl = tgUser.photo_url || currentUser.photoUrl;
 
-                // URL'den referans kodu al
+                // Get referral code from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 initialRefCode = urlParams.get('start');
                 if (initialRefCode && initialRefCode.includes('=')) {
@@ -432,34 +430,33 @@
 
                 if (userData) {
                     Object.assign(currentUser, userData);
-                    // Name/Photo'yu Telegram'dan güncelle
+                    // Update Name/Photo from Telegram
                     currentUser.name = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || userData.name;
                     currentUser.photoUrl = tgUser.photo_url || userData.photoUrl;
                     
                     if (!currentUser.referredUsers) currentUser.referredUsers = {};
                     if (!currentUser.withdrawalRequests) currentUser.withdrawalRequests = {};
 
-                    // Referans kodu zaten varsa, kalıcı olarak atanmış demektir.
+                    // If referral code doesn't exist, assign a permanent one.
                     if (!currentUser.referralCode) {
                         currentUser.referralCode = await generateUniqueReferralCode();
                     }
                     saveUserState(); 
                 } else {
-                    // Yeni kullanıcı
+                    // New user
                     currentUser.balanceTRX = 0.00;
-                    // BURASI DEĞİŞTİ: Yeni kullanıcıya benzersiz kod atanıyor.
                     currentUser.referralCode = await generateUniqueReferralCode(); 
                     saveUserState(); 
                 }
                 
-                // Admin nav butonunu göster/gizle
+                // Show/hide Admin nav button
                 if (currentUser.telegramId === ADMIN_TELEGRAM_ID) {
                     adminNav.style.display = 'flex';
                 }
 
             } 
             
-            // Günlük sayaç sıfırlama
+            // Daily counter reset
             const today = new Date().toLocaleDateString('en-CA');
             if (currentUser.lastAdWatchDate !== today) {
                 currentUser.adsWatchedToday = 0;
@@ -467,7 +464,7 @@
                 saveUserState();
             }
 
-            // Referans kontrolü (yalnızca yeni kullanıcıysa ve URL'de kod varsa)
+            // Referral check (only if new user and code in URL)
             if (initialRefCode && !currentUser.referredBy && currentUser.referralCode && initialRefCode !== currentUser.referralCode) {
                 applyReferral(initialRefCode);
             }
@@ -477,7 +474,7 @@
             if (!currentUser.telegramId || currentUser.referredBy || !currentUser.referralCode || referrerCode === currentUser.referralCode) return;
 
             const usersRef = db.ref('users');
-            // Referans kodunu kullanan kullanıcıyı bul
+            // Find the user who owns the referral code
             const referrerSnapshot = await usersRef.orderByChild('referralCode').equalTo(referrerCode).once('value');
             const referrerData = referrerSnapshot.val();
 
@@ -504,7 +501,7 @@
                     referredUsers: referrerUser.referredUsers 
                 });
 
-                showToast(`Referans bonusu: +${formatTRX(trxRefeeBonus)} TRX!`);
+                showToast(`Referral bonus: +${formatTRX(trxRefeeBonus)} TRX!`);
                 sendTelegramReferralNotification(
                     currentUser.name, currentUser.telegramId, trxRefeeBonus, 
                     referrerUser.name, referrerId, trxRefBonus
@@ -512,7 +509,7 @@
                 updateUI();
 
             } else {
-                showToast("Geçersiz referans kodu.");
+                showToast("Invalid referral code.");
             }
         }
 
@@ -525,11 +522,11 @@
                 Telegram.WebApp.ready();
             }
             
-            setInitialTRXValues(); // Sabit fiyatı ayarla
+            setInitialTRXValues(); 
             await loadUserStateFromFirebase();
             applyTheme(localStorage.getItem('tronAdsTheme') || 'light'); 
             
-            // İlk yükleme, animasyonu atlamak için true gönderilir
+            // Initial load skips animation
             navigateTo('home', true);
 
             themeToggleBtn.addEventListener('click', toggleTheme);
@@ -538,7 +535,7 @@
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
                     const page = item.dataset.page;
-                    // Navigasyonda animasyon kullanılır (isInitialLoad = false)
+                    // Navigation uses animation
                     navigateTo(page);
                 });
             });
@@ -558,7 +555,7 @@
 
         // UI UPDATES
         function updateUI() {
-            // DOM güncellemesi her navigateTo çağrıldığında yapıldığı için butonu yeniden bağlamalıyız
+            // Recreate and reattach event listener for the edit button
             profileNameDisplay.innerHTML = `
                 ${currentUser.name}
                 <i class="fas fa-check-circle verified-badge" style="color: var(--secondary-color); margin-left: 8px;"></i>
@@ -566,7 +563,6 @@
                     <i class="fas fa-pencil-alt"></i>
                 </button>
             `;
-            // Yeniden oluşturulan butonu tekrar dinlemeye al
             document.getElementById('editNameBtn').addEventListener('click', promptForNewName);
 
             userPointsDisplay.innerHTML = `<i class="fas fa-wallet" style="margin-right: 8px; color: var(--primary-dark);"></i> ${formatTRX(currentUser.balanceTRX)} TRX`;
@@ -580,16 +576,16 @@
         }
 
         function promptForNewName() {
-            const newName = prompt("Yeni adınızı girin:", currentUser.name);
+            const newName = prompt("Enter your new name:", currentUser.name);
             if (newName && newName.trim()) {
                 currentUser.name = newName.trim();
                 updateUI();
                 saveUserState();
-                showToast("Adınız başarıyla güncellendi!");
+                showToast("Name successfully updated!");
             }
         }
 
-        // NAVIGATION (Gelişmiş Animasyon Uygulaması)
+        // NAVIGATION 
         function navigateTo(page, isInitialLoad = false) {
             const currentActiveNavItem = document.querySelector('.bottom-nav .nav-item.active');
             if (currentActiveNavItem) {
@@ -605,24 +601,23 @@
                 'admin': renderAdminPage
             };
             
-            // Fonksiyon: İçeriği render et ve animasyonla göster
+            // Function: Render content and fade in
             const renderAndFadeIn = () => {
                 if (pageRenderers[page]) pageRenderers[page]();
                 updateUI();
                 
-                // DOM'un yeni içeriği algılamasını zorla (Animasyonu tetiklemek için kritik)
                 void mainContent.offsetWidth; 
                 mainContent.classList.add('active-content');
             };
 
             if (isInitialLoad) {
-                // İlk yükleme: animasyonsuz ve hemen render et
+                // Initial load: render immediately
                 renderAndFadeIn();
             } else {
-                // Navigasyon: mevcut içeriği animasyonla gizle
+                // Navigation: fade out current content
                 mainContent.classList.remove('active-content');
                 
-                // 200ms sonra (CSS geçiş süresinin yarısı), yeni içeriği render et ve göster
+                // Wait for the transition to finish (200ms) before rendering and showing new content
                 setTimeout(() => {
                     renderAndFadeIn();
                 }, 200); 
@@ -634,17 +629,17 @@
             mainContent.innerHTML = `
                 <div class="task-card">
                     <h2 class="section-title">
-                        <i class="fas fa-bullhorn"></i> Reklam İzle & Kazan
+                        <i class="fas fa-bullhorn"></i> Watch Ad & Earn
                     </h2>
                     <p class="task-description">
-                        Basit bir reklam izleyerek her seferinde **${formatTRX(trxPerAd)} TRX** (yaklaşık $${REWARD_USD_PER_AD}) kazanın.
+                        Earn **${formatTRX(trxPerAd)} TRX** (approx. $${REWARD_USD_PER_AD}) every time you watch a simple ad.
                     </p>
                     <div style="text-align: center; margin: 20px 0;">
-                        <div class="reward-badge">Ödül: ${formatTRX(trxPerAd)} TRX</div>
+                        <div class="reward-badge">Reward: ${formatTRX(trxPerAd)} TRX</div>
                     </div>
                     
                     <button class="btn btn-primary" id="watchDailyAdBtn">
-                        <i class="fas fa-play-circle"></i> Reklam İzle & Kazan
+                        <i class="fas fa-play-circle"></i> Watch Ad & Earn
                     </button>
                 </div>`;
             document.getElementById('watchDailyAdBtn').addEventListener('click', handleWatchDailyAd);
@@ -654,26 +649,26 @@
             mainContent.innerHTML = `
                 <div class="task-card">
                     <h2 class="section-title">
-                        <i class="fas fa-coins"></i> TRX Çekim Talebi
+                        <i class="fas fa-coins"></i> TRX Withdrawal Request
                     </h2>
                     <p class="task-description">
-                        Mevcut Bakiyeniz: <b>${formatTRX(currentUser.balanceTRX)} TRX</b><br>
-                        Minimum çekim tutarı: <b>${MIN_WITHDRAW_TRX.toFixed(2)} TRX</b> (Sadece TRON)
+                        Current Balance: <b>${formatTRX(currentUser.balanceTRX)} TRX</b><br>
+                        Minimum withdrawal amount: <b>${MIN_WITHDRAW_TRX.toFixed(2)} TRX</b> (TRON only)
                     </p>
                     <div class="input-group">
-                        <label class="input-label">Çekilecek Miktar (TRX)</label>
-                        <input type="number" id="withdrawAmountInput" class="input-field" placeholder="En az ${MIN_WITHDRAW_TRX.toFixed(2)} TRX" value="">
+                        <label class="input-label">Amount to Withdraw (TRX)</label>
+                        <input type="number" id="withdrawAmountInput" class="input-field" placeholder="At least ${MIN_WITHDRAW_TRX.toFixed(2)} TRX" value="">
                     </div>
                     <div class="input-group">
-                        <label class="input-label">TRON (TRX) Cüzdan Adresi</label>
-                        <input type="text" id="withdrawAccountInput" class="input-field" placeholder="T ile başlayan cüzdan adresiniz">
+                        <label class="input-label">TRON (TRX) Wallet Address</label>
+                        <input type="text" id="withdrawAccountInput" class="input-field" placeholder="Your wallet address starting with T">
                     </div>
                     <div class="input-group">
-                        <label class="input-label">Telegram Kullanıcı Adınız (Zorunlu)</label>
-                        <input type="text" id="withdrawUsernameInput" class="input-field" placeholder="@kullaniciadiniz">
+                        <label class="input-label">Your Telegram Username (Required)</label>
+                        <input type="text" id="withdrawUsernameInput" class="input-field" placeholder="@yourusername">
                     </div>
                     <button class="btn btn-primary" id="submitWithdrawBtn">
-                        <i class="fas fa-paper-plane"></i> Çekim Talebi Gönder
+                        <i class="fas fa-paper-plane"></i> Submit Withdrawal Request
                     </button>
                     <p class="status-message" id="withdrawStatusMsg"></p>
                 </div>`;
@@ -681,7 +676,6 @@
         }
 
         function renderReferralPage() {
-            // Referans kodu kalıcı ve benzersiz olduğu için direkt kullanılır
             const referralLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}`;
             const referredUsersCount = currentUser.referredUsers ? Object.keys(currentUser.referredUsers).length : 0;
             const refEarnedTRX = referredUsersCount * trxRefBonus;
@@ -689,13 +683,13 @@
             let referredUsersListHtml = '';
             if (referredUsersCount > 0) {
                 referredUsersListHtml = `
-                    <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Davet Edilenler (${referredUsersCount})</h3>
+                    <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Referred Users (${referredUsersCount})</h3>
                     <ul style="list-style: none; padding: 0;">`;
                 
                 Object.values(currentUser.referredUsers).forEach(refUser => {
                     referredUsersListHtml += `
                         <li style="padding: 10px; border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between;">
-                            <span><i class="fas fa-user-check" style="margin-right: 8px; color: var(--secondary-color);"></i> ${refUser.name || 'Bilinmeyen Kullanıcı'}</span>
+                            <span><i class="fas fa-user-check" style="margin-right: 8px; color: var(--secondary-color);"></i> ${refUser.name || 'Unknown User'}</span>
                             <span style="font-weight: 600; color: var(--primary-color);">${refUser.code}</span>
                         </li>`;
                 });
@@ -704,39 +698,39 @@
                 referredUsersListHtml = `
                     <div style="text-align: center; padding: 20px 0; color: var(--text-secondary); opacity: 0.8; font-size: 0.95rem;">
                         <i class="fas fa-ghost" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <p>Henüz kimseyi davet etmediniz. Linkinizi paylaşın!</p>
+                        <p>You haven't invited anyone yet. Share your link!</p>
                     </div>`;
             }
 
             mainContent.innerHTML = `
                 <div class="task-card">
                     <h2 class="section-title">
-                        <i class="fas fa-users-cog"></i> Referans Sistemi
+                        <i class="fas fa-users-cog"></i> Referral System
                     </h2>
                     <p class="task-description">
-                        Davet ettiğiniz her aktif kullanıcı için yaklaşık <b>${formatTRX(trxRefBonus)} TRX</b> kazanın. Yeni kullanıcı da <b>${formatTRX(trxRefeeBonus)} TRX</b> bonusla başlar!
+                        Earn approximately <b>${formatTRX(trxRefBonus)} TRX</b> for every active user you invite. New users also start with a <b>${formatTRX(trxRefeeBonus)} TRX</b> bonus!
                     </p>
                     <div class="referral-container">
-                        <label class="input-label">Sizin Kalıcı Referans Linkiniz</label>
+                        <label class="input-label">Your Permanent Referral Link</label>
                         <div class="referral-input-group">
                             <input type="text" id="referralLinkDisplay" class="referral-input" value="${referralLink}" readonly>
                             <button class="copy-btn" id="copyReferralLinkBtn"><i class="fas fa-copy"></i></button>
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">**Linkiniz: https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}**</p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">**Link: https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}**</p>
                         
                         <div class="stats-display">
                             <div class="stat-item" style="text-align: center;">
                                 <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
-                                <div class="stat-label">Toplam Davet</div>
+                                <div class="stat-label">Total Referrals</div>
                             </div>
                             <div class="stat-item" style="text-align: center;">
                                 <div class="stat-value">${formatTRX(refEarnedTRX)}</div>
-                                <div class="stat-label">Referans TRX Kazancı</div>
+                                <div class="stat-label">Referral TRX Earnings</div>
                             </div>
                         </div>
 
                         <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
-                            <i class="fas fa-share-alt"></i> Linki Telegram'da Paylaş
+                            <i class="fas fa-share-alt"></i> Share Link on Telegram
                         </button>
                     </div>
                     ${referredUsersListHtml}
@@ -745,14 +739,14 @@
             document.getElementById('copyReferralLinkBtn').addEventListener('click', () => {
                 const referralLinkInput = document.getElementById('referralLinkDisplay');
                 navigator.clipboard.writeText(referralLinkInput.value);
-                showToast('Referans linki kopyalandı!');
+                showToast('Referral link copied!');
             });
             document.getElementById('shareReferralLinkBtn').addEventListener('click', () => {
                  if (window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(`Bu Tron Faucet'a katıl ve reklam izleyerek TRX kazan! Hemen başla:`)}`);
+                    Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(`Join this Tron Faucet and earn TRX by watching ads! Start now:`)}`);
                 } else {
                     navigator.clipboard.writeText(referralLink);
-                    showToast('Telegram WebApp bulunamadı, link kopyalandı!');
+                    showToast('Telegram WebApp not found, link copied!');
                 }
             });
         }
@@ -760,17 +754,17 @@
         // ADMIN PAGE RENDERER
         function renderAdminPage() {
             if (currentUser.telegramId !== ADMIN_TELEGRAM_ID) {
-                mainContent.innerHTML = `<div class="task-card error-message" style="text-align:center; padding: 20px; font-weight: bold;">Yetkisiz Erişim!</div>`;
+                mainContent.innerHTML = `<div class="task-card error-message" style="text-align:center; padding: 20px; font-weight: bold;">Unauthorized Access!</div>`;
                 return;
             }
 
             mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-user-lock"></i> Admin Paneli</h2>
-                <div class="task-card" id="adminStatsCard">Yükleniyor...</div>
+                <h2 class="section-title"><i class="fas fa-user-lock"></i> Admin Panel</h2>
+                <div class="task-card" id="adminStatsCard">Loading...</div>
                 
-                <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Bekleyen Çekim Talepleri</h3>
+                <h3 style="margin: 25px 0 15px; font-size: 1.2rem; color: var(--primary-color);">Pending Withdrawal Requests</h3>
                 <ul class="admin-request-list" id="withdrawalRequestsList">
-                    <li>Yükleniyor...</li>
+                    <li>Loading...</li>
                 </ul>`;
             
             loadAdminData();
@@ -780,7 +774,7 @@
             const statsCard = document.getElementById('adminStatsCard');
             const requestsList = document.getElementById('withdrawalRequestsList');
             
-            // İstatistikleri yükle
+            // Load stats
             const usersSnapshot = await db.ref('users').once('value');
             const totalUsers = usersSnapshot.numChildren();
             let totalBalance = 0;
@@ -796,25 +790,25 @@
 
             statsCard.innerHTML = `
                 <div class="admin-stat-card">
-                    <b>Toplam Kullanıcı:</b> ${totalUsers}
+                    <b>Total Users:</b> ${totalUsers}
                 </div>
                 <div class="admin-stat-card">
-                    <b>Toplam Bakiye (TRX):</b> ${formatTRX(totalBalance)}
+                    <b>Total Balance (TRX):</b> ${formatTRX(totalBalance)}
                 </div>
                 <div class="admin-stat-card">
-                    <b>Toplam İzlenen Reklam:</b> ${totalAds}
+                    <b>Total Ads Watched:</b> ${totalAds}
                 </div>
                 <div class="admin-stat-card">
-                    <b>Toplam Referans:</b> ${totalReferrals}
+                    <b>Total Referrals:</b> ${totalReferrals}
                 </div>
             `;
             
-            // Çekim taleplerini yükle
+            // Load withdrawal requests
             const requestsSnapshot = await db.ref('withdrawalRequests').orderByChild('status').equalTo('Pending').once('value');
             const requestsData = requestsSnapshot.val();
 
             if (!requestsData) {
-                requestsList.innerHTML = '<li style="text-align: center; padding: 10px; color: var(--text-secondary);">Bekleyen çekim talebi yok.</li>';
+                requestsList.innerHTML = '<li style="text-align: center; padding: 10px; color: var(--text-secondary);">No pending withdrawal requests.</li>';
                 return;
             }
 
@@ -824,15 +818,19 @@
                 const item = document.createElement('li');
                 item.className = 'admin-request-item';
                 item.innerHTML = `
-                    <div class="request-detail" style="font-size: 0.9rem;">
-                       <span style="font-weight: 700;">${formatTRX(req.amountTRX)} TRX</span> &rarr; <span style="font-family: monospace; font-size: 0.85rem;">${req.walletAddress.substring(0, 10)}...</span>
+                    <div class="request-detail" style="font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center;">
+                       <span>
+                           <span style="font-weight: 700;">${formatTRX(req.amountTRX)} TRX</span> &rarr; 
+                           <span style="font-family: monospace; font-size: 0.85rem;">${req.walletAddress.substring(0, 8)}...</span>
+                       </span>
+                       <button class="copy-wallet-btn" data-address="${req.walletAddress}" style="background: var(--primary-color); color: white; border: none; padding: 5px 8px; border-radius: var(--border-radius-sm); font-size: 0.75rem; cursor: pointer; transition: background 0.2s;"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                     <div class="request-detail" style="font-size: 0.85rem; margin-top: 5px;">
                        👤 ${req.userName} | ID: ${req.telegramId}
                     </div>
                     <div class="request-actions" style="margin-top: 10px; display: flex; justify-content: space-between;">
-                        <button class="approve" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-right: 5px;">Onayla</button>
-                        <button class="reject" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-left: 5px;">Reddet</button>
+                        <button class="approve" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-right: 5px;">Approve</button>
+                        <button class="reject" data-id="${reqId}" data-user-id="${req.telegramId}" data-amount="${req.amountTRX}" style="flex: 1; margin-left: 5px;">Reject</button>
                     </div>
                 `;
                 requestsList.appendChild(item);
@@ -840,6 +838,13 @@
             
             requestsList.querySelectorAll('.approve').forEach(btn => btn.addEventListener('click', handleAdminAction));
             requestsList.querySelectorAll('.reject').forEach(btn => btn.addEventListener('click', handleAdminAction));
+            
+            // YENİ: Kopyalama butonu işlevi
+            requestsList.querySelectorAll('.copy-wallet-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const address = e.currentTarget.dataset.address;
+                navigator.clipboard.writeText(address);
+                showToast('TRX Address copied!');
+            }));
         }
 
         async function handleAdminAction(event) {
@@ -849,13 +854,13 @@
             const amountTRX = parseFloat(btn.dataset.amount);
             const action = btn.classList.contains('approve') ? 'Approved' : 'Rejected';
 
-            if (!confirm(`${reqId.substring(0, 8)} ID'li ${formatTRX(amountTRX)} TRX talebi ${action === 'Approved' ? 'ONAYLIYOR' : 'REDDEDİYOR'} musunuz?`)) return;
+            if (!confirm(`Do you ${action === 'Approved' ? 'APPROVE' : 'REJECT'} the request for ${formatTRX(amountTRX)} TRX with ID ${reqId.substring(0, 8)}?`)) return;
 
-            // Talebin durumunu güncelle
+            // Update request status
             await db.ref('withdrawalRequests/' + reqId).update({ status: action, adminId: currentUser.telegramId, resolutionTime: new Date().toISOString() });
             
             if (action === 'Rejected') {
-                // Reddedilirse bakiyeyi geri yükle
+                // Restore balance if rejected
                 const userRef = db.ref('users/' + userId);
                 const userSnap = await userRef.once('value');
                 const user = userSnap.val();
@@ -863,52 +868,52 @@
                 if (user) {
                     const newBalance = (user.balanceTRX || 0) + amountTRX;
                     await userRef.update({ balanceTRX: parseFloat(newBalance.toFixed(8)) });
-                    showToast(`Reddedildi. Bakiye geri yüklendi: +${formatTRX(amountTRX)} TRX`, 5000);
+                    showToast(`Rejected. Balance restored: +${formatTRX(amountTRX)} TRX`, 5000);
                 }
             } else {
-                 showToast(`Talep Onaylandı. Lütfen ödemeyi yapın.`, 5000);
+                 showToast(`Request Approved. Please make the payment.`, 5000);
             }
             
-            loadAdminData(); 
+            loadAdminData(); // GÜNCELLENDİ: Admin paneli verilerini yenile
         }
 
 
-        // AD HANDLING (REKLAM İŞLEMLERİ)
+        // AD HANDLING
         function handleWatchDailyAd() {
-            openAdModal("Reklam Başlatılıyor...");
-            adModalTitle.textContent = "Reklam Başlatılıyor...";
-            adStatusMessage.textContent = "Lütfen bekleyin...";
+            openAdModal("Ad Starting...");
+            adModalTitle.textContent = "Ad Starting...";
+            adStatusMessage.textContent = "Please wait...";
             adCloseBtn.style.display = 'none';
 
             if (window[AD_FUNCTION_NAME] && typeof window[AD_FUNCTION_NAME] === 'function') {
                 window[AD_FUNCTION_NAME]()
                     .then(() => {
-                        // Başarılı (Reklam İzleme Tamamlandı)
-                        adModalTitle.textContent = "Tebrikler! 🎉";
-                        adStatusMessage.textContent = `Reklam başarıyla tamamlandı. ${formatTRX(trxPerAd)} TRX kazanmak için butona basın.`;
+                        // Success (Ad Watch Completed)
+                        adModalTitle.textContent = "Congratulations! 🎉";
+                        adStatusMessage.textContent = `Ad completed successfully. Press the button to earn ${formatTRX(trxPerAd)} TRX.`;
                         adCloseBtn.style.display = 'block';
-                        adCloseBtn.textContent = "Kapat & Ödülü Al";
+                        adCloseBtn.textContent = "Close & Claim Reward";
                         adCloseBtn.dataset.rewardStatus = 'success';
                     })
                     .catch(e => {
-                        // Hata (Kullanıcı Kapattı/Hata Oluştu)
-                        console.error("Adexora Reklam Hatası:", e);
-                        adModalTitle.textContent = "İşlem Başarısız ❌";
-                        adStatusMessage.textContent = "Reklamı tam izlemediniz veya bir hata oluştu. Ödül verilmedi.";
+                        // Error (User Closed/Error Occurred)
+                        console.error("Adexora Ad Error:", e);
+                        adModalTitle.textContent = "Transaction Failed ❌";
+                        adStatusMessage.textContent = "You didn't watch the ad completely or an error occurred. Reward not granted.";
                         adCloseBtn.style.display = 'block';
-                        adCloseBtn.textContent = "Kapat";
+                        adCloseBtn.textContent = "Close";
                         adCloseBtn.dataset.rewardStatus = 'fail';
                     });
             } else {
-                // Simülasyon
-                showToast("Adexora kodu bulunamadı. 5 sn simülasyon başlatıldı.");
-                adModalTitle.textContent = "Reklam Simülasyonu ⏱️";
-                adStatusMessage.textContent = "Simülasyon devam ediyor... (5sn)";
+                // Simulation
+                showToast("Adexora code not found. Starting 5 sec simulation.");
+                adModalTitle.textContent = "Ad Simulation ⏱️";
+                adStatusMessage.textContent = "Simulation in progress... (5 sec)";
                 setTimeout(() => {
-                    adModalTitle.textContent = "Simülasyon Tamamlandı! 🎉";
-                    adStatusMessage.textContent = `Simülasyon başarılı. ${formatTRX(trxPerAd)} TRX kazanmak için kapatın.`;
+                    adModalTitle.textContent = "Simulation Completed! 🎉";
+                    adStatusMessage.textContent = `Simulation successful. Close to earn ${formatTRX(trxPerAd)} TRX.`;
                     adCloseBtn.style.display = 'block';
-                    adCloseBtn.textContent = "Kapat & Ödülü Al";
+                    adCloseBtn.textContent = "Close & Claim Reward";
                     adCloseBtn.dataset.rewardStatus = 'success';
                 }, 5000);
             }
@@ -927,7 +932,7 @@
             const rewardStatus = adCloseBtn.dataset.rewardStatus;
             
             if (rewardStatus === 'success') {
-                // Ödülü ver ve sayaçları güncelle
+                // Grant reward and update counters
                 currentUser.balanceTRX += trxPerAd;
                 currentUser.adsWatchedToday++;
                 currentUser.totalAdsWatchedLifetime++;
@@ -935,17 +940,17 @@
 
                 updateUI();
                 saveUserState();
-                showToast(`+${formatTRX(trxPerAd)} TRX kazandınız!`);
+                showToast(`+${formatTRX(trxPerAd)} TRX earned!`);
             } else if (rewardStatus === 'fail') {
-                showToast("Reklam ödülü verilmedi.");
+                showToast("Ad reward not granted.");
             }
             adCloseBtn.dataset.rewardStatus = '';
         }
 
-        // WITHDRAWAL HANDLING (ÇEKİM İŞLEMLERİ)
+        // WITHDRAWAL HANDLING
         async function handleSubmitWithdrawal() {
             if (!currentUser.telegramId) {
-                showToast("Çekim talebi için Telegram kullanıcısı olmalısınız.");
+                showToast("You must be a Telegram user to make a withdrawal request.");
                 return;
             }
             
@@ -958,35 +963,35 @@
             statusMsg.textContent = '';
 
             if (isNaN(amount) || amount <= 0 || amount > 1000000) {
-                statusMsg.textContent = "Lütfen geçerli bir miktar girin.";
+                statusMsg.textContent = "Please enter a valid amount.";
                 statusMsg.classList.add('error-message');
                 return;
             }
-            if (amount < MIN_WITHDRAW_TRX) {
-                statusMsg.textContent = `Minimum çekim ${MIN_WITHDRAW_TRX.toFixed(2)} TRX'tir.`;
+            if (amount < MIN_WITHDRAW_TRX) { // GÜNCELLENDİ: Min çekim kontrolü
+                statusMsg.textContent = `The minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`;
                 statusMsg.classList.add('error-message');
                 return;
             }
             if (amount > currentUser.balanceTRX) {
-                statusMsg.textContent = "Yeterli bakiyeniz yok.";
+                statusMsg.textContent = "Insufficient balance.";
                 statusMsg.classList.add('error-message');
                 return;
             }
             if (!walletAddress || !walletAddress.startsWith('T') || walletAddress.length < 30) {
-                statusMsg.textContent = "Lütfen geçerli bir TRON (TRX) cüzdan adresi girin (T ile başlamalı).";
+                statusMsg.textContent = "Please enter a valid TRON (TRX) wallet address (must start with T).";
                 statusMsg.classList.add('error-message');
                 return;
             }
             if (!telegramUsername || !telegramUsername.startsWith('@') || telegramUsername.length < 4) {
-                statusMsg.textContent = "Lütfen geçerli bir Telegram Kullanıcı Adı girin (@ ile başlamalı).";
+                statusMsg.textContent = "Please enter a valid Telegram Username (must start with @).";
                 statusMsg.classList.add('error-message');
                 return;
             }
 
-            // Bakiyeden düş
+            // Deduct from balance
             currentUser.balanceTRX -= amount;
             
-            // Firebase'e çekim talebini kaydet
+            // Save withdrawal request to Firebase
             const withdrawalRequest = {
                 telegramId: currentUser.telegramId,
                 userName: currentUser.name,
@@ -999,23 +1004,23 @@
 
             await db.ref('withdrawalRequests').push(withdrawalRequest);
 
-            // Telegram Admin Kanalına Bildirim Gönder
+            // Send Notification to Telegram Admin Channel
             sendTelegramWithdrawalNotification(withdrawalRequest);
 
             updateUI();
             saveUserState();
 
-            statusMsg.textContent = "Çekim talebiniz başarıyla gönderildi ve inceleniyor!";
+            statusMsg.textContent = "Your withdrawal request has been successfully submitted and is under review!";
             statusMsg.classList.add('success-message');
             document.getElementById('withdrawAmountInput').value = "";
             document.getElementById('withdrawAccountInput').value = "";
             document.getElementById('withdrawUsernameInput').value = "";
         }
 
-        // TELEGRAM BİLDİRİMLERİ (Syntax hatası giderildi: Template Literal yerine String Birleştirme kullanıldı)
+        // TELEGRAM NOTIFICATIONS
         function sendToTelegram(message) {
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-                console.warn("Telegram Bot ayarları eksik. Bildirim gönderilemedi.");
+                console.warn("Telegram Bot settings are missing. Notification failed to send.");
                 return;
             }
 
@@ -1029,35 +1034,35 @@
                     parse_mode: 'MarkdownV2'
                 })
             })
-            .catch(error => console.error('Telegram mesajı gönderme hatası:', error));
+            .catch(error => console.error('Error sending Telegram message:', error));
         }
 
         function sendTelegramWithdrawalNotification(req) {
-            const message = "🚨 *YENİ ÇEKİM TALEBİ* 🚨\n" +
+            const message = "🚨 *NEW WITHDRAWAL REQUEST* 🚨\n" +
                 "------------------------------------\n" +
-                // Kullanıcı adına tıklanabilir link (tg://user?id=) ekleniyor
-                "👤 *Kullanıcı:* \\[\`" + escapeMarkdown(req.userName) + "\`\\](tg://user?id=" + req.telegramId + ")\n" +
+                // User Name with clickable link (tg://user?id=)
+                "👤 *User:* \\[\`" + escapeMarkdown(req.userName) + "\`\\](tg://user?id=" + req.telegramId + ")\n" +
                 "🆔 *Telegram ID:* `" + req.telegramId + "`\n" +
-                "💰 *Miktar:* " + formatTRX(req.amountTRX) + " TRX\n" +
-                "💳 *Cüzdan:* `" + escapeMarkdown(req.walletAddress) + "`\n" +
-                "📱 *Kullanıcı Adı:* `" + escapeMarkdown(req.telegramUsername) + "`\n" +
+                "💰 *Amount:* " + formatTRX(req.amountTRX) + " TRX\n" +
+                "💳 *Wallet:* `" + escapeMarkdown(req.walletAddress) + "`\n" +
+                "📱 *Username:* `" + escapeMarkdown(req.telegramUsername) + "`\n" +
                 "------------------------------------\n" +
-                "⏰ *Talep Zamanı:* " + new Date(req.timestamp).toLocaleString('tr-TR');
+                "⏰ *Request Time:* " + new Date(req.timestamp).toLocaleString('en-US');
             sendToTelegram(message);
         }
 
         function sendTelegramReferralNotification(refereeName, refereeId, refereeBonus, referrerName, referrerId, referrerBonus) {
-            const message = "🎉 *YENİ REFERANS* 🎉\n" +
+            const message = "🎉 *NEW REFERRAL* 🎉\n" +
                 "------------------------------------\n" +
-                // Yeni Kullanıcı
-                "👥 *Yeni Kullanıcı:* \\[\`" + escapeMarkdown(refereeName) + "\`\\](tg://user?id=" + refereeId + ")\n" +
-                "🌟 *Kazanılan:* " + formatTRX(refereeBonus) + " TRX\n" +
-                "Davet Eden:\n" +
-                // Davet Eden
-                "👤 *Davet Eden:* \\[\`" + escapeMarkdown(referrerName) + "\`\\](tg://user?id=" + referrerId + ")\n" +
-                "🌟 *Kazanılan:* " + formatTRX(referrerBonus) + " TRX\n" +
+                // New User (Referee)
+                "👥 *New User:* \\[\`" + escapeMarkdown(refereeName) + "\`\\](tg://user?id=" + refereeId + ")\n" +
+                "🌟 *Earned:* " + formatTRX(refereeBonus) + " TRX\n" +
+                "Inviter:\n" +
+                // Inviter (Referrer)
+                "👤 *Inviter:* \\[\`" + escapeMarkdown(referrerName) + "\`\\](tg://user?id=" + referrerId + ")\n" +
+                "🌟 *Earned:* " + formatTRX(referrerBonus) + " TRX\n" +
                 "------------------------------------\n" +
-                "⏰ *Zaman:* " + new Date().toLocaleString('tr-TR');
+                "⏰ *Time:* " + new Date().toLocaleString('en-US');
             sendToTelegram(message);
         }
 
