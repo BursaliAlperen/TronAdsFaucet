@@ -109,7 +109,13 @@
         .admin-warning { background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px solid #FFC107; }
         .balance { font-weight: 600; color: #4CAF50; }
         .usd-val { font-size: 0.8em; color: var(--text-secondary); }
-
+        
+        /* Yeni CSS Kuralı: Giriş kutucuklarını ortalamak için */
+        .centered-form { 
+            max-width: 350px; /* Form genişliğini sınırla */
+            margin-left: auto; /* Otomatik sol kenar boşluğu ile ortala */
+            margin-right: auto; /* Otomatik sağ kenar boşluğu ile ortala */
+        }
         /* Loading Screen Style */
         #loadingScreen {
             position: fixed;
@@ -603,8 +609,7 @@
                         **<span style="color: var(--primary-color);">Minimum withdrawal amount is ${minWithdrawTRX.toFixed(2)} TRX.</span>**
                     </p>
 
-                    <form id="withdrawalForm">
-                        <div class="input-group">
+                    <form id="withdrawalForm" class="centered-form"> <div class="input-group">
                             <label for="amountTRX" class="input-label">Amount (TRX)</label>
                             <input type="number" id="amountTRX" class="input-field" placeholder="Min ${minWithdrawTRX.toFixed(2)} TRX" step="0.01" required>
                         </div>
