@@ -142,7 +142,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Reklam Modal Stili */
+        /* Reklam Modal Stili (Simülasyon kaldırıldığı için bu CSS gereksiz olabilir ancak şimdilik tutuluyor) */
         .ad-modal-overlay {
             position: fixed;
             top: 0;
@@ -327,7 +327,7 @@
             }
         }
 
-        // --- AD PLAYBACK FUNCTION (Simulation) ---
+        // --- AD PLAYBACK FUNCTION (Simulation - Kept for Admin/Debugging) ---
         function showAdAndRewardSimulation() {
             const adModal = document.getElementById('adModal');
             const adCountdown = document.getElementById('adCountdown');
@@ -776,6 +776,7 @@
 
         // --- EVENT HANDLERS (The Ad logic is here) ---
 
+        // Düzeltilmiş Reklam Gösterme Fonksiyonu (handleWatchDailyAd)
         function handleWatchDailyAd() {
             if (!currentUser) return;
             
@@ -821,12 +822,19 @@
                     updateUI(); 
                 });
             } else {
-                // Fallback to Simulation Ad if Adexora function is not loaded (e.g., script blocked)
-                console.warn("Adexora function not found. Falling back to simulation.");
-                showToast("Adexora not loaded or blocked. Simulating Ad...", 5000);
-                showAdAndRewardSimulation();
+                // FALLBACK DEĞİŞİKLİĞİ: Simülasyon yerine hata mesajı gösterilir.
+                console.error("Adexora function not found. Cannot show real ad.");
+                showToast("Gerçek reklam servisi yüklenemedi. Lütfen internet bağlantınızı veya Telegram kısıtlamalarını kontrol edin.", 6000);
+                
+                // Butonu hemen tekrar etkinleştir.
+                watchBtn.disabled = false;
+                updateUI();
+                
+                // EĞER SİMÜLASYONU YİNE DE KULLANMAK İSTERSENİZ:
+                // showAdAndRewardSimulation(); 
             }
         }
+        // Düzeltilmiş Reklam Gösterme Fonksiyonu Sonu
 
         function handleWithdrawal() {
             const walletAddress = document.getElementById('walletAddressInput').value.trim();
