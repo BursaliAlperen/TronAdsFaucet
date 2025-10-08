@@ -618,8 +618,67 @@
             box-shadow: var(--shadow);
         }
         
-        /* The rest of the CSS remains the same */
-        /* ... */
+        /* Admin Panel specific styles */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat-card {
+            background: rgba(255, 65, 54, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .admin-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .admin-stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            text-transform: uppercase;
+        }
+        
+        .admin-user-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .admin-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .admin-control-btn {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: var(--gradient-primary);
+            color: white;
+            transition: var(--transition);
+        }
+
+        .admin-control-btn.danger {
+            background: var(--danger-color);
+        }
+
+        .admin-control-btn:hover {
+            opacity: 0.9;
+        }
+        /* End Admin Panel Styles */
+
 
         /* Responsive Design */
         @media (max-width: 480px) {
@@ -823,7 +882,7 @@
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="totalAds">0</div>
-                        <div class="admin-stat-label">Total Ads</div>
+                        <div class="admin-stat-label">Total Ads Watched</div>
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="totalWithdrawals">0</div>
@@ -831,34 +890,28 @@
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="totalBalance">TRX 0.00</div>
-                        <div class="admin-stat-label">Total Balance</div>
+                        <div class="admin-stat-label">Total User Balance</div>
                     </div>
                 </div>
             </div>
             <div class="card">
-                <h2><i class="fas fa-users"></i> User Management</h2>
+                <h2><i class="fas fa-users"></i> Recent Users (Top 10)</h2>
                 <div class="input-group">
                     <label for="userSearch">Search User (ID or Name)</label>
-                    <input type="text" id="userSearch" placeholder="Enter User ID or name">
+                    <input type="text" id="userSearch" placeholder="Enter User ID or name" disabled>
                 </div>
-                <button class="btn btn-primary" id="searchUserBtn">Search</button>
+                <button class="btn btn-primary" id="searchUserBtn" disabled>Search (Not Implemented)</button>
                 <div class="admin-user-list" id="adminUserList">
-                    </div>
+                    <p style="color:var(--tg-theme-hint-color); text-align:center;">Loading users...</p>
+                </div>
             </div>
             <div class="card">
                 <h2><i class="fas fa-money-bill-wave"></i> Withdrawal Requests</h2>
                 <div class="withdraw-requests-list" id="withdrawRequestsList">
-                    </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-cogs"></i> System Settings</h2>
-                <div class="admin-controls">
-                    <button class="admin-control-btn" id="resetAdsBtn">Reset Daily Ads</button>
-                    <button class="admin-control-btn" id="updateRewardsBtn">Update Rewards</button>
-                    <button class="admin-control-btn danger" id="clearDataBtn">Clear All Data</button>
+                    <p style="color:var(--tg-theme-hint-color); text-align:center;">No withdrawal requests found.</p>
                 </div>
             </div>
-        </div>
+            </div>
     </div> <div class="status-message" id="statusMessage"></div>
 
     <div class="footer-nav">
@@ -890,9 +943,9 @@
 
     <script>
         // --- FIREBASE INTEGRATION START ---
-        // Your web app's Firebase configuration
+        // LÜTFEN KENDİ AYARLARINIZLA DEĞİŞTİRİN
         const firebaseConfig = {
-          apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
+          apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM", // Kendi API Key'iniz
           authDomain: "tronadsfaucet.firebaseapp.com",
           databaseURL: "https://tronadsfaucet-default-rtdb.firebaseio.com",
           projectId: "tronadsfaucet",
@@ -902,28 +955,27 @@
           measurementId: "G-WG3ETVHC78"
         };
 
-        // Initialize Firebase (Safely check if app is already initialized)
         let firebaseApp;
         let analytics;
         let database; 
 
         try {
-            // Check if Firebase apps are already initialized (to prevent "already exists" error)
             if (firebase.apps.length === 0) {
                 firebaseApp = firebase.initializeApp(firebaseConfig);
             } else {
                 firebaseApp = firebase.app();
             }
 
-            // Get services using the initialized app instance
+            // Gerekli modülleri initialize et
             analytics = firebase.analytics(firebaseApp);
             database = firebase.database(firebaseApp);
             console.log("Firebase initialized successfully.");
 
         } catch (e) {
             console.error("Firebase initialization failed:", e);
+            // Hata detayını göster (genellikle yapılandırma sorunudur)
+            showStatusMessage(`Firebase init failed: Check your config.`, 'error');
         }
-
         // --- FIREBASE INTEGRATION END ---
 
         let tg;
@@ -933,29 +985,31 @@
             tg.enableClosingConfirmation();
             tg.MainButton.hide();
         } catch (error) {
+            // Test user for non-Telegram environment
             tg = {
                 initDataUnsafe: {
                     user: {
-                        id: 'test_user_' + Date.now(),
+                        id: 'test_user_' + Math.floor(Math.random() * 10000000000),
                         first_name: 'Test User'
                     }
                 }
             };
         }
 
-        const ADMIN_USER_IDS = ['8401848644', '7904032877'];
+        // ÖNEMLİ: Kendi admin ID'lerinizle değiştirin
+        const ADMIN_USER_IDS = ['8401848644', '7904032877']; 
 
-        // FULL DATABASE STRUCTURE (Will be synced with Firebase)
+        // Global data structure
         let userData = {
             userId: '',
-            balance: 0,
+            balance: 0.0,
             adCount: 0,
             dailyAdCount: 0,
             lastAdDate: '',
             referralCode: '',
             referredBy: '',
             referrals: [],
-            referralBonus: 0,
+            referralBonus: 0.0,
             withdrawHistory: [],
             paymentAddress: '',
             firstName: '',
@@ -963,56 +1017,133 @@
             username: '',
             joinDate: '',
             lastActive: '',
-            totalEarnings: 0,
+            totalEarnings: 0.0,
             isActive: true,
             lastUpdated: Date.now()
         };
 
         let appData = {
-            // System Settings
             adRewardUSD: 0.001, // 0.001$ reward
-            minWithdraw: 5, // 5 TRX minimum withdraw
+            minWithdraw: 5.0, // 5 TRX minimum withdraw
             referralRewardUSD: 0.02, // 0.02$ referral reward
             dailyAdLimit: 200, // 200 ads daily limit
-            appVersion: '2.0.0',
-            // Withdrawals
-            withdrawRequests: [],
-            completedWithdrawals: [],
-            // Users
+            appVersion: '2.0.1',
             users: {},
             userStats: {
                 totalUsers: 0,
-                activeUsers: 0,
-                totalEarnings: 0,
+                totalAds: 0,
+                totalEarnings: 0.0,
                 totalWithdrawals: 0
             },
-            // System Logs
-            systemLogs: [],
-            errorLogs: [],
-            // Reward History
-            rewardHistory: [],
-            // Admin Settings
-            adminSettings: {
-                maintenanceMode: false,
-                newUserBonus: 0,
-                welcomeMessage: 'Welcome!',
-                adCooldown: 2.5 // 2.5 seconds cooldown
-            },
             lastUpdated: Date.now(),
-            createdDate: new Date().toISOString()
         };
 
-        // TRON price info
-        let tronPriceUSD = 0.12; // Default value
-        let tronPriceHistory = [];
-        let chart = null;
+        let tronPriceUSD = 0.12; // Default TRON price for calculation (Güncel kur ile değiştirilmeli)
 
         const views = document.querySelectorAll('.view');
         const navButtons = document.querySelectorAll('.nav-btn');
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
 
-        // CORE FUNCTIONS
+        // --- FIREBASE DATA PERSISTENCE FUNCTIONS ---
+
+        async function saveUserDataToFirebase() {
+            if (!database || !userData.userId) return;
+            try {
+                userData.lastActive = new Date().toISOString(); 
+                const userRef = database.ref('users/' + userData.userId);
+                await userRef.set(userData);
+                console.log('User data saved to Firebase.');
+            } catch (e) {
+                console.error('Error saving user data:', e);
+            }
+        }
+
+        async function loadUserDataFromFirebase() {
+            if (!database || !userData.userId) return;
+            
+            // Eğer Firebase initialization başarısız olduysa, load etmeyi deneme.
+            if (!database) {
+                console.warn("Firebase database not initialized. Skipping data load.");
+                return;
+            }
+
+            try {
+                const userRef = database.ref('users/' + userData.userId);
+                const snapshot = await userRef.once('value');
+                const dbUser = snapshot.val();
+                const today = new Date().toDateString();
+
+                if (dbUser) {
+                    userData = { ...userData, ...dbUser };
+                    
+                    // Günlük limit kontrolü ve sıfırlama
+                    if (userData.lastAdDate !== today) {
+                        userData.dailyAdCount = 0;
+                        userData.lastAdDate = today;
+                    }
+
+                    console.log('Existing user data loaded.');
+                } else {
+                    // New user setup
+                    const now = new Date().toISOString();
+                    userData.joinDate = now;
+                    userData.lastActive = now;
+                    userData.lastAdDate = today;
+                    userData.firstName = tg.initDataUnsafe.user.first_name || '';
+                    userData.lastName = tg.initDataUnsafe.user.last_name || '';
+                    userData.username = tg.initDataUnsafe.user.username || '';
+                    userData.referralCode = 'USER' + userData.userId.slice(-4);
+                    
+                    const refCode = getReferralCodeFromURL();
+                    if (refCode) {
+                        userData.referredBy = refCode;
+                        showStatusMessage(`You were referred by code: ${refCode}`, 'info');
+                    }
+                    console.log('New user data initialized.');
+                }
+                
+                await saveUserDataToFirebase(); 
+
+            } catch (e) {
+                console.error('Error loading user data:', e);
+                showStatusMessage('Could not load data from server. Using local cache.', 'error');
+            }
+        }
+
+        // Function to fetch all users/data for admin panel
+        async function loadAllUsersForAdmin() {
+            if (!database) return;
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.once('value');
+                const allUsers = snapshot.val() || {};
+                
+                let totalBalance = 0.0;
+                let totalAdCount = 0;
+                let totalUsersCount = 0;
+
+                for (const id in allUsers) {
+                    const user = allUsers[id];
+                    totalBalance += user.balance || 0.0;
+                    totalAdCount += user.adCount || 0;
+                    totalUsersCount++;
+                }
+                
+                appData.users = allUsers;
+                appData.userStats.totalUsers = totalUsersCount;
+                appData.userStats.totalEarnings = totalBalance;
+                appData.userStats.totalAds = totalAdCount;
+
+                updateAdminPanel();
+
+            } catch (e) {
+                console.error('Error loading admin data:', e);
+            }
+        }
+
+        // --- CORE UI & LOGIC FUNCTIONS ---
+
         function switchView(viewId) {
             views.forEach(view => view.style.display = 'none');
             const targetView = document.getElementById(viewId);
@@ -1033,32 +1164,192 @@
         function copyToClipboard(text) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text);
-                showStatusMessage('Copied to clipboard!', 'success'); // Added success message
+                showStatusMessage('Copied to clipboard!', 'success');
             } else {
-                // Fallback for older browsers
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                showStatusMessage('Copied to clipboard (fallback)!', 'success'); // Added success message
+                showStatusMessage('Copied to clipboard (fallback)!', 'success');
             }
         }
 
-        // APPLICATION LOGIC FUNCTIONS (Empty, insert your own code here)
-        function showAd() { 
-            showStatusMessage('Ad is being displayed... (Please insert your own Gigapub/Ad logic code here)', 'info');
-            // Your ad watching and balance increase logic goes here
+        function getReferralCodeFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Hem ref hem de start parametrelerini kontrol et (Telegram bot linklerinden gelen ref kodları için)
+            return urlParams.get('ref') || (urlParams.get('start') && urlParams.get('start').startsWith('ref_') ? urlParams.get('start').substring(4) : '');
         }
+
+        function updateUI() { 
+            // Update Home View
+            const balanceInTrx = userData.balance.toFixed(4);
+            document.getElementById('balanceDisplay').textContent = `TRX ${balanceInTrx}`;
+            document.getElementById('adCountDisplay').textContent = userData.adCount;
+            document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / ${appData.dailyAdLimit}`;
+
+            // Update Withdraw View
+            document.getElementById('withdrawBalanceDisplay').textContent = `TRX ${balanceInTrx}`;
+            const withdrawBtn = document.getElementById('mainWithdrawBtn');
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            
+            if (userData.balance >= appData.minWithdraw) {
+                withdrawBtn.disabled = false;
+                withdrawBtn.textContent = 'Withdraw Now';
+                finalWithdrawBtn.disabled = false;
+            } else {
+                withdrawBtn.disabled = true;
+                withdrawBtn.textContent = `Reach ${appData.minWithdraw} TRX to Withdraw`;
+                finalWithdrawBtn.disabled = true;
+            }
+
+            // Update Referral View
+            document.getElementById('referralCountDisplay').textContent = userData.referrals.length;
+            document.getElementById('referralBonusDisplay').textContent = `TRX ${userData.referralBonus.toFixed(4)}`;
+            document.getElementById('userReferralCode').textContent = userData.referralCode || 'N/A';
+        }
+        
+        function updateAdminPanel() {
+            // 1. Update Statistics
+            document.getElementById('totalUsers').textContent = appData.userStats.totalUsers;
+            document.getElementById('totalAds').textContent = appData.userStats.totalAds;
+            document.getElementById('totalBalance').textContent = `TRX ${appData.userStats.totalEarnings.toFixed(2)}`;
+            document.getElementById('totalWithdrawals').textContent = appData.userStats.totalWithdrawals || 0; 
+
+            // 2. Populate User List
+            const userListDiv = document.getElementById('adminUserList');
+            userListDiv.innerHTML = '';
+            
+            const usersArray = Object.values(appData.users || {});
+            
+            if (usersArray.length === 0) {
+                userListDiv.innerHTML = '<p style="color:var(--tg-theme-hint-color); text-align:center;">No users found in database.</p>';
+                return;
+            }
+
+            // Sort by most recent activity
+            usersArray.sort((a, b) => (new Date(b.lastActive).getTime() || 0) - (new Date(a.lastActive).getTime() || 0));
+
+            usersArray.slice(0, 10).forEach(user => { // Show top 10 recent users
+                const userElement = document.createElement('div');
+                userElement.style.cssText = 'padding: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;';
+                userElement.innerHTML = `
+                    <div>
+                        <strong>${user.firstName || 'User'}</strong>
+                        <span style="font-size: 12px; color: var(--tg-theme-hint-color);">(${user.userId.slice(0, 8)}...)</span>
+                        <br>
+                        <span style="font-size: 12px; color: var(--tg-theme-hint-color);">Balance: TRX ${user.balance ? user.balance.toFixed(4) : '0.0000'}</span>
+                    </div>
+                    <button onclick="copyToClipboard('${user.userId}')" style="background: var(--gradient-primary); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer;">Copy ID</button>
+                `;
+                userListDiv.appendChild(userElement);
+            });
+        }
+        
+        // --- AD REWARD LOGIC ---
+
+        /**
+         * Ad izleme başarılı olduğunda kullanıcıya ödül veren fonksiyon.
+         */
+        async function rewardUserForAd() {
+            // Günlük limiti tekrar kontrol et (Ad network'ten gelen callback gecikebilir)
+            if (userData.dailyAdCount >= appData.dailyAdLimit) {
+                // Bu durumun tekrar oluşmaması için hata mesajı göstermeye gerek yok
+                return;
+            }
+
+            const rewardInTrx = appData.adRewardUSD / tronPriceUSD; // 0.001$ ödül / TRON fiyatı
+            const rewardFixed = parseFloat(rewardInTrx.toFixed(8)); // Hassasiyeti koru
+
+            // 1. Kullanıcı Verilerini Güncelle
+            userData.balance += rewardFixed;
+            userData.adCount += 1;
+            userData.dailyAdCount += 1;
+            userData.totalEarnings += rewardFixed;
+            
+            // 2. Firebase'e Kaydet ve Arayüzü Güncelle
+            updateUI();
+            await saveUserDataToFirebase();
+            
+            showStatusMessage(`+${rewardFixed.toFixed(8)} TRX earned!`, 'success');
+
+            // Eğer kullanıcı admin ise, admin istatistiklerini yenile
+            if (ADMIN_USER_IDS.includes(String(userData.userId))) {
+                loadAllUsersForAdmin(); 
+            }
+        }
+
+        /**
+         * Reklamı gösterme ve sonuç callback'ini simüle eden fonksiyon.
+         * Gerçek entegrasyon için bu kısım değiştirilmelidir.
+         */
+        function showAd() { 
+            if (userData.dailyAdCount >= appData.dailyAdLimit) {
+                showStatusMessage('Daily ad limit reached. Come back tomorrow!', 'error');
+                return;
+            }
+
+            showStatusMessage('Ad is loading... Please wait.', 'info');
+
+            const rewardedBtn = document.getElementById('rewardedBtn');
+            rewardedBtn.classList.add('btn-loading');
+            rewardedBtn.disabled = true;
+
+            // --- START: Simulated Ad Call ---
+            // Gerçek GigaPub/Ad Network Entegrasyonu için bu setTimeout bloğunu
+            // ilgili SDK çağrısı ile değiştirin ve 'rewardUserForAd' fonksiyonunu
+            // başarı (reward) callback'i olarak kullanın.
+            
+            setTimeout(async () => {
+                // Reklam izleme sona erdiğinde (başarılı veya başarısız) butonun durumunu sıfırla
+                rewardedBtn.classList.remove('btn-loading');
+                rewardedBtn.disabled = false;
+                
+                // Başarılı bir reklam izlemeyi simüle et
+                await rewardUserForAd();
+                
+            }, 2500); // 2.5 saniye reklam simülasyonu
+            // --- END: Simulated Ad Call ---
+        }
+
+        // --- WITHDRAWAL & REFERRAL LOGIC ---
         function processWithdrawal() { 
             showStatusMessage('Withdrawal request is being processed...', 'info'); 
-            // Your withdrawal logic goes here
+            
+            if (userData.balance >= appData.minWithdraw && document.getElementById('paymentAddress').value.startsWith('T')) {
+                 const amount = userData.balance;
+                 userData.balance = 0;
+                 userData.withdrawHistory.push({
+                     amount: amount,
+                     address: document.getElementById('paymentAddress').value,
+                     date: new Date().toISOString(),
+                     status: 'Pending'
+                 });
+
+                // Clear address input
+                document.getElementById('paymentAddress').value = '';
+
+                // Save new state
+                saveUserDataToFirebase();
+                updateUI();
+                
+                showStatusMessage('Withdrawal request submitted successfully!', 'success');
+            } else {
+                showStatusMessage('Withdrawal failed: Check minimum balance and TRON address.', 'error');
+            }
         }
         function submitReferralCode() { 
-            showStatusMessage('Referral code is being submitted...', 'info'); 
-            // Your referral code processing logic goes here
+            const code = document.getElementById('referralCodeInput').value;
+            if (code && code !== userData.referralCode && !userData.referredBy) {
+                userData.referredBy = code;
+                saveUserDataToFirebase();
+                showStatusMessage(`Referral code ${code} accepted!`, 'success');
+            } else {
+                showStatusMessage('Invalid or already submitted referral code.', 'error');
+            }
         }
+
         function shareReferral(message) {
             try {
                 if (tg && tg.shareText) {
@@ -1071,39 +1362,6 @@
                 showStatusMessage('Sharing error: Message copied.', 'error');
                 copyToClipboard(message);
             }
-        }
-        function resetDailyAds() { showStatusMessage('Daily ads reset. (Admin)', 'info'); }
-        function searchUser() { showStatusMessage('User is being searched... (Admin)', 'info'); }
-        function clearAllData() { showStatusMessage('All data cleared. (Admin)', 'danger'); }
-        function updateAdReward() { showStatusMessage('Rewards updated. (Admin)', 'success'); }
-
-        function updateUI() { 
-            // Minimal UI update to show referral code for sharing
-            document.getElementById('userReferralCode').textContent = userData.referralCode || 'TESTREF';
-            // Also ensure the navigation works after init
-            switchView('home-view');
-            // Other UI updates go here
-        }
-        
-        async function initApp() {
-            // Get user information
-            userData.userId = tg.initDataUnsafe.user.id.toString();
-            // Assign a test referral code (should be retrieved from Firebase in a real app)
-            userData.referralCode = 'USER' + userData.userId.slice(-4);
-            
-            // Admin check
-            if (ADMIN_USER_IDS.includes(String(userData.userId))) {
-                document.getElementById('adminHeaderBtn').style.display = 'flex';
-            }
-
-            initEventListeners();
-            updateUI();
-        }
-
-        // Check for referral code from URL parameters
-        function getReferralCodeFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('ref') || '';
         }
 
         // Initialize button event listeners
@@ -1123,6 +1381,8 @@
             adminHeaderBtn.addEventListener('click', () => {
                 switchView('admin-view');
                 navButtons.forEach(btn => btn.classList.remove('active'));
+                // Force data refresh when entering admin panel
+                loadAllUsersForAdmin(); 
             });
 
             // Ad button
@@ -1137,32 +1397,39 @@
 
             // Referral buttons
             document.getElementById('referralCodeBox').addEventListener('click', () => {
-                // REFERRAL SHARING TEXT UPDATED
-                const message = `🚨 DON'T MISS OUT! Join TronAdsFaucet and start earning TRON (TRX) by watching ads! \n\n💰 Extra Bonus: Use my referral code: (${userData.referralCode}) to get an instant 0.02$ bonus.\n\nClick and start earning: https://t.me/TorreAds_Bot`;
-                // The copyToClipboard function now includes the success message
+                const code = document.getElementById('userReferralCode').textContent;
+                const message = `🚨 DON'T MISS OUT! Join TronAdsFaucet and start earning TRON (TRX) by watching ads! \n\n💰 Extra Bonus: Use my referral code: (${code}) to get an instant 0.02$ bonus.\n\nClick and start earning: https://t.me/TorreAds_Bot`;
                 copyToClipboard(message);
             });
             document.getElementById('submitReferralBtn').addEventListener('click', submitReferralCode);
 
             // Referral share button
             document.getElementById('referralShareBtn').addEventListener('click', () => {
-                // REFERRAL SHARING TEXT UPDATED
-                const message = `🚨 DON'T MISS OUT! Join TronAdsFaucet and start earning TRON (TRX) by watching ads! \n\n💰 Extra Bonus: Use my referral code: (${userData.referralCode}) to get an instant 0.02$ bonus.\n\nClick and start earning: https://t.me/TorreAds_Bot`;
+                const code = document.getElementById('userReferralCode').textContent;
+                // Bot linkini ve ref kodunu içeren mesajı ayarla
+                const message = `🚨 DON'T MISS OUT! Join TronAdsFaucet and start earning TRON (TRX) by watching ads! \n\n💰 Extra Bonus: Use my referral code: (${code}) to get an instant 0.02$ bonus.\n\nClick and start earning: https://t.me/TorreAds_Bot?start=ref_${code}`;
                 shareReferral(message);
             });
 
-            // Admin buttons
-            document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
-            document.getElementById('searchUserBtn').addEventListener('click', searchUser);
-            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
-            document.getElementById('updateRewardsBtn').addEventListener('click', updateAdReward);
+            // Admin buttons (Search button logic is not implemented, kept disabled)
+            document.getElementById('searchUserBtn').addEventListener('click', () => { showStatusMessage('Search is not yet implemented.', 'info'); });
+        }
+        
+        async function initApp() {
+            // userId'nin string olduğundan emin ol
+            userData.userId = tg.initDataUnsafe.user.id.toString();
+            
+            // 1. Load data from Firebase
+            await loadUserDataFromFirebase(); 
+            
+            // 2. Admin check and data load
+            if (ADMIN_USER_IDS.includes(String(userData.userId))) {
+                document.getElementById('adminHeaderBtn').style.display = 'flex';
+            }
 
-            // Copy wallet address
-            document.getElementById('withdrawRequestsList').addEventListener('click', (e) => {
-                if (e.target.classList.contains('withdraw-request-address')) {
-                    copyToClipboard(e.target.textContent);
-                }
-            });
+            // 3. Initialize UI and listeners
+            initEventListeners();
+            updateUI();
         }
         
         // APPLICATION STARTUP: Call initApp when DOM is loaded
