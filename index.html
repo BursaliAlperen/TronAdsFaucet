@@ -22,7 +22,7 @@
             --secondary-bg-light: #ffffff; 
             --text-color-light: #1c1c1e;
             --subtle-text-light: #6d6d72;
-            --primary-color-light: #dc3545; /* Kırmızı */
+            --primary-color-light: #dc3545; /* Red */
             --border-color-light: #e0e0e0;
             --bg-color-dark: #121212;
             --secondary-bg-dark: #1c1c1e;
@@ -90,7 +90,7 @@
         .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
         .referral-section h3 { text-align: center; }
         
-        /* Task Container (Sadece Reklam Kaldı) */
+        /* Task Container */
         .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-top: 30px; }
         .light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
@@ -163,8 +163,8 @@
             <div class="profile-info">
                 <img id="user-photo" src="" alt="User Photo">
                 <div class="user-details">
-                    <h1 id="user-name">Yükleniyor... <i class="fas fa-check-circle verified-icon"></i></h1>
-                    <p> Bakiye: <span id="user-points">0.0000</span> TRX</p>
+                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
+                    <p> Balance: <span id="user-points">0.0000</span> TRX</p>
                 </div>
             </div>
             <button id="admin-btn" style="display: none;">Admin Panel</button>
@@ -224,21 +224,28 @@
                 <div class="referral-section">
                     <h3>Referral Code</h3>
                     <p>
-                        **Earnings of $0.30 to $3 per day** 🚀<br>
-                        Tron Coin Ads Faucet.
+                        **Earnings of $0.02** worth of TRX per referral.
                     </p>
                     
-                    <div class="form-group" id="ref-code-input-group">
-                        <label for="ref-code-input">Referans Kodunu Gir Ödül Al! ✨</label>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="my-ref-id-display">Your Referral ID (Share this!)</label>
                         <div class="input-group">
-                            <input type="text" id="ref-code-input" placeholder="Referans kodu (User ID)">
-                            <button type="button" id="submit-ref-code-btn">Kullan</button>
+                            <input type="text" id="my-ref-id-display" value="Loading..." readonly>
+                            <button type="button" id="copy-ref-id-btn">Copy ID</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="ref-code-input-group">
+                        <label for="ref-code-input">Enter Friend's Referral Code & Get Reward! ✨</label>
+                        <div class="input-group">
+                            <input type="text" id="ref-code-input" placeholder="Friend's User ID">
+                            <button type="button" id="submit-ref-code-btn">Apply</button>
                         </div>
                     </div>
                     
                     <div style="margin-top: 20px;">
                         <h3>Share Bot Link</h3>
-                        <p>Share the official bot link to let your friends join and earn **$0.02** worth of TRX per referral.</p>
+                        <p>Share the official bot link with your unique referral ID to let your friends join and earn!</p>
                         <button id="copy-ref-link-btn" class="action-btn" style="margin-top: 15px;">
                             <i class="fas fa-share-alt"></i> Share Bot Link
                         </button>
@@ -255,7 +262,7 @@
                 <h2>Admin Dashboard</h2>
                 <div class="stats-grid" style="grid-template-columns: 1fr;">
                     <div class="stat-card">
-                        <h3>Total Users</h3> 
+                        <h3>Total Users (On This Device's Cache)</h3> 
                         <p id="total-users-count">...</p>
                     </div>
                 </div>
@@ -273,7 +280,7 @@
                                 </tr>
                             </thead>
                             <tbody id="withdrawal-requests-table">
-                                <tr><td colspan="4" style="text-align: center;">No pending requests.</td></tr>
+                                <tr><td colspan="4" style="text-align: center; color: var(--subtle-text-light);">No pending requests.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -307,19 +314,16 @@
             
             const DAILY_AD_LIMIT = 100; 
             
-            // USD Ödül Miktarları
+            // USD Reward Amounts
             const USD_PER_AD = 0.001; 
             const USD_PER_REFERRAL_BONUS = 0.02; 
             
             const MIN_WITHDRAW_POINTS = 0.01; 
             
-            // PAYLAŞIM MESAJI
-            const REFERRAL_SHARE_MESSAGE = "Earnings of $0.30 to $3 per day \nTron Coin Ads faucet \nUse it to Make Money\nhttps://t.me/TronAdsFaucetBot"; 
-
-            // TRX FİYATI (Bu değer manuel olarak güncellenmelidir)
+            // TRX Price (This value should be updated manually)
             let TRX_TO_USD_RATE = 0.342249; 
 
-            // HESAPLANAN TRX MİKTARLARI
+            // Calculated TRX Amounts
             let TRX_PER_AD = (USD_PER_AD / TRX_TO_USD_RATE); 
             let TRX_PER_REFERRAL_BONUS = (USD_PER_REFERRAL_BONUS / TRX_TO_USD_RATE);
             
@@ -340,6 +344,9 @@
             const refCodeInputGroup = document.getElementById('ref-code-input-group');
             const refCodeInput = document.getElementById('ref-code-input');
             const submitRefCodeBtn = document.getElementById('submit-ref-code-btn');
+            // NEW REFERRAL ELEMENTS
+            const myRefIdDisplay = document.getElementById('my-ref-id-display');
+            const copyRefIdBtn = document.getElementById('copy-ref-id-btn');
             
             // ADMIN PANEL ELEMENTS
             const adminBtn = document.getElementById('admin-btn');
@@ -348,7 +355,7 @@
             const withdrawalRequestsTable = document.getElementById('withdrawal-requests-table');
 
 
-            // --- State Management (LocalStorage = Merkezi Veri) ---
+            // --- State Management (LocalStorage = Central Data) ---
             let userState = {
                 trxBalance: 0.0000, 
                 dailyAdWatchCount: 0,
@@ -358,6 +365,7 @@
                 userId: null
             };
             
+            // AppData is used for withdrawal requests and user names (stored on Admin's device)
             let appData = {
                 withdrawalRequests: [],
                 users: {} 
@@ -379,13 +387,19 @@
             };
 
             const saveAppData = () => {
-                localStorage.setItem('TronAdsFaucet_AppData', JSON.stringify(appData));
+                // Only save on the ADMIN's device
+                if (String(userState.userId) === ADMIN_CHAT_ID) {
+                    localStorage.setItem('TronAdsFaucet_AppData', JSON.stringify(appData));
+                }
             };
 
             const loadAppData = () => {
-                const savedData = localStorage.getItem('TronAdsFaucet_AppData');
-                if (savedData) {
-                    appData = JSON.parse(savedData);
+                // Only load from the ADMIN's device
+                if (String(userState.userId) === ADMIN_CHAT_ID) {
+                    const savedData = localStorage.getItem('TronAdsFaucet_AppData');
+                    if (savedData) {
+                        appData = JSON.parse(savedData);
+                    }
                 }
                 if (!appData.withdrawalRequests) appData.withdrawalRequests = [];
                 if (!appData.users) appData.users = {};
@@ -399,7 +413,7 @@
 
                 const user = tg.initDataUnsafe.user;
                 if (!user || !user.id) {
-                    tg.showAlert("Kullanıcı doğrulanamadı. Lütfen bu uygulamayı Telegram üzerinden açın.", () => tg.close());
+                    tg.showAlert("User could not be verified. Please open this application through Telegram.", () => tg.close());
                     return;
                 }
                 
@@ -407,12 +421,17 @@
                 loadState(user.id);
                 loadAppData(); 
                 
-                // Kullanıcı bilgilerini AppData'ya kaydet/güncelle
-                appData.users[user.id] = { 
-                    name: user.first_name, 
-                    username: user.username 
-                };
-                saveAppData();
+                // Save/Update user info in AppData (collect only on Admin's device)
+                if (String(userState.userId) === ADMIN_CHAT_ID) {
+                    appData.users[user.id] = { 
+                        name: user.first_name, 
+                        username: user.username 
+                    };
+                    saveAppData();
+                } else if (!localStorage.getItem(`userState_TRX_${user.id}`)) {
+                    // If it's a new user, save their state on their own device
+                    saveState();
+                }
 
                 const today = new Date().toISOString().slice(0, 10);
                 if (userState.lastAdWatchDate !== today) {
@@ -420,7 +439,7 @@
                     userState.lastAdWatchDate = today;
                 }
                 
-                // ADMIN KONTROLÜ
+                // ADMIN CHECK
                 if (String(userState.userId) === ADMIN_CHAT_ID) {
                     document.getElementById('admin-btn').style.display = 'block';
                     navAdminBtn.style.display = 'flex';
@@ -429,7 +448,6 @@
                 updateUI();
                 setupNavigation();
                 setupEventListeners();
-                saveState();
             };
             
             const updateUI = () => {
@@ -442,14 +460,27 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
-                // TRX Bilgileri
+                // TRX Info
                 trxPriceDisplayElem.textContent = `$${TRX_TO_USD_RATE.toFixed(4)}`;
                 adRewardTrxElem.textContent = TRX_PER_AD.toFixed(6); 
-
-                // Referans Kodu Giriş Alanını Kontrol Et
-                if (userState.referredBy) {
-                    refCodeInputGroup.innerHTML = `<p style="color: var(--primary-color-light); font-weight: 700;">✅ Referans kodu başarıyla kullanıldı! (${userState.referredBy})</p>`;
+                
+                // Populate the new copyable Referral ID
+                if (myRefIdDisplay) {
+                    myRefIdDisplay.value = userState.userId;
                 }
+
+                // Check Referral Code Entry Field
+                if (userState.referredBy) {
+                    refCodeInputGroup.innerHTML = `<p style="color: var(--primary-color-light); font-weight: 700;">✅ Referral code successfully used! (${userState.referredBy})</p>`;
+                }
+            };
+            
+            const handleCopyRefId = () => {
+                const refId = userState.userId;
+                navigator.clipboard.writeText(refId).then(() => {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("Your Referral ID copied to clipboard!");
+                });
             };
             
             const setupEventListeners = () => {
@@ -457,6 +488,9 @@
                 withdrawForm.addEventListener('submit', handleWithdraw);
                 copyRefLinkBtn.addEventListener('click', copyReferralLink);
                 submitRefCodeBtn.addEventListener('click', handleEnterReferralCode);
+                // NEW LISTENER
+                copyRefIdBtn.addEventListener('click', handleCopyRefId); 
+
                 adminBtn.addEventListener('click', () => {
                      document.querySelector('.page.active').classList.remove('active');
                      document.getElementById('admin-page').classList.add('active');
@@ -468,7 +502,7 @@
 
             const handleWatchAd = () => {
                 if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-                    tg.showAlert("Günlük reklam izleme limitine ulaştınız."); return;
+                    tg.showAlert("You have reached the daily ad watch limit."); return;
                 }
                 loadingModal.style.display = 'flex';
                 
@@ -480,23 +514,23 @@
                         saveState();
                         updateUI();
                         tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert(`Tebrikler! ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) kazandınız.`);
+                        tg.showAlert(`Congratulations! You earned ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ).`);
                     })
                     .catch(e => {
-                        tg.showAlert("Reklam yüklenemedi veya yarıda kesildi. Lütfen tekrar deneyin.");
+                        tg.showAlert("Ad failed to load or was interrupted. Please try again.");
                     })
                     .finally(() => {
                         loadingModal.style.display = 'none';
                     });
                 } else {
-                    // Adexora yüklü değilse/hata verirse
+                    // Fallback if Adexora is not loaded
                     setTimeout(() => {
                         userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
                         userState.dailyAdWatchCount++;
                         saveState();
                         updateUI();
                         tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert(`Tebrikler! ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) kazandınız (Adexora yüklenemedi).`);
+                        tg.showAlert(`Congratulations! You earned ${TRX_PER_AD.toFixed(6)} TRX ( $${USD_PER_AD} ) (Adexora failed to load).`);
                         loadingModal.style.display = 'none';
                     }, 1000);
                 }
@@ -504,36 +538,35 @@
 
             const handleEnterReferralCode = () => {
                 if (userState.referredBy) {
-                    tg.showAlert("Referans kodunuz zaten kullanılmış.");
+                    tg.showAlert("Your referral code has already been used.");
                     return;
                 }
                 
                 const refCode = refCodeInput.value.trim();
                 if (!refCode || isNaN(parseInt(refCode))) {
-                    tg.showAlert("Lütfen geçerli bir Referans Kodu (User ID) girin.");
+                    tg.showAlert("Please enter a valid Referral Code (User ID).");
                     return;
                 }
                 
                 const refId = parseInt(refCode);
                 if (refId === userState.userId) {
-                    tg.showAlert("Kendi kodunuzu kullanamazsınız.");
+                    tg.showAlert("You cannot use your own code.");
                     return;
                 }
 
-                // Referans kodunun geçerli bir kullanıcıya ait olup olmadığını kontrol et
                 const referrerStateKey = `userState_TRX_${refId}`;
                 const referrerStateJson = localStorage.getItem(referrerStateKey);
 
                 if (!referrerStateJson) {
-                    tg.showAlert("Girdiğiniz referans kodu geçersiz veya kullanıcı bulunamadı.");
+                    tg.showAlert("The referral code you entered is invalid or the user was not found.");
                     return;
                 }
                 
-                // Kodu giren kullanıcıya bonusu ver
+                // Give bonus to the user who entered the code
                 userState.referredBy = refId;
                 userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_REFERRAL_BONUS;
                 
-                // Kod sahibi kullanıcının verisini bul ve referans sayısını artır
+                // Find the referrer's data and increase referral count
                 let referrerState = JSON.parse(referrerStateJson);
                 if (!referrerState.referrals) referrerState.referrals = [];
                 referrerState.referrals.push(userState.userId);
@@ -542,7 +575,7 @@
                 saveState();
                 updateUI();
                 tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert(`Tebrikler! Referans kodu kullanıldı ve ${TRX_PER_REFERRAL_BONUS.toFixed(4)} TRX kazandınız!`);
+                tg.showAlert(`Congratulations! Referral code applied and you earned ${TRX_PER_REFERRAL_BONUS.toFixed(4)} TRX!`);
             };
             
             const handleWithdraw = async (e) => {
@@ -551,20 +584,21 @@
                 const accountNumber = document.getElementById('account-number').value;
                 const amount = parseFloat(document.getElementById('amount').value);
 
-                if (isNaN(amount) || amount <= 0) { tg.showAlert("Lütfen geçerli bir miktar girin."); return; }
-                if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum çekim ${MIN_WITHDRAW_POINTS.toFixed(2)} TRX.`); return; }
-                if (amount > userState.trxBalance) { tg.showAlert("Bakiyeniz yeterli değil."); return; }
+                if (isNaN(amount) || amount <= 0) { tg.showAlert("Please enter a valid amount."); return; }
+                if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum withdrawal is ${MIN_WITHDRAW_POINTS.toFixed(2)} TRX.`); return; }
+                if (amount > userState.trxBalance) { tg.showAlert("Your balance is insufficient."); return; }
 
                 withdrawSubmitBtn.classList.add('loading');
                 withdrawSubmitBtn.disabled = true;
 
-                // Bakiyeden düş
+                // Deduct from balance
                 userState.trxBalance = parseFloat(userState.trxBalance) - amount;
                 saveState();
                 
                 const user = tg.initDataUnsafe.user;
                 
-                // ÇEKİM TALEBİNİ MERKEZİ ADMİN LİSTESİNE EKLE
+                // Add Withdrawal Request to Central Admin List
+                loadAppData(); 
                 const request = {
                     id: Date.now(),
                     userId: user.id,
@@ -573,10 +607,10 @@
                     address: accountNumber,
                     timestamp: new Date().toLocaleString()
                 };
-                appData.withdrawalRequests.unshift(request); // En yeni üste
-                saveAppData();
+                appData.withdrawalRequests.unshift(request); // Newest at the top
+                saveAppData(); 
 
-                // Admin'e Telegram ile bildirim gönder
+                // Send Telegram notification to Admin
                 const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> ${amount.toFixed(4)} TRX\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
                 
                 const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -588,14 +622,14 @@
                     });
                     
                     tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("Çekim talebi başarıyla gönderildi! Admin panelinde görüntülenecektir.");
+                    tg.showAlert("Withdrawal request successfully submitted! It will be visible in the Admin panel.");
                     withdrawForm.reset();
                 } catch (error) {
                     tg.HapticFeedback.notificationOccurred('error');
-                    tg.showAlert("Talep bildirimi Admin'e gönderilemedi. Bakiyeniz iade edildi.");
+                    tg.showAlert("Request notification could not be sent to Admin. Your balance has been returned.");
                     userState.trxBalance = parseFloat(userState.trxBalance) + amount;
                     
-                    // Başarısız olursa Admin listesinden çıkar
+                    // Remove from Admin list if notification fails
                     appData.withdrawalRequests.shift(); 
                     saveAppData();
                 } finally {
@@ -606,7 +640,8 @@
             };
             
             const copyReferralLink = () => {
-                const shareText = REFERRAL_SHARE_MESSAGE; 
+                // Dynamically create the share text as requested by the user
+                const shareText = `Earnings of $0.30 to $3 per day \nTron Coin Ads faucet \nUse it to Make Money (${userState.userId})\nhttps://t.me/${BOT_USERNAME}`; 
                 
                 if (tg.shareText) {
                     tg.shareText(shareText);
@@ -614,19 +649,27 @@
                 } else {
                     navigator.clipboard.writeText(shareText).then(() => {
                         tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert("Paylaşım mesajı panoya kopyalandı!");
+                        tg.showAlert("Share message copied to clipboard!");
                     });
                 }
             };
 
-            // ADMIN PANEL FONKSİYONU: ÇEKİM TALEPLERİNİ GÖSTER
+            // ADMIN PANEL FUNCTION: FIXES USER COUNTING ISSUE
             const loadAdminStats = () => {
                 
-                // 1. Toplam Kullanıcı Sayısı (AppData'daki users objesi)
-                const totalUsers = Object.keys(appData.users).length;
+                // 1. Total User Count (Count ALL userState_TRX_ keys in LocalStorage)
+                let totalUsers = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    // Only count user state entries
+                    if (key && key.startsWith('userState_TRX_')) {
+                        totalUsers++;
+                    }
+                }
                 totalUsersCountElem.textContent = totalUsers.toString().padStart(2, '0');
                 
-                // 2. Çekim Taleplerini Göster
+                // 2. Display Withdrawal Requests
+                loadAppData(); 
                 let requestsHTML = '';
                 const requests = appData.withdrawalRequests;
 
