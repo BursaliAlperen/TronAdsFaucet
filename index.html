@@ -14,158 +14,255 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
     <style>
-        /* Genel Tema Ayarları */
+        /* Telegram WebApp Teması ve Modern Görünüm */
         :root {
-            --primary-color: #E63946; /* Kırmızı */
-            --primary-dark: #A82E37;
-            --secondary-color: #457B9D; /* Mavi/TRON */
-            --bg-light: #F8F9FA;
-            --bg-dark: #1F2937;
-            --card-bg-light: #FFFFFF;
-            --card-bg-dark: #374151;
-            --text-dark: #212529;
-            --text-light: #F8F9FA;
-            --border-color-light: #E9ECEF;
-            --border-radius: 16px;
+            /* Telegram'a Entegre Değişkenler (Varsayılan Açık Mod - KIRMIZI TEMA) */
+            --tg-theme-bg-color: #f7f7f7; /* Daha beyaz bir ton */
+            --tg-theme-text-color: #1f2937; 
+            --tg-theme-button-color: #E63946; /* KIRMIZI (Primary) */
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-hint-color: #64748b; 
+            
+            /* Uygulama Değişkenleri */
+            --primary-color: var(--tg-theme-button-color); /* Kırmızı */
+            --primary-dark: #cc2936; /* Kırmızının koyu tonu */
+            --secondary-color: #10b981; /* Yeşil (TRX/Success) */
+            
+            --bg-main: var(--tg-theme-bg-color);
+            --card-bg: #ffffff;
+            --text-main: var(--tg-theme-text-color);
+            --text-secondary: var(--tg-theme-hint-color);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            
+            --border-radius: 12px;
             --border-radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            --input-border: #CED4DA;
-            --input-bg: #FFFFFF;
+            --transition: all 0.2s ease-in-out;
+            --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.15);
+
+            --input-border: #E5E7EB;
+            --input-bg: var(--card-bg);
         }
-        /* Düzeltme 1: Tam Ekran Desteği */
-        body { font-family: 'Poppins', sans-serif; height: 100vh; min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
-        body:not(.dark-mode) { 
-            background-color: var(--bg-light); 
-            color: var(--text-dark); 
-            --header-bg: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); 
-            --card-bg: var(--card-bg-light); 
-            --text-primary: var(--text-dark); 
-            --text-secondary: #6C757D; 
-            --border-color: var(--border-color-light); 
-            --input-border: #CED4DA; 
-            --input-bg: var(--card-bg-light); 
-        }
+
+        /* Karanlık Mod Desteği */
         body.dark-mode { 
-            background-color: var(--bg-dark); 
-            color: var(--text-light); 
-            --header-bg: linear-gradient(135deg, var(--primary-dark), #470005); 
-            --card-bg: var(--card-bg-dark); 
-            --text-primary: var(--text-light); 
-            --text-secondary: #D1D5DB; 
-            --border-color: #4B5563; 
-            --input-border: #4B5563; 
-            --input-bg: #4B5563; 
+            --tg-theme-bg-color: #1f2937; /* Koyu Gri/Mavi */
+            --tg-theme-text-color: #f8f9fa; 
+            --card-bg: #374151;
+            --text-main: var(--tg-theme-text-color);
+            --input-border: #4B5563;
+            --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.6);
         }
         
-        /* Düzeltme 1: Tam Ekran Desteği */
-        .app-container { max-width: 480px; margin: 0 auto; position: relative; min-height: 100vh; }
-        .header { height: 200px; background: var(--header-bg); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-light); border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15); z-index: 100; max-width: 480px; margin: 0 auto; border-top: 1px solid var(--border-color); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; flex: 1; transition: var(--transition); padding: 5px; min-width: 80px; cursor: pointer; }
-        .nav-item.active { color: var(--primary-color); transform: translateY(-3px); }
-        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; border-radius: var(--border-radius); border: none; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 6px 15px rgba(230, 57, 70, 0.4); }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-secondary { background: var(--secondary-color); color: white; box-shadow: 0 6px 15px rgba(69, 123, 157, 0.4); }
-        .btn-secondary:hover { background: #356683; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10; }
-        .profile-section { margin-top: -80px; padding: 0 20px; position: relative; z-index: 2; }
-        .profile-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 70px 20px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid var(--border-color); position: relative; text-align: center; }
-        .profile-pic { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; border: 5px solid var(--card-bg); object-fit: cover; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); background: var(--primary-color); }
-        .profile-pic i { font-size: 3rem; color: white; line-height: 100px; }
-        .profile-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-        .verified-badge { color: #4CAF50; margin-left: 5px; font-size: 0.9em; }
-        .points-display { display: inline-flex; align-items: center; background: rgba(230, 57, 70, 0.15); padding: 8px 20px; border-radius: 50px; margin-top: 10px; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; border: 1px solid var(--primary-color); }
-        .stats-display { display: flex; justify-content: space-around; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border-color); }
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--primary-color); }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
-        .content-section { padding: 20px; margin-bottom: 80px; }
-        .section-title { display: flex; align-items: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); border-left: 4px solid var(--primary-color); padding-left: 10px; }
-        .task-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border: 1px solid var(--border-color); }
+        /* Genel Stil */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            height: 100vh; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            transition: background-color var(--transition), color var(--transition); 
+            background-color: var(--bg-main); 
+            color: var(--text-main);
+        }
+        
+        /* Tam Ekran Desteği */
+        .app-container { 
+            max-width: 480px; 
+            margin: 0 auto; 
+            position: relative; 
+            min-height: 100vh; 
+            padding-bottom: 80px; /* Navigasyon için boşluk */
+        }
+        
+        /* Yeni Top-Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 10px;
+            color: var(--text-main);
+        }
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+        .theme-toggle { 
+            background: none; 
+            border: none; 
+            color: var(--text-main); 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+        }
+
+        /* Yeni Bakiye Kartı */
+        .balance-card-container {
+            padding: 0 20px;
+            margin-bottom: 25px;
+        }
+        .balance-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--input-border);
+        }
+        .balance-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        /* GÜNCELLENMİŞ: Profil Fotoğrafı Alanı */
+        .profile-pic {
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            background-color: var(--primary-color); 
+            background-size: cover; 
+            background-position: center;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin-right: 15px;
+            overflow: hidden; 
+            flex-shrink: 0;
+        }
+        .profile-pic i { 
+            font-size: 1.5rem; 
+            color: white; 
+        }
+
+        .profile-info h3 { font-size: 1.1rem; margin: 0; font-weight: 700; color: var(--text-main); }
+        .profile-info p { font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
+        .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 5px; cursor: pointer; font-size: 0.9rem; }
+
+        .points-display { 
+            text-align: center; 
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3); /* KIRMIZI Gölge */
+        }
+        .stats-display { 
+            display: flex; 
+            justify-content: space-around; 
+            padding-top: 10px;
+        }
+        .stat-item { text-align: center; flex: 1; border-right: 1px solid var(--input-border); }
+        .stat-item:last-child { border-right: none; }
+        .stat-value { font-size: 1.2rem; font-weight: 700; color: var(--secondary-color); }
+        .stat-label { font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Navigation */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--card-bg); 
+            display: flex; justify-content: space-around; 
+            padding: 10px 0; 
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1); 
+            z-index: 100; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            border-top: 1px solid var(--input-border);
+        }
+        .nav-item { 
+            display: flex; flex-direction: column; align-items: center; 
+            color: var(--text-secondary); text-decoration: none; 
+            font-size: 0.75rem; font-weight: 600; flex: 1; 
+            transition: var(--transition); padding: 5px; cursor: pointer; 
+        }
+        .nav-item.active { color: var(--primary-color); }
+
+        /* Buttons and General */
+        .content-section { padding: 0 20px; }
+        .section-title { margin-bottom: 20px; font-size: 1.3rem; font-weight: 700; color: var(--text-main); }
+        .task-card { 
+            background: var(--card-bg); 
+            border-radius: var(--border-radius); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            box-shadow: var(--shadow-sm); 
+            border: 1px solid var(--input-border);
+        }
         .task-description { margin-bottom: 25px; color: var(--text-secondary); font-size: 0.95rem; }
+        .btn { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 100%; padding: 15px; border-radius: var(--border-radius-sm); 
+            border: none; font-weight: 700; font-size: 1rem; cursor: pointer; 
+            transition: var(--transition); text-transform: uppercase; 
+        }
+        .btn-primary { 
+            background: var(--primary-color); color: var(--tg-theme-button-text-color); 
+            box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3); /* KIRMIZI Gölge */
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { 
+            background: var(--secondary-color); color: white; 
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+        .btn-secondary:hover { background: #0c9b6e; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Input Styles */
         .input-group { margin-bottom: 20px; }
-        .input-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
-        .input-field { width: 100%; padding: 12px; border-radius: var(--border-radius-sm); border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 1rem; transition: border-color var(--transition); }
+        .input-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
+        .input-field { 
+            width: 100%; padding: 12px; border-radius: var(--border-radius-sm); 
+            border: 2px solid var(--input-border); background: var(--input-bg); 
+            color: var(--text-main); font-size: 1rem; transition: border-color var(--transition); 
+        }
         .input-field:focus { border-color: var(--primary-color); outline: none; }
-        .error-message { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px; border-radius: var(--border-radius-sm); margin-bottom: 15px; font-size: 0.9rem; }
+        
+        /* Referral & Toast (Diğer stiller korundu) */
         .referral-input-group { display: flex; margin-bottom: 15px; }
-        .referral-input { flex: 1; padding: 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); font-size: 0.95rem; }
-        .copy-btn { padding: 0 18px; background: var(--secondary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: var(--transition); }
-        .copy-btn:hover { background: #356683; }
+        .referral-input { flex: 1; padding: 12px; border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-size: 0.95rem; }
+        .copy-btn { padding: 0 18px; background: var(--primary-color); color: white; border: none; border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: var(--transition); }
+        .copy-btn:hover { background: var(--primary-dark); }
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: var(--border-radius-sm); opacity: 0; transition: opacity 0.5s; z-index: 1000; font-size: 0.9rem; }
-        .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
-        .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        
+        /* Admin Panel Styles */
+        .admin-container { 
+            max-width: 1200px; margin: auto; background: var(--card-bg); 
+            padding: 30px; border-radius: var(--border-radius); 
+            box-shadow: var(--shadow-lg); 
+            margin-top: 20px; 
+        }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
         .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
-        .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
-        /* Düzeltme 2: Admin Butonlarını Küçültme */
+        .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--input-border); font-size: 0.9rem; color: var(--text-main); }
+        .admin-container th { background-color: var(--input-border); color: var(--primary-color); font-weight: 700; }
         .admin-container .btn-action { 
-            background: #4CAF50; 
+            background: var(--secondary-color); 
             color: white; 
             border: none; 
-            padding: 6px 10px; /* Azaltıldı */
+            padding: 6px 10px; 
             border-radius: 6px; 
             cursor: pointer; 
             margin-right: 5px; 
             transition: 0.3s; 
-            font-size: 0.8rem; /* Azaltıldı */
-            white-space: nowrap; /* Yeni Eklendi: Metin kaymasını engeller */
+            font-size: 0.8rem; 
+            white-space: nowrap; 
         }
-        .admin-container .btn-action.deduct { background: var(--primary-color); }
-        .admin-container .btn-action.deduct:hover { background: var(--primary-dark); }
-        .admin-container .btn-action:hover { background: #409244; }
-        .admin-message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 0.9rem; }
-        .admin-success { background: rgba(76, 175, 80, 0.15); color: #4CAF50; border: 1px solid #4CAF50; }
-        .admin-error { background: rgba(230, 57, 70, 0.15); color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .admin-warning { background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px solid #FFC107; }
-        .balance { font-weight: 600; color: #4CAF50; }
-        .usd-val { font-size: 0.8em; color: var(--text-secondary); }
+        .admin-container .btn-action.deduct { background: var(--danger-color); }
+        .admin-container .btn-action.deduct:hover { background: #cc3333; }
+        .admin-container .btn-action:hover { background: #0c9b6e; }
 
-        /* Yükleme Ekranı Stili */
-        #loadingScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 1000;
-            color: var(--text-dark);
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* KRİTİK DÜZELTME: Görünmez katmanın tıklamayı engellemesini önler */
-        .ad-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5); 
-            z-index: 999; 
-            display: none; 
-            pointer-events: none; 
-        }
+        /* Diğer stiller (loading, error, vs.) korundu */
+        .error-message { background: rgba(239, 68, 68, 0.15); color: var(--danger-color); border: 1px solid var(--danger-color); padding: 10px; border-radius: var(--border-radius-sm); margin-bottom: 15px; font-size: 0.9rem; }
+        .verified-badge { color: var(--secondary-color); margin-left: 5px; font-size: 0.9em; }
 
+        #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 1000; color: var(--text-main); }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ad-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; display: none; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -173,23 +270,30 @@
     <div id="loadingScreen">
         <div class="spinner"></div>
         <p style="font-weight: 600;">Loading application data...</p>
-        <p id="loadingError" style="color: var(--primary-color); margin-top: 10px; display: none; font-size: 0.9rem; text-align: center; max-width: 80%;">Hata oluştu. Lütfen botu yeniden başlatın veya konsolu kontrol edin.</p>
+        <p id="loadingError" style="color: var(--danger-color); margin-top: 10px; display: none; font-size: 0.9rem; text-align: center; max-width: 80%;">Hata oluştu. Lütfen botu yeniden başlatın veya konsolu kontrol edin.</p>
     </div>
 
     <div id="fullAppContainer" class="app-container" style="display: none;">
         
         <div id="mainAppContent">
-            <div class="header">
-                <button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
+            
+            <div class="top-bar">
                 <h1 class="header-title">⚡ TronAdsFaucet</h1>
-                <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 5px; z-index: 2;">Earn TRON (TRX) daily!</p>
+                <button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
             </div>
 
-            <div class="profile-section">
-                <div class="profile-card">
-                    <div class="profile-pic" id="profilePic"><i class="fas fa-user-circle"></i></div>
-                    <h1 class="profile-name" id="profileNameDisplay"></h1>
+            <div class="balance-card-container">
+                <div class="balance-card">
+                    <div class="balance-header">
+                        <div class="profile-pic" id="profilePic"><i class="fas fa-user-circle"></i></div>
+                        <div class="profile-info">
+                            <h3 id="profileNameDisplay"></h3>
+                            <p id="profileTelegramId">TG ID: N/A</p>
+                        </div>
+                    </div>
+
                     <div class="points-display" id="userPointsDisplay"><i class="fas fa-bolt"></i> 0.0000 TRX</div>
+                    
                     <div class="stats-display">
                         <div class="stat-item"><div class="stat-value" id="adsWatchedToday">0</div><div class="stat-label">Ads Today</div></div>
                         <div class="stat-item"><div class="stat-value" id="adsLeftToday">0</div><div class="stat-label">Left</div></div>
@@ -249,6 +353,7 @@
         const loadingScreen = document.getElementById('loadingScreen');
         const loadingError = document.getElementById('loadingError');
         let profileNameDisplay, userPointsDisplay, adsWatchedTodayEl, adsLeftTodayEl, totalAdsWatchedEl;
+        let profileTelegramIdEl;
         
         // --- STATE ---
         let currentUser = null; 
@@ -287,10 +392,9 @@
         // --- FIREBASE DATA HANDLING ---
 
         async function fetchUser(tgId) {
-            if (!db) return null; // Firebase connection check
+            if (!db) return null; 
             try {
                 const userRef = db.collection('users').doc(String(tgId));
-                // 5 saniyelik bir timeout ekleyerek takılı kalmayı engelleriz
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
@@ -298,7 +402,6 @@
                 return doc.exists ? doc.data() : null;
             } catch (error) {
                 console.error("Firebase fetchUser Error:", error);
-                // Eğer hata olursa veya timeout olursa null döner
                 return null;
             }
         }
@@ -397,44 +500,33 @@
         }
 
 
-        // --- DATA/STATE MANAGEMENT (Authentication and Load) ---
+        // --- DATA/STATE MANAGEMENT ---
 
         async function loadUserState() {
             const urlParams = new URLSearchParams(window.location.search);
             const refCodeFromUrl = urlParams.get('start') || urlParams.get('ref');
 
-            // 1. Telegram WebApp Kullanıcısı Kontrolü
             if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                // KRİTİK: Telegram kullanıcısı yoksa, uygulamayı durdur ve hata göster.
                 throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
             }
             
             const tgUser = Telegram.WebApp.initDataUnsafe.user;
             const tgId = tgUser.id;
             
-            // 2. Firebase Bağlantısı Kontrolü
             if (!db) {
-                // KRİTİK: Firebase bağlantısı başarısız olduysa, uygulamayı durdur ve hata göster.
                 throw new Error("Database connection failed. Please check internet or contact support.");
             }
 
-            // 3. Kullanıcı Verisini Çek/Oluştur
-            let user = await fetchUser(tgId); // Bu fonksiyon 5s timeout içerir
+            let user = await fetchUser(tgId); 
             
             if (!user) {
-                // Eğer fetchUser timeout nedeniyle null döndürdüyse
                 if (tgId) {
-                     // Yeni kullanıcı oluşturmadan önce fetchUser'ın hata alıp almadığını kontrol etmeliyiz.
-                     // fetchUser içinde zaten bir timeout var. Eğer hala null ise, ya yeni kullanıcıdır ya da ciddi bir ağ sorunu var.
-                     // Yeni kullanıcı olduğunu varsayarak devam edebiliriz.
                     user = await createNewUser(tgUser, refCodeFromUrl);
                 } else {
-                    // Ciddi bir hata varsa veya TG ID çekilememişse, uygulama takılır.
                     throw new Error("Failed to retrieve or create user data from database.");
                 }
             }
             
-            // Kullanıcı verisi başarıyla çekildi veya oluşturuldu
             const today = new Date().toDateString();
             if (user.lastAdWatchDate !== today) {
                 user.adsWatchedToday = 0;
@@ -451,16 +543,14 @@
                 }
             }
             
-            currentUser = user; // Başarıyla yüklendi
+            currentUser = user; 
 
         }
         
         function saveUserStateLocalOrFirebase() {
-            // Misafir modu olmadığı için sadece Firebase'e kaydetmeyi deneriz.
             if (currentUser && currentUser.telegramId && db) { 
                 saveUser(currentUser); 
             } else {
-                // Eğer burada bir sorun varsa, bir uyarı verebiliriz ancak kritik bir hata saymayız.
                 console.warn("User state could not be saved to Firebase. DB or TG ID missing.");
             }
             updateUI();
@@ -481,17 +571,38 @@
             }
         }
         
-        // --- UI RENDER (Uygulama) ---
+        // --- UI RENDER (GÜNCELLENDİ) ---
 
         function updateUI() {
             if (!currentUser) return;
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             
+            // YENİ UI TARGETING
             profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
+            profileTelegramIdEl.textContent = `TG ID: ${currentUser.telegramId || 'N/A'}`;
             
             const editNameBtn = document.getElementById('editNameBtn');
             if(editNameBtn) editNameBtn.addEventListener('click', promptForNewName);
 
+            // GÜNCELLENEN KISIM: Profil Fotoğrafı
+            const profilePicEl = document.getElementById('profilePic');
+            const tgUser = Telegram.WebApp.initDataUnsafe.user;
+            if (profilePicEl) {
+                if (tgUser && tgUser.photo_url) {
+                    profilePicEl.innerHTML = ''; // İkonu kaldır
+                    profilePicEl.style.backgroundImage = `url('${tgUser.photo_url}')`;
+                    profilePicEl.style.backgroundSize = 'cover';
+                    profilePicEl.style.backgroundPosition = 'center';
+                    profilePicEl.style.border = '2px solid var(--primary-color)';
+                    profilePicEl.style.backgroundColor = 'white';
+                } else {
+                    profilePicEl.innerHTML = '<i class="fas fa-user-circle"></i>';
+                    profilePicEl.style.backgroundImage = 'none';
+                    profilePicEl.style.border = 'none';
+                    profilePicEl.style.backgroundColor = 'var(--primary-color)'; // Varsayılan renk
+                }
+            }
+            
             userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
             
             adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
@@ -519,12 +630,14 @@
         }
         
         function renderHomePage() {
+            const adsLeft = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
             const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
             mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ad</h2>
+                <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ad Task</h2>
                 <div class="task-card">
                     <p class="task-description">
-                        Watch an advertisement daily and earn **${earnedTRX} TRX** (worth $${USD_PER_AD.toFixed(3)}). You have **${Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}** ads left today.
+                        Watch an advertisement and earn **${earnedTRX} TRX** (worth $${USD_PER_AD.toFixed(3)}). 
+                        You have **${adsLeft}** ads left today.
                     </p>
                     <button class="btn btn-primary" id="watchDailyAdBtn">
                         Watch Ad & Earn ${earnedTRX} TRX
@@ -543,9 +656,9 @@
                     </div>
                 ` : ''}
             `;
-            // KRİTİK: Buton Event Listener'lar render işleminden hemen sonra bağlanmalı
             document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
             document.getElementById('openAdminPanelBtn')?.addEventListener('click', renderAdminPanel);
+            updateUI(); // Buton durumunu güncellemek için tekrar çağır
         }
 
         function renderReferralPage() {
@@ -570,11 +683,11 @@
                             <input type="text" id="referralLinkDisplay" class="referral-input" value="https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}" readonly>
                             <button class="copy-btn" id="copyReferralLinkBtn">Copy</button>
                         </div>
-                        <button class="btn btn-secondary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
+                        <button class="btn btn-primary" id="shareReferralLinkBtn" style="margin-top: 15px; width: 100%;">
                             <i class="fas fa-paper-plane"></i> Share Now (Telegram)
                         </button>
                     </div>
-                    <div class="referral-stats stats-display" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <div class="referral-stats stats-display" style="border-top: 1px solid var(--input-border); padding-top: 20px; margin-top: 20px;">
                         <div class="stat-item">
                             <div class="stat-value" style="color: var(--secondary-color);">${referredUsersCount}</div>
                             <div class="stat-label">Total Referrals</div>
@@ -598,7 +711,7 @@
                 <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Withdrawal</h2>
                 <div class="task-card">
                     <p class="task-description" style="margin-bottom: 5px;">
-                        Your current balance: <strong style="color: var(--primary-color);">${currentBalanceTRX.toFixed(4)} TRX</strong> (Worth: $${currentUser.balanceUSD.toFixed(4)})
+                        Your current balance: <strong style="color: var(--secondary-color);">${currentBalanceTRX.toFixed(4)} TRX</strong> (Worth: $${currentUser.balanceUSD.toFixed(4)})
                     </p>
                     <p class="task-description">
                         Minimum withdrawal amount is **${minWithdrawTRX.toFixed(2)} TRX**.
@@ -626,20 +739,18 @@
             document.getElementById('withdrawalForm')?.addEventListener('submit', handleSubmitWithdrawal);
         }
 
-        // --- HANDLERS (Uygulama) ---
+        // --- HANDLERS ---
 
         function handleWatchDailyAd() {
             if (currentUser.adsWatchedToday < ADS_PER_DAY_LIMIT) {
                 const adModal = document.getElementById('adModal');
                 
                 if (window[ADEXORA_AD_FUNCTION_NAME]) {
-                    // KRİTİK DÜZELTME: Reklam gösterilmeden önce overlay'i etkinleştirin
                     adModal.style.display = 'block';
                     adModal.style.pointerEvents = 'auto';
 
                     window[ADEXORA_AD_FUNCTION_NAME]()
                         .then(() => {
-                            // Reklam bittikten sonra overlay'i kapatın ve tıklama olaylarını devre dışı bırakın
                             adModal.style.display = 'none';
                             adModal.style.pointerEvents = 'none';
 
@@ -655,7 +766,6 @@
                             sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
                         })
                         .catch(e => {
-                            // Hata durumunda da overlay'i kapatmayı UNUTMAYIN
                             adModal.style.display = 'none';
                             adModal.style.pointerEvents = 'none';
                             
@@ -663,7 +773,6 @@
                             showToast("Ad closed or failed. Please try again.", 4000);
                         });
                 } else {
-                    // Simülasyon
                     showToast("Ad system not ready. Simulating earnings...", 3000);
                     currentUser.balanceUSD += USD_PER_AD;
                     currentUser.adsWatchedToday += 1;
@@ -680,7 +789,6 @@
         async function handleSubmitWithdrawal(e) {
             e.preventDefault();
             
-            // Critical checks for submission
             if (!currentUser.telegramId || !db) { showToast('Çekim talebi için gerekli veriler eksik. Lütfen tekrar deneyin.', 4000); return; }
 
             const amountTRX = parseFloat(document.getElementById('amountTRX').value);
@@ -750,7 +858,7 @@
             
             mainContent.innerHTML = `
                 <div class="task-card" style="text-align: center;">
-                    <h2 style="color: #4CAF50;"><i class="fas fa-check-circle"></i> Request Sent!</h2>
+                    <h2 style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Request Sent!</h2>
                     <p style="margin: 20px 0;">Your withdrawal request for **${amountTRX.toFixed(4)} TRX** has been successfully submitted. Your balance has been updated. The Admin will process the payment soon.</p>
                     <div class="btn-group" style="display: flex; gap: 10px; justify-content: center;">
                         <button class="btn btn-secondary" onclick="navigateTo('home')" style="width: auto;"><i class="fas fa-home"></i> Go Home</button>
@@ -777,8 +885,15 @@
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            document.getElementById('themeToggle').innerHTML = isDarkMode ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            // Telegram WebApp arayüzünü de ayarla
+            if (Telegram.WebApp) {
+                const bgColor = isDarkMode ? '#1f2937' : '#f7f7f7'; // Kırmızı tema için açık mod rengi
+                Telegram.WebApp.setHeaderColor(bgColor);
+                Telegram.WebApp.setBackgroundColor(bgColor);
+            }
         }
 
         function promptForNewName() {
@@ -842,7 +957,7 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td><strong>${user.name || 'N/A'}</strong><br>${user.telegramId ? `<a href="tg://user?id=${user.telegramId}" target="_blank">${user.telegramId}</a>` : 'N/A'}</td>
-                    <td><span class="balance">${balanceTRX.toFixed(4)} TRX</span><br><span class="usd-val">($${user.balanceUSD.toFixed(4)})</span></td>
+                    <td><span class="balance" style="color: var(--secondary-color);">${balanceTRX.toFixed(4)} TRX</span><br><span class="usd-val">($${user.balanceUSD.toFixed(4)})</span></td>
                     <td>${user.totalAdsWatchedLifetime || 0}</td><td>${referredCount}</td>
                     <td><button class="btn-action deduct" onclick="deductAdminBalance('${user.id}', ${user.balanceUSD})"><i class="fas fa-minus"></i> Düş</button></td>
                 `;
@@ -928,14 +1043,14 @@
 
             document.getElementById('adminPanelContent').innerHTML = `
                 <div class="admin-container">
-                    <h1><i class="fas fa-user-shield"></i> TronAdsFaucet Yönetici Paneli</h1>
+                    <h1 style="border-left: 4px solid var(--primary-color); padding-left: 10px;"><i class="fas fa-user-shield"></i> TronAdsFaucet Yönetici Paneli</h1>
                     <p style="text-align: right;"><button class="btn btn-secondary" onclick="document.getElementById('mainAppContent').style.display='block'; document.getElementById('adminPanelContent').style.display='none'; navigateTo('home');">
                         <i class="fas fa-arrow-left"></i> Ana Menüye Dön
                     </button></p>
 
                     <div id="adminMessage" class="admin-message admin-warning" style="display: none;"></div>
 
-                    <h2 style="margin-top: 20px; color: var(--secondary-color);"><i class="fas fa-list"></i> Son 50 Çekim Talebi</h2>
+                    <h2 style="margin-top: 20px; color: var(--text-main); font-weight: 600;"><i class="fas fa-list"></i> Son 50 Çekim Talebi</h2>
                     <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
                     <table id="withdrawalTable" style="display: none;">
                         <thead>
@@ -944,7 +1059,7 @@
                         <tbody id="withdrawalTableBody"></tbody>
                     </table>
 
-                    <h2 style="margin-top: 40px; color: var(--secondary-color);"><i class="fas fa-users"></i> Tüm Kullanıcılar</h2>
+                    <h2 style="margin-top: 40px; color: var(--text-main); font-weight: 600;"><i class="fas fa-users"></i> Tüm Kullanıcılar</h2>
                     <table id="userTable" style="display: none;">
                         <thead>
                             <tr><th>Telegram ID / İsim</th><th>Bakiye (TRX / USD)</th><th>Toplam İzlenen Reklam</th><th>Referanslar</th><th>İşlemler</th></tr>
@@ -978,8 +1093,9 @@
                     throw new Error("Application failed to initialize user state completely.");
                 }
 
-                // 4. DOM elementlerini ata
+                // 4. DOM elementlerini ata (YENİ ID'ler dahil)
                 profileNameDisplay = document.getElementById('profileNameDisplay');
+                profileTelegramIdEl = document.getElementById('profileTelegramId');
                 userPointsDisplay = document.getElementById('userPointsDisplay');
                 adsWatchedTodayEl = document.getElementById('adsWatchedToday');
                 adsLeftTodayEl = document.getElementById('adsLeftToday');
@@ -993,6 +1109,14 @@
                     document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
                 } else {
                     document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+                }
+
+                // Telegram'ın kendi renklerini set et
+                if (Telegram.WebApp) {
+                     const isDarkMode = document.body.classList.contains('dark-mode');
+                     const bgColor = isDarkMode ? '#1f2937' : '#f7f7f7';
+                     Telegram.WebApp.setHeaderColor(bgColor);
+                     Telegram.WebApp.setBackgroundColor(bgColor);
                 }
 
                 // 6. Sayfaya yönlendir ve UI'ı güncelle
@@ -1016,7 +1140,6 @@
                 }
             } catch(error) {
                 console.error("Uygulama başlatılırken kritik hata oluştu:", error);
-                // KRİTİK: Hata durumunda yükleme ekranını kalıcı hata mesajına çeviririz.
                 loadingScreen.querySelector('.spinner').style.display = 'none';
                 loadingScreen.querySelector('p').style.display = 'none';
                 loadingError.textContent = `CRITICAL ERROR: Application could not load. Reason: ${error.message}. Please restart the bot via Telegram.`;
