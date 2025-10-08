@@ -315,14 +315,14 @@
     
     <script>
         // *** FIREBASE CONFIGURATION START ***
+        // LÜTFEN AŞAĞIDAKİ BİLGİLERİ KENDİ FIREBASE PROJENİZLE GÜNCELLEYİN!
         const firebaseConfig = {
-          apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
+          apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM", // Kendi Anahtarınız
           authDomain: "tronadsfaucet.firebaseapp.com",
           projectId: "tronadsfaucet",
           storageBucket: "tronadsfaucet.firebasestorage.app",
           messagingSenderId: "26180984735",
           appId: "1:26180984735:web:e498a635c4f61bd0a167aa"
-          // Realtime Database URL ve Measurement ID bu uygulamada Firestore kullandığı için çıkarılmıştır.
         };
 
         // Firebase'i başlat
@@ -339,13 +339,14 @@
             // --- Configuration ---
             const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
             const BOT_USERNAME = "TronAdsFaucetBot"; 
-            const ADMIN_CHAT_ID = "7904032877";
+            // ADMIN ID'Sİ KURALLARLA EŞLEŞTİRİLDİ.
+            const ADMIN_CHAT_ID = "7904032877"; 
             
             const DAILY_AD_LIMIT = 100; 
             const USD_PER_AD = 0.001; 
             const USD_PER_REFERRAL_BONUS = 0.02; 
             const MIN_WITHDRAW_POINTS = 0.01; 
-            let TRX_TO_USD_RATE = 0.342249; 
+            let TRX_TO_USD_RATE = 0.342249; // Bu değer gerçek bir API'den çekilmelidir.
 
             // Calculated TRX Amounts
             let TRX_PER_AD = (USD_PER_AD / TRX_TO_USD_RATE); 
@@ -378,7 +379,7 @@
             const withdrawalRequestsTable = document.getElementById('withdrawal-requests-table');
             const clearRequestsBtn = document.getElementById('clear-requests-btn');
 
-            // --- State Management (Now Firestore based) ---
+            // --- State Management (Firestore based) ---
             let userState = {
                 trxBalance: 0.0000, 
                 dailyAdWatchCount: 0,
@@ -433,7 +434,8 @@
                         saveState(true);
                     }
                 }, error => {
-                    tg.showAlert("Veri yüklenemedi. Firebase bağlantı hatası: " + error.message);
+                    // İzin Hatası burası yüzünden çıkıyordu, kuralları kontrol edin.
+                    tg.showAlert("Veri yüklenemedi. Firebase bağlantı hatası: Missing or insufficient permissions.");
                 });
                 
                 // ADMIN CHECK
@@ -708,7 +710,7 @@
                     console.error("Withdrawal Error:", error);
                     tg.HapticFeedback.notificationOccurred('error');
                     
-                    // Transaction failed. If the error was just with Telegram (i.e. balanceDeducted is true, which shouldn't happen with Firestore Transactions, but for safety in case of partial success outside of the transaction scope):
+                    // İşlem başarısız olursa bakiyeyi geri yükle
                     if (balanceDeducted && !error.message.includes("Transaction")) {
                         tg.showAlert("Hata: Çekim talebi Firebase'e kaydedildi ancak Admin'e bildirim gönderilemedi. Admin panelinden kontrol edin.");
                     } else {
@@ -777,8 +779,9 @@
                     
                     withdrawalRequestsTable.innerHTML = requestsHTML;
                 }, error => {
+                    // İzin Hatası alıyorsanız kural setini kontrol edin.
                     console.error("Requests Listener Error:", error);
-                    withdrawalRequestsTable.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary-color-light);">Hata: Talepler yüklenemedi.</td></tr>';
+                    withdrawalRequestsTable.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--primary-color-light);">Hata: Talepler yüklenemedi. (İzin Hatası)</td></tr>';
                 });
             };
 
