@@ -18,7 +18,7 @@
         :root {
             --primary-color: #E63946; /* Kırmızı */
             --primary-dark: #A82E37;
-            --secondary-color: #E63946; /* Kırmızı */
+            --secondary-color: #457B9D; /* Mavi (Admin butonu için eklendi) */
             --bg-light: #FFFFFF; /* Beyaz */
             --bg-dark: #1F2937;
             --card-bg-light: #FFFFFF;
@@ -142,7 +142,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Reklam Modal Stili (Simülasyon kaldırıldığı için bu CSS gereksiz olabilir ancak şimdilik tutuluyor) */
+        /* Reklam Modal Stili */
         .ad-modal-overlay {
             position: fixed;
             top: 0;
@@ -327,7 +327,7 @@
             }
         }
 
-        // --- AD PLAYBACK FUNCTION (Simulation - Kept for Admin/Debugging) ---
+        // --- AD PLAYBACK FUNCTION (Simulation) ---
         function showAdAndRewardSimulation() {
             const adModal = document.getElementById('adModal');
             const adCountdown = document.getElementById('adCountdown');
@@ -776,13 +776,14 @@
 
         // --- EVENT HANDLERS (The Ad logic is here) ---
 
-        // Düzeltilmiş Reklam Gösterme Fonksiyonu (handleWatchDailyAd)
         function handleWatchDailyAd() {
             if (!currentUser) return;
             
             const adsLeft = ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday;
             if (adsLeft <= 0) {
                 showToast('Daily ad limit reached. Come back tomorrow!');
+                // Konsol Uyarısı Eklendi:
+                console.warn('Daily ad limit reached. User attempted to watch ad but limit is 0.');
                 return;
             }
             
@@ -822,19 +823,12 @@
                     updateUI(); 
                 });
             } else {
-                // FALLBACK DEĞİŞİKLİĞİ: Simülasyon yerine hata mesajı gösterilir.
-                console.error("Adexora function not found. Cannot show real ad.");
-                showToast("Gerçek reklam servisi yüklenemedi. Lütfen internet bağlantınızı veya Telegram kısıtlamalarını kontrol edin.", 6000);
-                
-                // Butonu hemen tekrar etkinleştir.
-                watchBtn.disabled = false;
-                updateUI();
-                
-                // EĞER SİMÜLASYONU YİNE DE KULLANMAK İSTERSENİZ:
-                // showAdAndRewardSimulation(); 
+                // Fallback to Simulation Ad if Adexora function is not loaded (e.g., script blocked)
+                console.warn("Adexora function not found. Falling back to simulation.");
+                showToast("Adexora not loaded or blocked. Simulating Ad...", 5000);
+                showAdAndRewardSimulation();
             }
         }
-        // Düzeltilmiş Reklam Gösterme Fonksiyonu Sonu
 
         function handleWithdrawal() {
             const walletAddress = document.getElementById('walletAddressInput').value.trim();
@@ -963,6 +957,8 @@
                 body: JSON.stringify(payload)
             }).catch(e => console.error("Telegram API Error:", e));
         }
+        
+        // --- ADMIN PANEL FUNCTIONS ---
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -973,7 +969,7 @@
                 themeIcon.className = 'fas fa-sun';
             }
         }
-
+        
         async function renderAdminPanel() {
             if (currentUser.telegramId != ADMIN_TELEGRAM_ID) return;
 
@@ -987,10 +983,18 @@
                 <div class="admin-container">
                     <h1>Admin Panel</h1>
                     <p class="admin-warning" style="display:block; text-align: center;">Loading withdrawal requests...</p>
-                    <button class="btn btn-primary" id="closeAdminPanelBtn" style="margin-bottom: 20px;">
-                        <i class="fas fa-arrow-left"></i> Back to Main App
-                    </button>
-                    <div id="withdrawalList"></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-primary" id="closeAdminPanelBtn" style="flex: 1;">
+                            <i class="fas fa-arrow-left"></i> Back to Main App
+                        </button>
+                        <button class="btn btn-secondary" id="openAdminConsoleBtn" style="flex: 1; background: #FFC107;">
+                            <i class="fas fa-code"></i> Console/Tools
+                        </button>
+                    </div>
+                    
+                    <div id="adminPanelTabs">
+                        <div id="withdrawalList"></div>
+                    </div>
                     <div id="adminMessage" class="admin-message admin-success" style="display:none;"></div>
                 </div>
             `;
@@ -1000,6 +1004,8 @@
                 mainAppContentEl.style.display = 'block';
                 navigateTo('home');
             });
+            
+            document.getElementById('openAdminConsoleBtn').addEventListener('click', renderAdminConsolePage);
 
             const withdrawalListEl = document.getElementById('withdrawalList');
             const adminMessageEl = document.getElementById('adminMessage');
@@ -1010,6 +1016,7 @@
                 withdrawalListEl.innerHTML = '<p class="admin-warning" style="background:none; border:none; color:inherit; text-align: center;">No pending withdrawal requests found.</p>';
             } else {
                 let tableHtml = `
+                    <h2 class="section-title"><i class="fas fa-money-check-alt"></i> Pending Withdrawals</h2>
                     <table>
                         <thead>
                             <tr>
@@ -1071,6 +1078,66 @@
                     }
                 });
             });
+        }
+        
+        function renderAdminConsolePage() {
+            if (currentUser.telegramId != ADMIN_TELEGRAM_ID) return;
+
+            const adminPanelTabsEl = document.getElementById('adminPanelTabs');
+            const adminMessageEl = document.getElementById('adminMessage');
+
+            adminMessageEl.style.display = 'none';
+
+            adminPanelTabsEl.innerHTML = `
+                <h2 class="section-title"><i class="fas fa-code"></i> Developer Console</h2>
+                <div class="task-card">
+                    <p class="task-description">
+                        Execute JavaScript code in the application context. Use with extreme caution. Global objects: <code>currentUser</code>, <code>db</code>, <code>showToast</code>, <code>convertUSDToTRX</code>, etc.
+                    </p>
+                    <div class="input-group">
+                        <label class="input-label">JS Code to Execute</label>
+                        <textarea class="input-field" id="consoleInput" rows="5" placeholder="e.g., currentUser.balanceUSD += 10; saveUserStateLocalOrFirebase();"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="executeCodeBtn">
+                        <i class="fas fa-play"></i> Execute Code
+                    </button>
+                    
+                    <h3 style="margin-top: 20px; font-size: 1.2rem; color: var(--primary-color);">Output</h3>
+                    <pre style="background: var(--bg-dark); color: #00FF00; padding: 10px; border-radius: var(--border-radius-sm); overflow-x: auto; font-size: 0.9rem;" id="consoleOutput">Execution result will appear here.</pre>
+                    
+                    <button class="btn btn-secondary" id="backToWithdrawalsBtn" style="margin-top: 20px; background: var(--secondary-color);">
+                        <i class="fas fa-list"></i> Back to Withdrawals
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('executeCodeBtn').addEventListener('click', handleExecuteCode);
+            document.getElementById('backToWithdrawalsBtn').addEventListener('click', () => {
+                // Rerender the main admin panel to show withdrawal requests again
+                renderAdminPanel(); 
+            });
+        }
+
+        function handleExecuteCode() {
+            const code = document.getElementById('consoleInput').value;
+            const outputEl = document.getElementById('consoleOutput');
+            
+            try {
+                // eval() is used as requested by the user to execute arbitrary code for the admin console feature.
+                const result = eval(code); // eslint-disable-line no-eval
+                
+                // Show successful toast for simple operations like balance change
+                if (code.includes('saveUserStateLocalOrFirebase')) {
+                    showToast('Code executed and user state saved/UI updated!', 4000);
+                }
+
+                outputEl.textContent = `SUCCESS:\n${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`;
+                outputEl.style.color = '#00FF00';
+            } catch (error) {
+                outputEl.textContent = `ERROR:\n${error.name}: ${error.message}`;
+                outputEl.style.color = 'var(--primary-color)'; // Red
+                showToast(`Code execution failed: ${error.message}`, 5000);
+            }
         }
         
         // --- INITIALIZATION ---
