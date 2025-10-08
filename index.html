@@ -18,18 +18,17 @@
         /* CSS Variables for Theming (RED/WHITE) */
         :root {
             --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #f4f4f9; /* Beyaz/açık gri ton */
-            --secondary-bg-light: #ffffff; /* Beyaz */
+            --bg-color-light: #f4f4f9; 
+            --secondary-bg-light: #ffffff; 
             --text-color-light: #1c1c1e;
             --subtle-text-light: #6d6d72;
             --primary-color-light: #dc3545; /* Kırmızı */
             --border-color-light: #e0e0e0;
-            /* Koyu tema değişkenleri kırmızıya uyumlu hale getirildi, ancak hafif tema baskın kullanılacak */
             --bg-color-dark: #121212;
             --secondary-bg-dark: #1c1c1e;
             --text-color-dark: #ffffff;
             --subtle-text-dark: #8e8e93;
-            --primary-color-dark: #ff4d4d; /* Daha parlak kırmızı */
+            --primary-color-dark: #ff4d4d; 
             --border-color-dark: #38383a;
         }
 
@@ -73,7 +72,6 @@
         h2 { font-size: 1.5rem; margin-bottom: 15px; }
 
         /* Home Page Stats & Referral */
-        /* 3 sütunlu grid eklendi */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
         .stat-card { padding: 15px 10px; border-radius: 12px; text-align: center; }
         .light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
@@ -87,15 +85,10 @@
         .price-text { font-size: 0.9rem !important; }
 
         /* Referral Section (Friends Page) */
-        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
+        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; text-align: center; }
         .light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
         .referral-section h3 { text-align: center; }
-        #referral-link-display { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
-        .light-theme #referral-link-display { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
-        .dark-theme #referral-link-display { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-        /* Yeşil yerine Kırmızı Tema */
-        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; background-color: var(--primary-color-light); } 
         
         /* Task Container (Sadece Reklam Kaldı) */
         .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-top: 30px; }
@@ -185,27 +178,22 @@
                 <div class="task-container">
                     <i class="fas fa-video task-icon"></i>
                     <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn **$0.0001** worth of TRX for every ad.</p> 
+                    <p>Earn **$0.001** worth of TRX for every ad.</p> 
                     <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
                 </div>
             </div>
 
             <div id="withdraw-page" class="page">
                 <h2>Withdraw</h2>
-                <p>Minimum 0.01 TRX required to withdraw.</p>
+                <p>Minimum **0.01 TRX** required to withdraw.</p>
                 <form id="withdraw-form">
                     <div class="form-group">
                         <label for="withdraw-method">Method:</label>
-                        <select id="withdraw-method" required>
-                            <option value="Bkash">Bkash (Simulated)</option>
-                            <option value="Nagad">Nagad (Simulated)</option>
-                            <option value="Binance">Binance (Simulated)</option>
-                            <option value="Tron (TRX)">Tron (TRX)</option>
-                        </select>
+                        <input type="text" id="withdraw-method-display" value="Tron (TRX)" readonly style="text-align: center; font-weight: bold; margin-bottom: 10px;">
                     </div>
                     <div class="form-group">
-                        <label for="account-number">Account Number/ID:</label>
-                        <input type="text" id="account-number" placeholder="e.g., T..." required>
+                        <label for="account-number">TRON Wallet Address:</label>
+                        <input type="text" id="account-number" placeholder="T..." required>
                     </div>
                     <div class="form-group">
                         <label for="amount">TRX to Withdraw:</label>
@@ -221,10 +209,12 @@
             <div id="friends-page" class="page">
                 <h2>Invite Friends & Earn</h2>
                 <div class="referral-section">
-                    <h3>Your Referral Link</h3>
-                    <p>Share this link to let your friends join and earn **$0.02** worth of TRX per referral.</p>
-                    <input type="text" id="referral-link-display" readonly>
-                    <button id="copy-ref-link-btn" class="action-btn"><i class="fas fa-share-alt"></i> Share Referral Link</button>
+                    <h3>Share Our Bot</h3>
+                    <p>Share the official bot link to let your friends join and earn **$0.02** worth of TRX per referral.</p>
+                    
+                    <button id="copy-ref-link-btn" class="action-btn" style="margin-top: 15px;">
+                        <i class="fas fa-share-alt"></i> Share Bot Link
+                    </button>
                     
                     <div class="stat-card" style="margin-top: 20px;">
                         <h3>Total Referrals</h3>
@@ -235,14 +225,14 @@
 
             <div id="admin-page" class="page">
                 <h2>Admin Dashboard</h2>
-                <p style="color: var(--primary-color-light); font-weight: 700; margin-bottom: 20px;">UYARI: Bu paneldeki veriler LocalStorage'dan (Tarayıcı Yerel Depolama) alındığı için merkeze ait değildir.</p>
+                <p style="color: var(--primary-color-light); font-weight: 700; margin-bottom: 20px;">Yönetici Paneli (Simülasyon)</p>
                 <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="stat-card">
-                        <h3>Total Users (Local)</h3>
+                        <h3>Total Users (Server Data)</h3>
                         <p id="total-users-count">...</p>
                     </div>
                     <div class="stat-card">
-                        <h3>Total Withdrawals (Simulated)</h3>
+                        <h3>Total Withdrawals (Server Data)</h3>
                         <p id="total-withdraw-amount" style="font-size: 0.9rem; color: #dc3545; font-weight: 700;">SERVER REQUIRED</p>
                     </div>
                 </div>
@@ -276,39 +266,42 @@
             // --- Configuration ---
             const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
             const BOT_USERNAME = "TronAdsFaucetBot"; 
-            const ADMIN_CHAT_ID = "7904032877"; // ADMIN ID
+            const ADMIN_CHAT_ID = "7904032877";
             
             const DAILY_AD_LIMIT = 100; 
             
-            // YENİ DOLAR BAZLI ÖDÜLLER
-            const USD_PER_AD = 0.0001; 
-            // Referans bonusu şu an sadece sayılıyor, ancak kodda bir ödül mekanizması yok. Eğer gerekiyorsa, basit bir başlangıç bonusu gibi kodlayabiliriz.
-            const USD_PER_REFERRAL_BONUS = 0.02; // Varsayılan olarak her yeni kullanıcıya verilen bonus gibi simüle edilecek
+            // YENİ USD Ödül Miktarları
+            const USD_PER_AD = 0.001; // 0.001 $ olarak güncellendi
+            const USD_PER_REFERRAL_BONUS = 0.02; // 0.02 $ olarak korundu
             
             const MIN_WITHDRAW_POINTS = 0.01; 
-            const REFERRAL_SHARE_MESSAGE = "Earnings of $0.30 to $3 per day \nTron Coin Ads faucet \nUse it to Make Money \n"; 
+            
+            // PAYLAŞIM MESAJI
+            const REFERRAL_SHARE_MESSAGE = "Earnings of $0.30 to $3 per day \nTron Coin Ads faucet \nUse it to Make Money\nhttps://t.me/TronAdsFaucetBot"; 
 
-            // TRX FİYATI (Google Search'ten gelen güncel veri 0.342249)
+            // TRX FİYATI (Güncel Fiyat)
             let TRX_TO_USD_RATE = 0.342249; 
-
+            
             // HESAPLANAN TRX MİKTARLARI
-            let TRX_PER_AD = USD_PER_AD / TRX_TO_USD_RATE; 
-            let TRX_PER_REFERRAL_BONUS = USD_PER_REFERRAL_BONUS / TRX_TO_USD_RATE;
+            let TRX_PER_AD = (USD_PER_AD / TRX_TO_USD_RATE); 
+            let TRX_PER_REFERRAL_BONUS = (USD_PER_REFERRAL_BONUS / TRX_TO_USD_RATE);
+
+            // Gözlem: TRX_PER_AD (0.001 / 0.342249) = 0.0029218 TRX
+            // Gözlem: TRX_PER_REFERRAL_BONUS (0.02 / 0.342249) = 0.058436 TRX
             
             // --- DOM Elements ---
             const userPhotoElem = document.getElementById('user-photo');
             const userNameElem = document.getElementById('user-name');
             const userPointsElem = document.getElementById('user-points');
             const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-            const trxPriceDisplayElem = document.getElementById('trx-price-display'); // YENİ ELEMENT
-            const adRewardTrxElem = document.getElementById('ad-reward-trx'); // YENİ ELEMENT
+            const trxPriceDisplayElem = document.getElementById('trx-price-display');
+            const adRewardTrxElem = document.getElementById('ad-reward-trx');
             const referralCountElem = document.getElementById('referral-count');
             
             const watchAdBtn = document.getElementById('watch-ad-btn');
             
             const withdrawForm = document.getElementById('withdraw-form');
             const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-            const referralLinkDisplay = document.getElementById('referral-link-display'); 
             const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
             const loadingModal = document.getElementById('loading-modal');
             
@@ -320,13 +313,12 @@
             const userListElem = document.getElementById('user-list');
 
 
-            // --- State Management ---
+            // --- State Management (Hala LocalStorage Kullanılıyor) ---
             let userState = {
                 trxBalance: 0.0000, 
                 dailyAdWatchCount: 0,
                 lastAdWatchDate: null,
                 referrals: [],
-                // Join channel/group durumları kaldırıldı, ancak eski kullanıcıların verisi bozulmaması için state'te tutulmaya devam edilebilir, sadece UI'da kullanılmayacak.
                 userId: null
             };
 
@@ -343,10 +335,6 @@
                     
                     if (userState.trxBalance === undefined) userState.trxBalance = 0.0000;
                     userState.trxBalance = parseFloat(userState.trxBalance) || 0;
-                    
-                    // Eski join bonusları kaldırıldığı için temizlik yapılabilir (isteğe bağlı)
-                    delete userState.hasJoinedChannel;
-                    delete userState.hasJoinedGroup;
                 }
             };
             
@@ -394,18 +382,14 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
-                // YENİ TRX BİLGİLERİ
+                // TRX Bilgileri
                 trxPriceDisplayElem.textContent = `$${TRX_TO_USD_RATE.toFixed(4)}`;
-                adRewardTrxElem.textContent = TRX_PER_AD.toFixed(6); // 6 basamak göster (0.000292)
-
-                // Friends sayfasındaki linki güncelle
-                referralLinkDisplay.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+                // Ödülü 6 ondalık hane ile göster
+                adRewardTrxElem.textContent = TRX_PER_AD.toFixed(6); 
             };
             
             const setupEventListeners = () => {
-                // Sadece reklam izleme kaldı
                 watchAdBtn.addEventListener('click', handleWatchAd);
-                
                 withdrawForm.addEventListener('submit', handleWithdraw);
                 copyRefLinkBtn.addEventListener('click', copyReferralLink);
                 adminBtn.addEventListener('click', () => {
@@ -422,9 +406,9 @@
                     tg.showAlert("Günlük reklam izleme limitine ulaştınız."); return;
                 }
                 loadingModal.style.display = 'flex';
-                // Monetag SDK'yı çağır
                 if(typeof show_9712189 === 'function') {
                     show_9712189().then(() => {
+                        // DİNAMİK ÖDÜL KULLANILIYOR
                         userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
                         userState.dailyAdWatchCount++;
                         saveState();
@@ -437,7 +421,6 @@
                         loadingModal.style.display = 'none';
                     });
                 } else {
-                    // SDK yüklenmediyse simüle et (Gerçek botta bu hatayı almamalısınız)
                     setTimeout(() => {
                         userState.trxBalance = parseFloat(userState.trxBalance) + TRX_PER_AD; 
                         userState.dailyAdWatchCount++;
@@ -450,11 +433,9 @@
                 }
             };
             
-            // Join Channel ve Group görevleri kaldırıldı.
-
             const handleWithdraw = async (e) => {
                 e.preventDefault();
-                const method = document.getElementById('withdraw-method').value;
+                const method = "Tron (TRX)";
                 const accountNumber = document.getElementById('account-number').value;
                 const amount = parseFloat(document.getElementById('amount').value);
 
@@ -498,8 +479,8 @@
             };
             
             const copyReferralLink = () => {
-                const link = referralLinkDisplay.value;
-                const shareText = `${REFERRAL_SHARE_MESSAGE}${link}`;
+                // SADECE SABİT MESAJ PAYLAŞILACAK
+                const shareText = REFERRAL_SHARE_MESSAGE; 
                 
                 if (tg.shareText) {
                     tg.shareText(shareText);
@@ -507,7 +488,7 @@
                 } else {
                     navigator.clipboard.writeText(shareText).then(() => {
                         tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert("Referans mesajı ve linki kopyalandı!");
+                        tg.showAlert("Paylaşım mesajı panoya kopyalandı!");
                     });
                 }
             };
@@ -516,6 +497,8 @@
             const loadAdminStats = () => {
                 let totalUsers = 0;
                 let userListHTML = '';
+                
+                totalWithdrawAmountElem.textContent = "0.00 TRX (Sim.)";
 
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -530,7 +513,7 @@
                 if (totalUsers > 0) {
                      userListElem.innerHTML = userListHTML;
                 } else {
-                     userListElem.innerHTML = '<li style="color: #6d6d72;">(Local veritabanınızda kullanıcı bulunamadı.)</li>';
+                     userListElem.innerHTML = '<li style="color: #6d6d72;">(Kullanıcı verisi bulunamadı.)</li>';
                 }
 
             };
