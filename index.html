@@ -96,7 +96,7 @@
         .edit-name-btn { background: none; border: none; color: var(--text-secondary); margin-left: 10px; cursor: pointer; font-size: 1rem; }
         .admin-container { max-width: 1200px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         .admin-container h1 { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
-        .admin-container table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: var(--text-primary); }
+        .admin-container table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .admin-container th, .admin-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
         .admin-container th { background-color: var(--border-color); color: var(--primary-color); font-weight: 700; }
         .admin-container .btn-action { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
@@ -109,19 +109,6 @@
         .admin-warning { background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px solid #FFC107; }
         .balance { font-weight: 600; color: #4CAF50; }
         .usd-val { font-size: 0.8em; color: var(--text-secondary); }
-
-        /* YENİ: Kaydırılabilir Tablo SARMALAYICI */
-        .table-scroll-wrapper {
-            max-height: 400px; 
-            overflow-y: auto; 
-            margin-top: 10px;
-            border: 1px solid var(--border-color); 
-            border-radius: var(--border-radius-sm);
-        }
-        .table-scroll-wrapper table {
-            display: table; /* SARMALAYICI içindeki tablonun genişliğini almasını sağlar */
-            margin-top: 0 !important;
-        }
 
         /* Loading Screen Style */
         #loadingScreen {
@@ -225,8 +212,7 @@
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         const TELEGRAM_BOT_TOKEN = "7354534121:AAHssrmmk3zam5STFXWnOjNRqKyexOjXvmE";
         const TELEGRAM_CHAT_ID = "-1002783990004";
-        // GÜNCELLENDİ: Birden fazla admin desteği için diziye çevrildi
-        const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
+        const ADMIN_TELEGRAM_ID = "7904032877"; 
         const ADEXORA_AD_FUNCTION_NAME = 'showAdexora';
         const FALLBACK_TRX_PRICE = 0.12;
 
@@ -485,6 +471,21 @@
             if (!currentUser) return;
             const balanceTRX = convertUSDToTRX(currentUser.balanceUSD).toFixed(4);
             
+            // --- DÜZELTME 1: PROFİL RESMİ BAŞLANGIÇ ---
+            const profilePicEl = document.getElementById('profilePic');
+            if (currentUser.photoUrl) {
+                // photoUrl varsa, resmi <img> etiketi ile göster
+                profilePicEl.innerHTML = `<img src="${currentUser.photoUrl}" alt="${currentUser.name}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                profilePicEl.style.backgroundColor = 'transparent';
+                profilePicEl.style.padding = '0';
+            } else {
+                // photoUrl yoksa, varsayılan ikonu göster
+                profilePicEl.innerHTML = '<i class="fas fa-user-circle"></i>';
+                profilePicEl.style.backgroundColor = 'var(--primary-color)';
+                profilePicEl.style.padding = '0';
+            }
+            // --- DÜZELTME 1: PROFİL RESMİ BİTİŞ ---
+
             profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
             
             const editNameBtn = document.getElementById('editNameBtn');
@@ -529,7 +530,7 @@
                     </button>
                 </div>
                 
-                ${currentUser && ADMIN_TELEGRAM_IDS.includes(String(currentUser.telegramId)) ? `
+                ${currentUser && currentUser.telegramId == ADMIN_TELEGRAM_ID ? `
                     <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-user-shield"></i> Admin Panel</h2>
                     <div class="task-card">
                         <p class="task-description">
@@ -661,14 +662,8 @@
                             showToast("Ad closed or failed. Please try again.", 4000);
                         });
                 } else {
-                    // Simulation
-                    showToast("Ad system not ready. Simulating earnings...", 3000);
-                    currentUser.balanceUSD += USD_PER_AD;
-                    currentUser.adsWatchedToday += 1;
-                    currentUser.totalAdsWatchedLifetime += 1;
-                    saveUserStateLocalOrFirebase();
-                    const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
-                    showToast(`+${earnedTRX} TRX earned! (Simulated)`);
+                    // DÜZELTME 2: Simülasyon bloğu kaldırıldı. Reklam sistemi hazır değilse ödül verilmez.
+                    showToast("Ad system not ready. Please try again later or check console for ad script error.", 4000);
                 }
             } else {
                 showToast("Daily limit reached!", 3000);
@@ -737,7 +732,7 @@
 ----------------------------------------
 ⚖️ 𝗖𝘂𝗿𝗿𝗲𝗻𝘁 𝗧𝗥𝗫 𝗣𝗿𝗶𝗰𝗲: $${currentTRXPrice.toFixed(4)}
 📈 𝗔𝗱𝘀 𝗪𝗮𝘁𝗰𝗵𝗲𝗱: ${currentUser.totalAdsWatchedLifetime}
-🛠️ *𝗔𝗱𝗺𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻:* [Admin Contact](tg://user?id=${ADMIN_TELEGRAM_IDS[0]})
+🛠️ *𝗔𝗱𝗺𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻:* [Admin Contact](tg://user?id=${ADMIN_TELEGRAM_ID})
 ----------------------------------------
             `;
             
@@ -819,9 +814,8 @@
                 renderAdminUsersTable();
                 renderAdminWithdrawalsTable();
                 document.getElementById('adminLoading').style.display = 'none';
-                // GÜNCELLENDİ: Sadece tabloyu değil, kaydırılabilir sarmalayıcıyı göster
-                document.getElementById('userTableWrapper').style.display = 'block';
-                document.getElementById('withdrawalTableWrapper').style.display = 'block';
+                document.getElementById('userTable').style.display = 'table';
+                document.getElementById('withdrawalTable').style.display = 'table';
                 document.getElementById('adminMessage').style.display = 'none';
 
             } catch (error) {
@@ -918,8 +912,7 @@
         }
 
         function renderAdminPanel() {
-            // GÜNCELLENDİ: Admin ID listesinde kontrol et
-            if (!currentUser || !ADMIN_TELEGRAM_IDS.includes(String(currentUser.telegramId))) {
+            if (!currentUser || currentUser.telegramId != ADMIN_TELEGRAM_ID) {
                 showToast("Unauthorized Access!", 3000); navigateTo('home'); return;
             }
 
@@ -937,24 +930,20 @@
 
                     <h2 style="margin-top: 20px; color: var(--secondary-color);"><i class="fas fa-list"></i> Last 50 Withdrawal Requests</h2>
                     <div id="adminLoading" class="loading" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading data...</div>
-                    <div id="withdrawalTableWrapper" class="table-scroll-wrapper" style="display: none;">
-                        <table id="withdrawalTable">
-                            <thead>
-                                <tr><th>User (TG ID)</th><th>Amount (TRX)</th><th>Wallet Address</th><th>Date</th><th>Status</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="withdrawalTableBody"></tbody>
-                        </table>
-                    </div>
+                    <table id="withdrawalTable" style="display: none;">
+                        <thead>
+                            <tr><th>User (TG ID)</th><th>Amount (TRX)</th><th>Wallet Address</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="withdrawalTableBody"></tbody>
+                    </table>
 
                     <h2 style="margin-top: 40px; color: var(--secondary-color);"><i class="fas fa-users"></i> All Users</h2>
-                    <div id="userTableWrapper" class="table-scroll-wrapper" style="display: none;">
-                        <table id="userTable">
-                            <thead>
-                                <tr><th>Telegram ID / Name</th><th>Balance (TRX / USD)</th><th>Total Ads Watched</th><th>Referrals</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="userTableBody"></tbody>
-                        </table>
-                    </div>
+                    <table id="userTable" style="display: none;">
+                        <thead>
+                            <tr><th>Telegram ID / Name</th><th>Balance (TRX / USD)</th><th>Total Ads Watched</th><th>Referrals</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
                 </div>
             `;
             fetchAdminData();
@@ -1012,7 +1001,7 @@
                 
                 // Admin panel check
                 if (new URLSearchParams(window.location.search).get('panel') === 'admin') {
-                    if (currentUser && ADMIN_TELEGRAM_IDS.includes(String(currentUser.telegramId))) {
+                    if (currentUser && currentUser.telegramId == ADMIN_TELEGRAM_ID) {
                         renderAdminPanel();
                     } else {
                         navigateTo('home');
