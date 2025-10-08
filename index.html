@@ -172,6 +172,40 @@
             color: var(--primary-color);
         }
 
+        /* Konsol Log Stilleri */
+        .console-log {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+        .console-log.info {
+            background-color: rgba(33, 150, 243, 0.1);
+            border-left: 3px solid #2196F3;
+        }
+        .console-log.warn {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 3px solid #FFC107;
+        }
+        .console-log.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border-left: 3px solid #F44336;
+        }
+        .console-log.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-left: 3px solid #4CAF50;
+        }
+        #consoleLogs {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--bg-dark);
+            border-radius: var(--border-radius-sm);
+        }
+
     </style>
 </head>
 <body>
@@ -271,15 +305,51 @@
         let currentUser = null; 
         let currentTRXPrice = FALLBACK_TRX_PRICE;
         let adCountdownInterval;
+        let consoleLogs = [];
+
+        // --- KONSOL LOG SİSTEMİ ---
+        function addConsoleLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                message,
+                type
+            };
+            
+            consoleLogs.unshift(logEntry);
+            
+            // Konsol loglarını admin panelinde göster
+            if (document.getElementById('consoleLogs')) {
+                const consoleLogsEl = document.getElementById('consoleLogs');
+                const logElement = document.createElement('div');
+                logElement.className = `console-log ${type}`;
+                logElement.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+                consoleLogsEl.prepend(logElement);
+                
+                // Maksimum 50 log tut
+                if (consoleLogsEl.children.length > 50) {
+                    consoleLogsEl.removeChild(consoleLogsEl.lastChild);
+                }
+            }
+            
+            // Browser konsoluna da yaz
+            if (type === 'error') {
+                console.error(`[${timestamp}] ${message}`);
+            } else if (type === 'warn') {
+                console.warn(`[${timestamp}] ${message}`);
+            } else {
+                console.log(`[${timestamp}] ${message}`);
+            }
+        }
 
         // --- FIREBASE INITIALIZATION ---
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore(); 
-            console.log("Firebase initialized successfully.");
+            addConsoleLog("Firebase initialized successfully.", 'success');
         } catch(e) {
-            console.error("Firebase Initialization Error:", e);
+            addConsoleLog(`Firebase Initialization Error: ${e.message}`, 'error');
         }
 
         // --- UTILITY FUNCTIONS ---
@@ -314,7 +384,7 @@
                         profilePic.appendChild(img);
                     };
                     img.onerror = function() {
-                        console.log("Telegram profile photo failed to load, using default icon");
+                        addConsoleLog("Telegram profile photo failed to load, using default icon", 'warn');
                         profilePic.innerHTML = '<i class="fas fa-user-circle"></i>';
                     };
                     img.src = tgUser.photo_url;
@@ -373,6 +443,7 @@
             
             const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
             showToast(`+${earnedTRX} TRX earned!`);
+            addConsoleLog(`User ${currentUser.name} earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX from watching ad`, 'success');
             
             if(currentUser.telegramId) {
                 sendToTelegram(`✅ *Ad Watched:* User \`${currentUser.name}\` (${currentUser.telegramId || 'N/A'}) earned ${USD_PER_AD.toFixed(3)}$ / ${earnedTRX} TRX.`, true);
@@ -382,38 +453,40 @@
         // --- FIREBASE DATA HANDLING ---
 
         async function fetchUser(tgId) {
-            if (!db) return null;
+            if (!db) {
+                addConsoleLog("Firebase DB not available for fetchUser", 'error');
+                return null;
+            }
             try {
                 const userRef = db.collection('users').doc(String(tgId));
-                // Timeout is good practice but ensure Firestore is available and rules allow read.
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout (5s)")), 5000));
                 
                 const doc = await Promise.race([userRef.get(), timeoutPromise]); 
                 
-                // Check if doc exists and return data
                 if (doc.exists) {
+                    addConsoleLog(`User ${tgId} fetched successfully from Firebase`, 'success');
                     return doc.data();
                 } else {
-                    console.log(`User with ID ${tgId} not found. Will create new user.`);
+                    addConsoleLog(`User ${tgId} not found in Firebase`, 'info');
                     return null;
                 }
-
             } catch (error) {
-                // If the fetch fails (network, rules, timeout), it's caught here.
-                console.error("Firebase fetchUser Error:", error);
-                // The error is now thrown, which will be caught in loadUserState to show an error screen.
-                throw new Error(`Failed to fetch user data: ${error.message}`); 
+                addConsoleLog(`Firebase fetchUser Error for ${tgId}: ${error.message}`, 'error');
+                return null;
             }
         }
 
         async function saveUser(user) {
-            if (!db) return; 
+            if (!db) {
+                addConsoleLog("Firebase DB not available for saveUser", 'error');
+                return; 
+            }
             try {
                 const userRef = db.collection('users').doc(String(user.telegramId));
                 await userRef.set(user, { merge: true });
+                addConsoleLog(`User ${user.telegramId} saved successfully to Firebase`, 'success');
             } catch (error) {
-                console.error("Firebase saveUser Error:", error);
-                showToast("Error: Could not save data to Firebase.", 5000);
+                addConsoleLog(`Firebase saveUser Error for ${user.telegramId}: ${error.message}`, 'error');
             }
         }
         
@@ -433,10 +506,11 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            addConsoleLog(`Creating new user: ${newUser.name} (${tgId})`, 'info');
+
             if (refCodeFromUrl && db) { 
                 const referrer = await getReferrerByCode(refCodeFromUrl);
                 if (referrer && referrer.telegramId !== tgId) {
-                    // Referral applied only if user is new or hasn't been referred yet (handled in loadUserState)
                     await applyReferral(newUser, referrer);
                     newUser.referredBy = referrer.referralCode; 
                 }
@@ -447,26 +521,33 @@
         }
 
         async function getReferrerByCode(code) {
-            if (!db) return null; 
+            if (!db) {
+                addConsoleLog("Firebase DB not available for getReferrerByCode", 'error');
+                return null;
+            }
             try {
                 const snapshot = await db.collection('users').where('referralCode', '==', code).limit(1).get();
                 if (!snapshot.empty) {
+                    addConsoleLog(`Referrer found for code: ${code}`, 'success');
                     return {
                         id: snapshot.docs[0].id,
                         ...snapshot.docs[0].data()
                     };
                 }
+                addConsoleLog(`No referrer found for code: ${code}`, 'info');
                 return null;
             } catch (error) {
-                 console.error("Firebase getReferrerByCode Error:", error);
+                 addConsoleLog(`Firebase getReferrerByCode Error for ${code}: ${error.message}`, 'error');
                  return null;
             }
         }
 
         async function applyReferral(refereeUser, referrerUser) {
-            if (!db) return; 
+            if (!db) {
+                addConsoleLog("Firebase DB not available for applyReferral", 'error');
+                return false;
+            }
             try {
-                // Referee receives bonus instantly (will be saved with the new user object or later)
                 refereeUser.balanceUSD += REFERRAL_BONUS_REFEREE_USD;
                 
                 const referrerRef = db.collection('users').doc(String(referrerUser.telegramId));
@@ -488,228 +569,152 @@
                     });
                 });
 
+                addConsoleLog(`Referral applied: ${refereeUser.name} referred by ${referrerUser.name}`, 'success');
                 showToast(`+${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX bonus from referral!`);
+                return true;
             } catch (error) {
-                 console.error("Firebase applyReferral Error:", error);
-                 // Revert referee bonus if transaction failed
-                 refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD; 
+                 addConsoleLog(`Firebase applyReferral Error: ${error}`, 'error');
+                 refereeUser.balanceUSD -= REFERRAL_BONUS_REFEREE_USD;
                  return false;
             }
-            return true;
         }
         
         async function submitWithdrawalRequest(request) {
-            if (!db) return; 
+            if (!db) {
+                addConsoleLog("Firebase DB not available for submitWithdrawalRequest", 'error');
+                return; 
+            }
              try {
                 await db.collection('withdrawals').add({
                     ...request,
                     status: 'pending',
                     requestedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                addConsoleLog(`Withdrawal request submitted for user ${request.userId}: ${request.amountTRX} TRX`, 'success');
             } catch (error) {
-                 console.error("Firebase submitWithdrawalRequest Error:", error);
-                 showToast("Error submitting withdrawal request.", 5000);
+                 addConsoleLog(`Firebase submitWithdrawalRequest Error: ${error.message}`, 'error');
             }
         }
 
-        async function fetchWithdrawals() {
-            if (!db) return [];
-            try {
-                // ⚠️ CRITICAL NOTE: This query requires a Firestore Composite Index on the 'withdrawals' collection
-                // (status ASC, requestedAt DESC). Without this index, the query will fail silently and return no data.
-                const snapshot = await db.collection('withdrawals')
-                    .where('status', '==', 'pending')
-                    .orderBy('requestedAt', 'desc')
-                    .get();
-                
-                return snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-            } catch (error) {
-                console.error("Firebase fetchWithdrawals Error:", error);
-                showToast("Error fetching withdrawal requests (Admin). Check Console/Indexes.", 6000);
-                return [];
+        function saveUserStateLocalOrFirebase() {
+            if (currentUser) {
+                localStorage.setItem('tronAdsUser', JSON.stringify(currentUser));
+                if (db) saveUser(currentUser); 
             }
         }
 
-        async function updateWithdrawalStatus(docId, status) {
-            if (!db) return false;
+        // --- TELEGRAM BOT INTEGRATION ---
+        async function sendToTelegram(message, isMarkdown = false) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const payload = {
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                disable_web_page_preview: true
+            };
+            if (isMarkdown) {
+                payload.parse_mode = 'MarkdownV2';
+            }
             try {
-                await db.collection('withdrawals').doc(docId).update({
-                    status: status,
-                    processedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    processedBy: currentUser.telegramId
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-                return true;
-            } catch (error) {
-                console.error("Firebase updateWithdrawalStatus Error:", error);
-                return false;
-            }
-        }
-
-        // --- DATA/STATE MANAGEMENT (Authentication and Load) ---
-
-        async function loadUserState() {
-            const urlParams = new URLSearchParams(window.location.search);
-            // Check both 'start' and 'ref' for backwards compatibility/flexibility
-            const refCodeFromUrl = urlParams.get('start')?.split(' ')[0] || urlParams.get('ref'); 
-
-            if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initDataUnsafe.user) {
-                throw new Error("Telegram user data not found. Please open the app via the Telegram Bot.");
-            }
-            
-            const tgUser = Telegram.WebApp.initDataUnsafe.user;
-            const tgId = tgUser.id;
-            
-            if (!db) {
-                throw new Error("Database connection failed. Please check internet or contact support.");
-            }
-
-            let user = await fetchUser(tgId);
-            
-            if (!user) {
-                user = await createNewUser(tgUser, refCodeFromUrl);
-            }
-            
-            // Daily reset logic
-            const today = new Date().toDateString();
-            if (user.lastAdWatchDate !== today) {
-                user.adsWatchedToday = 0;
-                user.lastAdWatchDate = today;
-                await saveUser(user); 
-            }
-            
-            // Check for referral if not already referred
-            if (refCodeFromUrl && !user.referredBy && refCodeFromUrl !== user.referralCode) {
-                const referrer = await getReferrerByCode(refCodeFromUrl);
-                if (referrer && referrer.telegramId !== tgId) {
-                    const success = await applyReferral(user, referrer);
-                    if(success) {
-                        user.referredBy = referrer.referralCode; 
-                        await saveUser(user); 
-                    } else {
-                        console.warn("Referral link application failed due to transaction error.");
-                    }
-                }
-            }
-            
-            currentUser = user; 
-        }
-        
-        async function saveUserStateLocalOrFirebase() {
-            if (currentUser && currentUser.telegramId && db) { 
-                await saveUser(currentUser); // Wait for save operation to complete
-            } else {
-                console.warn("User state could not be saved to Firebase. DB or TG ID missing.");
-            }
-            updateUI(); // Update UI after saving the state
-        }
-
-        async function fetchTRXPrice() {
-            try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
                 const data = await response.json();
-                if (data.tron && data.tron.usd) {
-                    currentTRXPrice = data.tron.usd;
-                } else {
-                    currentTRXPrice = FALLBACK_TRX_PRICE;
+                if (!data.ok) {
+                    addConsoleLog(`Telegram API Error: ${data.description}`, 'error');
                 }
             } catch (error) {
-                console.error("Error fetching TRX price, using fallback:", error);
-                currentTRXPrice = FALLBACK_TRX_PRICE;
+                addConsoleLog(`Network Error sending to Telegram: ${error.message}`, 'error');
             }
         }
-        
-        // --- UI RENDER (Application) ---
 
+        // --- UI RENDERING ---
         function updateUI() {
             if (!currentUser) return;
-            // Handle case where balanceUSD might be undefined or null
-            const balanceUSD = currentUser.balanceUSD || 0; 
-            const balanceTRX = convertUSDToTRX(balanceUSD).toFixed(4);
             
-            profileNameDisplay.innerHTML = `${currentUser.name}${currentUser.telegramId ? ' <i class="fas fa-check-circle verified-badge"></i>' : ''}<button class="edit-name-btn" id="editNameBtn"><i class="fas fa-pencil-alt"></i></button>`;
+            profileNameDisplay = document.getElementById('profileNameDisplay');
+            userPointsDisplay = document.getElementById('userPointsDisplay');
+            adsWatchedTodayEl = document.getElementById('adsWatchedToday');
+            adsLeftTodayEl = document.getElementById('adsLeftToday');
+            totalAdsWatchedEl = document.getElementById('totalAdsWatched');
             
-            const editNameBtn = document.getElementById('editNameBtn');
-            if(editNameBtn) editNameBtn.addEventListener('click', promptForNewName);
-
-            userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${balanceTRX} TRX`;
-            
-            // Use logical OR for null/undefined fields
-            adsWatchedTodayEl.textContent = currentUser.adsWatchedToday || 0;
-            adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0));
-            totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime || 0;
-
-            const watchBtn = document.getElementById('watchDailyAdBtn');
-            if (watchBtn) {
-                const adsLeft = ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0);
-                const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
-                watchBtn.disabled = (adsLeft <= 0);
-                watchBtn.textContent = adsLeft > 0 ? `Watch Ad & Earn ${earnedTRX} TRX` : `Daily Limit Reached`;
-            }
+            if (profileNameDisplay) profileNameDisplay.textContent = currentUser.name;
+            if (userPointsDisplay) userPointsDisplay.innerHTML = `<i class="fas fa-bolt"></i> ${convertUSDToTRX(currentUser.balanceUSD).toFixed(4)} TRX`;
+            if (adsWatchedTodayEl) adsWatchedTodayEl.textContent = currentUser.adsWatchedToday;
+            if (adsLeftTodayEl) adsLeftTodayEl.textContent = Math.max(0, ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday);
+            if (totalAdsWatchedEl) totalAdsWatchedEl.textContent = currentUser.totalAdsWatchedLifetime || 0;
             
             loadProfilePicture();
         }
 
-        function navigateTo(page) {
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
-            
-            if (page === 'home') renderHomePage();
-            else if (page === 'referral') renderReferralPage();
-            else if (page === 'withdraw') renderWithdrawPage();
-            
-            updateUI();
-        }
-        
         function renderHomePage() {
-            const earnedTRX = convertUSDToTRX(USD_PER_AD).toFixed(5);
             mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-tv"></i> Daily Ad</h2>
+                <h2 class="section-title"><i class="fas fa-home"></i> Daily Ads</h2>
                 <div class="task-card">
-                    <p class="task-description">
-                        Watch an advertisement daily and earn <strong>${earnedTRX} TRX</strong> (worth $${USD_PER_AD.toFixed(3)}). You have <strong>${Math.max(0, ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0))}</strong> ads left today.
-                    </p>
-                    <button class="btn btn-primary" id="watchDailyAdBtn">
-                        Watch Ad & Earn ${earnedTRX} TRX
+                    <div class="task-description">
+                        <p>Watch ads and earn TRX every day! You can watch up to ${ADS_PER_DAY_LIMIT} ads per day.</p>
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: var(--primary-color);"><i class="fas fa-info-circle"></i> <strong>${(ADS_PER_DAY_LIMIT - currentUser.adsWatchedToday)}</strong> ads remaining today.</p>
+                    </div>
+                    <button class="btn btn-primary" id="watchDailyAdBtn" ${currentUser.adsWatchedToday >= ADS_PER_DAY_LIMIT ? 'disabled' : ''}>
+                        <i class="fas fa-play-circle"></i> Watch Ad (Earn ${convertUSDToTRX(USD_PER_AD).toFixed(5)} TRX)
                     </button>
                 </div>
                 
-                ${currentUser && currentUser.telegramId == ADMIN_TELEGRAM_ID ? `
-                    <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-user-shield"></i> Admin Panel</h2>
-                    <div class="task-card">
-                        <p class="task-description">
-                            Manage users and process withdrawal requests.
-                        </p>
-                        <button class="btn btn-secondary" id="openAdminPanelBtn">
-                            <i class="fas fa-tools"></i> Open Admin Panel
-                        </button>
+                <h2 class="section-title"><i class="fas fa-chart-line"></i> Statistics</h2>
+                <div class="task-card">
+                    <div class="stats-display">
+                        <div class="stat-item"><div class="stat-value">${convertUSDToTRX(currentUser.balanceUSD).toFixed(4)}</div><div class="stat-label">TRX Balance</div></div>
+                        <div class="stat-item"><div class="stat-value">${(currentUser.balanceUSD || 0).toFixed(3)}$</div><div class="stat-label">USD Value</div></div>
+                        <div class="stat-item"><div class="stat-value">${currentUser.totalAdsWatchedLifetime || 0}</div><div class="stat-label">Total Ads</div></div>
                     </div>
-                ` : ''}
+                </div>
+                
+                <h2 class="section-title"><i class="fas fa-cog"></i> Settings</h2>
+                <div class="task-card">
+                    <div class="input-group">
+                        <label class="input-label">Display Name</label>
+                        <div style="display: flex; align-items: center;">
+                            <input type="text" class="input-field" id="displayNameInput" value="${currentUser.name}" style="flex: 1;">
+                            <button class="edit-name-btn" id="saveDisplayNameBtn"><i class="fas fa-save"></i></button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Theme</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn ${document.body.classList.contains('dark-mode') ? '' : 'btn-primary'}" id="lightThemeBtn" style="flex: 1;">Light</button>
+                            <button class="btn ${document.body.classList.contains('dark-mode') ? 'btn-primary' : ''}" id="darkThemeBtn" style="flex: 1;">Dark</button>
+                        </div>
+                    </div>
+                    ${currentUser.telegramId === ADMIN_TELEGRAM_ID ? `<button class="btn btn-secondary" id="adminPanelBtn" style="margin-top: 15px;"><i class="fas fa-crown"></i> Admin Panel</button>` : ''}
+                </div>
             `;
-            document.getElementById('watchDailyAdBtn')?.addEventListener('click', handleWatchDailyAd);
-            document.getElementById('openAdminPanelBtn')?.addEventListener('click', renderAdminPanel);
+            
+            document.getElementById('watchDailyAdBtn').addEventListener('click', showAdAndRewardSimulation);
+            document.getElementById('saveDisplayNameBtn').addEventListener('click', saveDisplayName);
+            document.getElementById('lightThemeBtn').addEventListener('click', () => setTheme('light'));
+            document.getElementById('darkThemeBtn').addEventListener('click', () => setTheme('dark'));
+            if (document.getElementById('adminPanelBtn')) {
+                document.getElementById('adminPanelBtn').addEventListener('click', showAdminPanel);
+            }
         }
 
         function renderReferralPage() {
-            const referralLink = `https://t.me/share/url?url=https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}&text=⚡ TronAdsFaucet ile her gün reklam izleyerek kolayca TRX kazan! Hemen katılmak için linke tıkla:`;
-
-            const referredUsersCount = currentUser.referredUsers ? currentUser.referredUsers.length : 0;
-            const earnedUSD = referredUsersCount * REFERRAL_BONUS_REFERRER_USD;
-            const earnedTRX = convertUSDToTRX(earnedUSD).toFixed(4);
-            const referrerBonusTRX = convertUSDToTRX(REFERRAL_BONUS_REFERRER_USD).toFixed(5);
-            const refereeBonusTRX = convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5);
-            
-            const hasReferredBy = !!currentUser.referredBy;
-
-
+            const referralLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}`;
             mainContent.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-share-alt"></i> Refer & Earn</h2>
+                <h2 class="section-title"><i class="fas fa-users"></i> Referral Program</h2>
                 <div class="task-card">
-                    <p class="task-description">
-                        Invite friends and earn <strong>${referrerBonusTRX} TRX</strong> for each friend who joins using your link. Your friends will also get <strong>${refereeBonusTRX} TRX</strong> as a welcome bonus!
-                    </p>
+                    <div class="task-description">
+                        <p>Invite friends and earn ${convertUSDToTRX(REFERRAL_BONUS_REFERRER_USD).toFixed(5)} TRX for each friend who joins!</p>
+                        <p>Your friend will also get ${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX as a welcome bonus.</p>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Your Referral Link</label>
+                        <div class="referral-input-group">
+                            <input type="text" class="referral-input" id="referralLinkInput" value="${referralLink}" readonly>
+                            <button class="copy-btn" id="copyReferralLinkBtn"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
                     <div class="input-group">
                         <label class="input-label">Your Referral Code</label>
                         <div class="referral-input-group">
@@ -717,499 +722,436 @@
                             <button class="copy-btn" id="copyReferralCodeBtn"><i class="fas fa-copy"></i></button>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <label class="input-label">Your Referral Link</label>
-                        <div class="referral-input-group">
-                            <input type="text" class="referral-input" id="referralLinkInput" value="https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}" readonly>
-                            <button class="copy-btn" id="copyReferralLinkBtn"><i class="fas fa-copy"></i></button>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" id="shareReferralBtn">
-                        <i class="fas fa-share"></i> Share Referral Link
-                    </button>
                 </div>
                 
-                <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-link"></i> Manually Use Code</h2>
-                <div class="task-card">
-                    ${hasReferredBy ? `
-                        <p class="task-description" style="color:#4CAF50; font-weight:600;">
-                            <i class="fas fa-check-circle"></i> You have already been referred by code: <strong>${currentUser.referredBy}</strong>. You cannot use another code.
-                        </p>
-                    ` : `
-                        <p class="task-description">
-                            If you have a referral code, enter it below to claim your <strong>${refereeBonusTRX} TRX</strong> bonus.
-                        </p>
-                        <div class="input-group">
-                            <label class="input-label">Referral Code</label>
-                            <input type="text" class="input-field" id="manualReferralCodeInput" placeholder="Enter code here" maxlength="8" style="text-transform: uppercase;">
-                        </div>
-                        <button class="btn btn-primary" id="submitManualReferralBtn">
-                            Apply Code & Claim Bonus
-                        </button>
-                        <div class="error-message" id="manualReferralMessage" style="display:none;"></div>
-                    `}
-                </div>
-
-                <h2 class="section-title" style="margin-top: 40px;"><i class="fas fa-chart-line"></i> Referral Stats</h2>
+                <h2 class="section-title"><i class="fas fa-trophy"></i> Referral Stats</h2>
                 <div class="task-card">
                     <div class="stats-display">
-                        <div class="stat-item"><div class="stat-value">${referredUsersCount}</div><div class="stat-label">Referred</div></div>
-                        <div class="stat-item"><div class="stat-value">${earnedTRX}</div><div class="stat-label">Earned TRX</div></div>
-                        <div class="stat-item"><div class="stat-value">$${earnedUSD.toFixed(2)}</div><div class="stat-label">Earned USD</div></div>
+                        <div class="stat-item"><div class="stat-value">${currentUser.referredUsers ? currentUser.referredUsers.length : 0}</div><div class="stat-label">Referred Users</div></div>
+                        <div class="stat-item"><div class="stat-value">${convertUSDToTRX((currentUser.referredUsers ? currentUser.referredUsers.length : 0) * REFERRAL_BONUS_REFERRER_USD).toFixed(4)}</div><div class="stat-label">Earned TRX</div></div>
                     </div>
                 </div>
             `;
-            document.getElementById('copyReferralCodeBtn')?.addEventListener('click', () => copyToClipboard(currentUser.referralCode, 'Referral code copied!'));
-            document.getElementById('copyReferralLinkBtn')?.addEventListener('click', () => copyToClipboard(`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${currentUser.referralCode}`, 'Referral link copied!'));
-            document.getElementById('shareReferralBtn')?.addEventListener('click', () => {
-                window.open(referralLink, '_blank');
-            });
-
-            if (!hasReferredBy) {
-                 document.getElementById('submitManualReferralBtn')?.addEventListener('click', handleManualReferral);
-            }
+            
+            document.getElementById('copyReferralLinkBtn').addEventListener('click', () => copyToClipboard(referralLink, 'Referral link copied!'));
+            document.getElementById('copyReferralCodeBtn').addEventListener('click', () => copyToClipboard(currentUser.referralCode, 'Referral code copied!'));
         }
 
         function renderWithdrawPage() {
-            const balanceUSD = currentUser.balanceUSD || 0;
-            const balanceTRX = convertUSDToTRX(balanceUSD).toFixed(4);
-            const minWithdrawTRX = MIN_WITHDRAW_TRX;
-            const canWithdraw = parseFloat(balanceTRX) >= minWithdrawTRX;
+            const userBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
+            const canWithdraw = userBalanceTRX >= MIN_WITHDRAW_TRX;
             
             mainContent.innerHTML = `
                 <h2 class="section-title"><i class="fas fa-wallet"></i> Withdraw TRX</h2>
                 <div class="task-card">
-                    <p class="task-description">
-                        Your current balance: <span class="balance">${balanceTRX} TRX</span> <span class="usd-val">($${balanceUSD.toFixed(2)})</span>.
-                        Minimum withdrawal amount: <strong>${minWithdrawTRX} TRX</strong>.
-                        Withdrawals are processed manually within 24 hours.
-                    </p>
-                    <div class="input-group">
-                        <label class="input-label">TRON (TRX) Wallet Address</label>
-                        <input type="text" class="input-field" id="walletAddressInput" placeholder="T..." maxlength="34">
+                    <div class="task-description">
+                        <p>Withdraw your TRX earnings to your Tron wallet address. Minimum withdrawal: <strong>${MIN_WITHDRAW_TRX} TRX</strong>.</p>
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: ${canWithdraw ? 'var(--primary-color)' : '#FF5722'};"><i class="fas ${canWithdraw ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> <strong>${userBalanceTRX.toFixed(4)} TRX</strong> available ${canWithdraw ? '(Ready to withdraw)' : `(Need ${(MIN_WITHDRAW_TRX - userBalanceTRX).toFixed(4)} more TRX)`}.</p>
                     </div>
                     <div class="input-group">
-                        <label class="input-label">Amount (TRX)</label>
-                        <input type="number" class="input-field" id="withdrawAmountInput" min="${minWithdrawTRX}" max="${balanceTRX}" step="0.001" value="${canWithdraw ? balanceTRX : 0}">
+                        <label class="input-label">Tron Wallet Address</label>
+                        <input type="text" class="input-field" id="tronWalletAddress" placeholder="Enter your TRX wallet address">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Withdrawal Amount (TRX)</label>
+                        <input type="number" class="input-field" id="withdrawalAmount" min="${MIN_WITHDRAW_TRX}" max="${userBalanceTRX.toFixed(4)}" step="0.001" value="${userBalanceTRX >= MIN_WITHDRAW_TRX ? userBalanceTRX.toFixed(4) : '0'}">
                     </div>
                     <button class="btn btn-primary" id="submitWithdrawalBtn" ${!canWithdraw ? 'disabled' : ''}>
                         <i class="fas fa-paper-plane"></i> Request Withdrawal
                     </button>
-                    <div class="error-message" id="withdrawErrorMessage" style="display:none;"></div>
+                </div>
+                
+                <h2 class="section-title"><i class="fas fa-history"></i> Withdrawal History</h2>
+                <div class="task-card">
+                    <p style="text-align: center; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Withdrawal history will be displayed here.</p>
                 </div>
             `;
-            document.getElementById('submitWithdrawalBtn')?.addEventListener('click', handleWithdrawal);
-        }
-
-        // --- EVENT HANDLERS (The Ad logic is here) ---
-
-        function handleWatchDailyAd() {
-            if (!currentUser) return;
             
-            const adsLeft = ADS_PER_DAY_LIMIT - (currentUser.adsWatchedToday || 0);
-            if (adsLeft <= 0) {
-                showToast('Daily ad limit reached. Come back tomorrow!');
-                console.warn('Daily ad limit reached. User attempted to watch ad but limit is 0.');
-                return;
-            }
-            
-            const watchBtn = document.getElementById('watchDailyAdBtn');
-            if (!watchBtn) return;
-            
-            // Adexora Promise-based ad attempt
-            if (typeof window[ADEXORA_AD_FUNCTION_NAME] === 'function') {
-                watchBtn.disabled = true; 
-                showToast("Ad loading (Adexora)... Please wait.");
-                
-                const adTimeout = setTimeout(() => {
-                    if (watchBtn.disabled) {
-                        console.warn("Adexora ad call timed out (10s). Re-enabling button.");
-                        showToast('Ad service unresponsive. Please try again.', 5000);
-                        watchBtn.disabled = false;
-                        updateUI();
-                    }
-                }, 10000);
-
-                window[ADEXORA_AD_FUNCTION_NAME]()
-                .then(() => {
-                    clearTimeout(adTimeout);
-                    rewardUserForAd();
-                })
-                .catch(error => {
-                    clearTimeout(adTimeout);
-                    console.error("Adexora ad error or dismissed:", error);
-                    showToast('Ad failed or was dismissed. Please try again.', 4000);
-                })
-                .finally(() => {
-                    watchBtn.disabled = false;
-                    updateUI(); 
-                });
-            } else {
-                // Fallback to Simulation Ad if Adexora function is not loaded
-                console.warn("Adexora function not found. Falling back to simulation.");
-                showToast("Adexora not loaded or blocked. Simulating Ad...", 5000);
-                showAdAndRewardSimulation();
+            if (canWithdraw) {
+                document.getElementById('submitWithdrawalBtn').addEventListener('click', submitWithdrawal);
             }
         }
 
-        async function handleWithdrawal() {
-            const walletAddress = document.getElementById('walletAddressInput').value.trim();
-            const amountInput = document.getElementById('withdrawAmountInput').value;
-            const amountTRX = parseFloat(amountInput);
-            const errorEl = document.getElementById('withdrawErrorMessage');
+        function submitWithdrawal() {
+            const walletAddress = document.getElementById('tronWalletAddress').value.trim();
+            const amountTRX = parseFloat(document.getElementById('withdrawalAmount').value);
+            const userBalanceTRX = convertUSDToTRX(currentUser.balanceUSD);
             
-            errorEl.style.display = 'none';
-            
-            if (!walletAddress || walletAddress.length < 10) {
-                errorEl.textContent = 'Please enter a valid TRON wallet address.';
-                errorEl.style.display = 'block';
+            if (!walletAddress) {
+                showToast('Please enter your Tron wallet address');
                 return;
             }
             
-            if (isNaN(amountTRX) || amountTRX < MIN_WITHDRAW_TRX) {
-                errorEl.textContent = `Withdrawal amount must be at least ${MIN_WITHDRAW_TRX} TRX.`;
-                errorEl.style.display = 'block';
+            if (amountTRX < MIN_WITHDRAW_TRX) {
+                showToast(`Minimum withdrawal amount is ${MIN_WITHDRAW_TRX} TRX`);
                 return;
             }
             
-            const balanceTRX = convertUSDToTRX(currentUser.balanceUSD || 0);
-            if (amountTRX > balanceTRX) {
-                errorEl.textContent = `Insufficient balance. You have ${balanceTRX.toFixed(4)} TRX.`;
-                errorEl.style.display = 'block';
+            if (amountTRX > userBalanceTRX) {
+                showToast('Insufficient balance');
                 return;
             }
-            
-            const amountUSD = amountTRX * currentTRXPrice;
-            currentUser.balanceUSD -= amountUSD;
             
             const withdrawalRequest = {
                 userId: currentUser.telegramId,
                 userName: currentUser.name,
                 walletAddress: walletAddress,
                 amountTRX: amountTRX,
-                amountUSD: amountUSD
+                amountUSD: amountTRX * currentTRXPrice
             };
             
-            await submitWithdrawalRequest(withdrawalRequest);
-            await saveUserStateLocalOrFirebase();
+            submitWithdrawalRequest(withdrawalRequest);
             
-            showToast(`Withdrawal request for ${amountTRX.toFixed(4)} TRX submitted!`);
+            currentUser.balanceUSD -= withdrawalRequest.amountUSD;
+            saveUserStateLocalOrFirebase();
             
-            document.getElementById('walletAddressInput').value = '';
-            document.getElementById('withdrawAmountInput').value = convertUSDToTRX(currentUser.balanceUSD || 0).toFixed(4); 
+            showToast(`Withdrawal request submitted for ${amountTRX.toFixed(4)} TRX`);
+            addConsoleLog(`Withdrawal requested: ${amountTRX.toFixed(4)} TRX to ${walletAddress}`, 'success');
             
-            navigateTo('home');
+            sendToTelegram(`🔄 *Withdrawal Request:* User \`${currentUser.name}\` (${currentUser.telegramId}) requested ${amountTRX.toFixed(4)} TRX (${withdrawalRequest.amountUSD.toFixed(3)}$) to address \`${walletAddress}\`.`, true);
+            
+            updateUI();
+            renderWithdrawPage();
         }
 
-        async function handleManualReferral() {
-            const codeInput = document.getElementById('manualReferralCodeInput');
-            const messageEl = document.getElementById('manualReferralMessage');
-            const code = codeInput.value.trim().toUpperCase();
-            
-            messageEl.style.display = 'none';
-
-            if (!code || code.length !== 6) {
-                messageEl.textContent = 'Please enter a valid 6-character referral code.';
-                messageEl.className = 'error-message';
-                messageEl.style.display = 'block';
-                return;
-            }
-
-            if (currentUser.referredBy) {
-                messageEl.textContent = `You have already been referred by code: ${currentUser.referredBy}.`;
-                messageEl.className = 'admin-message admin-success'; // Change to success style as it's a statement
-                messageEl.style.display = 'block';
-                return;
-            }
-
-            if (code === currentUser.referralCode) {
-                messageEl.textContent = 'You cannot refer yourself.';
-                messageEl.className = 'error-message';
-                messageEl.style.display = 'block';
-                return;
-            }
-
-            const referrer = await getReferrerByCode(code);
-
-            if (!referrer) {
-                messageEl.textContent = 'Invalid referral code. Please check and try again.';
-                messageEl.className = 'error-message';
-                messageEl.style.display = 'block';
-                return;
-            }
-            
-            // Re-fetch current user data to ensure it's up-to-date before applying
-            const latestUser = await fetchUser(currentUser.telegramId);
-            if(latestUser.referredBy) {
-                 currentUser = latestUser;
-                 messageEl.textContent = `You have already been referred by code: ${currentUser.referredBy}.`;
-                 messageEl.className = 'admin-message admin-success';
-                 messageEl.style.display = 'block';
-                 return;
-            }
-
-            const success = await applyReferral(currentUser, referrer);
-            
-            if (success) {
-                currentUser.referredBy = code; 
-                await saveUser(currentUser);
-                
-                messageEl.textContent = `Code applied successfully! You received ${convertUSDToTRX(REFERRAL_BONUS_REFEREE_USD).toFixed(5)} TRX.`;
-                messageEl.className = 'admin-message admin-success';
-                messageEl.style.display = 'block';
-                
-                // Re-render to hide the input field
-                renderReferralPage(); 
-            } else {
-                messageEl.textContent = 'An error occurred while applying the referral. Please try again later.';
-                messageEl.className = 'error-message';
-                messageEl.style.display = 'block';
-            }
-        }
-
-        function promptForNewName() {
-            const newName = prompt('Enter your new name:', currentUser.name);
-            if (newName && newName.trim() !== '' && newName !== currentUser.name) {
-                currentUser.name = newName.trim();
+        function saveDisplayName() {
+            const newName = document.getElementById('displayNameInput').value.trim();
+            if (newName && newName !== currentUser.name) {
+                currentUser.name = newName;
                 saveUserStateLocalOrFirebase();
+                updateUI();
+                showToast('Display name updated!');
+                addConsoleLog(`User display name updated to: ${newName}`, 'info');
             }
         }
 
-        function sendToTelegram(message, isSilent) {
-            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-            const payload = {
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'MarkdownV2',
-                disable_notification: isSilent,
-            };
-
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(e => console.error("Telegram API Error:", e));
-        }
-        
-        // --- ADMIN PANEL FUNCTIONS ---
-
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const themeIcon = document.getElementById('themeToggle').querySelector('i');
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.className = 'fas fa-moon';
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('tronAdsTheme', 'dark');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
             } else {
-                themeIcon.className = 'fas fa-sun';
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('tronAdsTheme', 'light');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
             }
         }
-        
-        async function renderAdminPanel() {
-            if (currentUser.telegramId != ADMIN_TELEGRAM_ID) return;
 
-            const adminContentEl = document.getElementById('adminPanelContent');
-            const mainAppContentEl = document.getElementById('mainAppContent');
+        // --- ADMIN PANEL ---
+        async function showAdminPanel() {
+            document.getElementById('mainAppContent').style.display = 'none';
+            document.getElementById('adminPanelContent').style.display = 'block';
             
-            mainAppContentEl.style.display = 'none';
-            adminContentEl.style.display = 'block';
+            let users = [];
+            let withdrawals = [];
             
-            adminContentEl.innerHTML = `
-                <div class="admin-container">
-                    <h1>Admin Panel</h1>
-                    <p class="admin-warning" style="display:block; text-align: center;">Loading withdrawal requests... (Ensure Firestore Index is created: withdrawals -> status ASC, requestedAt DESC)</p>
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button class="btn btn-primary" id="closeAdminPanelBtn" style="flex: 1;">
-                            <i class="fas fa-arrow-left"></i> Back to Main App
-                        </button>
-                        <button class="btn btn-secondary" id="openAdminConsoleBtn" style="flex: 1; background: #FFC107;">
-                            <i class="fas fa-code"></i> Console/Tools
-                        </button>
-                    </div>
+            if (db) {
+                try {
+                    const usersSnapshot = await db.collection('users').get();
+                    users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     
-                    <div id="adminPanelTabs">
-                        <div id="withdrawalList"></div>
-                    </div>
-                    <div id="adminMessage" class="admin-message admin-success" style="display:none;"></div>
-                </div>
-            `;
-            
-            document.getElementById('closeAdminPanelBtn').addEventListener('click', () => {
-                adminContentEl.style.display = 'none';
-                mainAppContentEl.style.display = 'block';
-                navigateTo('home');
-            });
-            
-            document.getElementById('openAdminConsoleBtn').addEventListener('click', renderAdminConsolePage);
-
-            const withdrawalListEl = document.getElementById('withdrawalList');
-            const adminMessageEl = document.getElementById('adminMessage');
-            
-            const requests = await fetchWithdrawals();
-            
-            if (requests.length === 0) {
-                withdrawalListEl.innerHTML = '<p class="admin-warning" style="background:none; border:none; color:inherit; text-align: center;">No pending withdrawal requests found.</p>';
+                    const withdrawalsSnapshot = await db.collection('withdrawals').orderBy('requestedAt', 'desc').limit(50).get();
+                    withdrawals = withdrawalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    
+                    addConsoleLog(`Admin panel loaded: ${users.length} users, ${withdrawals.length} withdrawals`, 'success');
+                } catch (error) {
+                    addConsoleLog(`Admin panel data fetch error: ${error.message}`, 'error');
+                }
             } else {
-                let tableHtml = `
-                    <h2 class="section-title"><i class="fas fa-money-check-alt"></i> Pending Withdrawals</h2>
+                addConsoleLog("Firebase DB not available for admin panel", 'error');
+            }
+            
+            document.getElementById('adminPanelContent').innerHTML = `
+                <div class="admin-container">
+                    <h1><i class="fas fa-crown"></i> Admin Panel</h1>
+                    
+                    <div class="admin-message" id="adminMessage"></div>
+                    
+                    <h2 style="color: var(--primary-color); margin-top: 20px;">Console Logs</h2>
+                    <div id="consoleLogs"></div>
+                    
+                    <h2 style="color: var(--primary-color); margin-top: 20px;">User Management</h2>
                     <table>
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>User/Wallet</th>
-                                <th>Amount (TRX/USD)</th>
-                                <th>Time</th>
-                                <th>Action</th>
+                                <th>Name</th>
+                                <th>Balance</th>
+                                <th>Ads Today</th>
+                                <th>Total Ads</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                `;
-                requests.forEach(req => {
-                    const time = req.requestedAt && req.requestedAt.seconds ? new Date(req.requestedAt.seconds * 1000).toLocaleString() : 'N/A';
-                    tableHtml += `
-                        <tr data-id="${req.id}">
-                            <td>${String(req.userId).slice(-4)}</td>
-                            <td>${req.userName} / <small title="${req.walletAddress}">${req.walletAddress.slice(0, 10)}...</small></td>
-                            <td>${req.amountTRX.toFixed(4)} TRX ($${req.amountUSD.toFixed(2)})</td>
-                            <td>
-                                <small>${time}</small>
-                            </td>
-                            <td>
-                                <button class="btn-action process-btn" data-id="${req.id}">Paid</button>
-                                <button class="btn-action deduct reject-btn" data-id="${req.id}">Reject</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                tableHtml += `</tbody></table>`;
-                withdrawalListEl.innerHTML = tableHtml;
-            }
-
-            adminContentEl.querySelector('.admin-warning').style.display = 'none';
-
-            document.querySelectorAll('.process-btn, .reject-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const docId = e.target.getAttribute('data-id');
-                    const status = e.target.classList.contains('process-btn') ? 'paid' : 'rejected';
+                            ${users.map(user => `
+                                <tr>
+                                    <td>${user.telegramId}</td>
+                                    <td>${user.name}</td>
+                                    <td><span class="balance">${convertUSDToTRX(user.balanceUSD || 0).toFixed(4)} TRX</span><br><span class="usd-val">(${(user.balanceUSD || 0).toFixed(3)}$)</span></td>
+                                    <td>${user.adsWatchedToday || 0}</td>
+                                    <td>${user.totalAdsWatchedLifetime || 0}</td>
+                                    <td>
+                                        <button class="btn-action add" onclick="adminAddBalance('${user.telegramId}')">Add</button>
+                                        <button class="btn-action deduct" onclick="adminDeductBalance('${user.telegramId}')">Deduct</button>
+                                        <button class="btn-action" onclick="adminResetAds('${user.telegramId}')">Reset Ads</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                     
-                    const success = await updateWithdrawalStatus(docId, status);
+                    <h2 style="color: var(--primary-color); margin-top: 30px;">Withdrawal Requests</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Wallet</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${withdrawals.map(w => `
+                                <tr>
+                                    <td>${w.userName || 'N/A'}<br><small>${w.userId}</small></td>
+                                    <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis;">${w.walletAddress}</td>
+                                    <td>${w.amountTRX.toFixed(4)} TRX<br><span class="usd-val">(${w.amountUSD.toFixed(3)}$)</span></td>
+                                    <td><span style="color: ${w.status === 'completed' ? '#4CAF50' : w.status === 'rejected' ? '#F44336' : '#FF9800'}">${w.status}</span></td>
+                                    <td>${w.requestedAt ? new Date(w.requestedAt.toDate()).toLocaleDateString() : 'N/A'}</td>
+                                    <td>
+                                        ${w.status === 'pending' ? `
+                                            <button class="btn-action" onclick="adminProcessWithdrawal('${w.id}', 'completed')">Approve</button>
+                                            <button class="btn-action deduct" onclick="adminProcessWithdrawal('${w.id}', 'rejected')">Reject</button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                     
-                    if (success) {
-                        adminMessageEl.textContent = `Request ${docId.slice(-4)} marked as ${status}.`;
-                        adminMessageEl.className = `admin-message ${status === 'paid' ? 'admin-success' : 'admin-error'}`;
-                        adminMessageEl.style.display = 'block';
-                        
-                        const row = e.target.closest('tr');
-                        row.remove();
-                        
-                        if (withdrawalListEl.querySelector('tbody') && withdrawalListEl.querySelector('tbody').children.length === 0) {
-                             // Re-render if the table becomes empty
-                             renderAdminPanel();
-                        }
-
-                    } else {
-                        adminMessageEl.textContent = `Error processing request ${docId.slice(-4)}.`;
-                        adminMessageEl.className = 'admin-message admin-error';
-                        adminMessageEl.style.display = 'block';
-                    }
-                });
-            });
-        }
-        
-        function renderAdminConsolePage() {
-            if (currentUser.telegramId != ADMIN_TELEGRAM_ID) return;
-
-            const adminPanelTabsEl = document.getElementById('adminPanelTabs');
-            const adminMessageEl = document.getElementById('adminMessage');
-
-            adminMessageEl.style.display = 'none';
-
-            adminPanelTabsEl.innerHTML = `
-                <h2 class="section-title"><i class="fas fa-code"></i> Developer Console</h2>
-                <div class="task-card">
-                    <p class="task-description">
-                        Execute JavaScript code in the application context. Use with extreme caution. Global objects: <code>currentUser</code>, <code>db</code>, <code>showToast</code>, <code>convertUSDToTRX</code>, etc.
-                    </p>
-                    <div class="input-group">
-                        <label class="input-label">JS Code to Execute</label>
-                        <textarea class="input-field" id="consoleInput" rows="5" placeholder="e.g., currentUser.balanceUSD = 10; saveUserStateLocalOrFirebase();"></textarea>
-                    </div>
-                    <button class="btn btn-primary" id="executeCodeBtn">
-                        <i class="fas fa-play"></i> Execute Code
-                    </button>
-                    
-                    <h3 style="margin-top: 20px; font-size: 1.2rem; color: var(--primary-color);">Output</h3>
-                    <pre style="background: var(--bg-dark); color: #00FF00; padding: 10px; border-radius: var(--border-radius-sm); overflow-x: auto; font-size: 0.9rem;" id="consoleOutput">Execution result will appear here.</pre>
-                    
-                    <button class="btn btn-secondary" id="backToWithdrawalsBtn" style="margin-top: 20px; background: var(--secondary-color);">
-                        <i class="fas fa-list"></i> Back to Withdrawals
-                    </button>
+                    <button class="btn btn-primary" onclick="hideAdminPanel()" style="margin-top: 30px; width: 100%;"><i class="fas fa-arrow-left"></i> Back to App</button>
                 </div>
             `;
-
-            document.getElementById('executeCodeBtn').addEventListener('click', handleExecuteCode);
-            document.getElementById('backToWithdrawalsBtn').addEventListener('click', () => {
-                renderAdminPanel(); 
+            
+            // Konsol loglarını admin panelinde göster
+            consoleLogs.forEach(log => {
+                const consoleLogsEl = document.getElementById('consoleLogs');
+                const logElement = document.createElement('div');
+                logElement.className = `console-log ${log.type}`;
+                logElement.innerHTML = `<strong>[${log.timestamp}]</strong> ${log.message}`;
+                consoleLogsEl.appendChild(logElement);
             });
         }
 
-        function handleExecuteCode() {
-            const code = document.getElementById('consoleInput').value;
-            const outputEl = document.getElementById('consoleOutput');
-            
-            try {
-                // eval() is used as requested by the user to execute arbitrary code for the admin console feature.
-                const result = eval(code); // eslint-disable-line no-eval
-                
-                if (code.includes('saveUserStateLocalOrFirebase')) {
-                    showToast('Code executed and user state saved/UI updated!', 4000);
-                }
-
-                outputEl.textContent = `SUCCESS:\n${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`;
-                outputEl.style.color = '#00FF00';
-            } catch (error) {
-                outputEl.textContent = `ERROR:\n${error.name}: ${error.message}`;
-                outputEl.style.color = 'var(--primary-color)'; // Red
-                showToast(`Code execution failed: ${error.message}`, 5000);
-            }
+        function hideAdminPanel() {
+            document.getElementById('mainAppContent').style.display = 'block';
+            document.getElementById('adminPanelContent').style.display = 'none';
+            renderHomePage();
         }
-        
-        // --- INITIALIZATION ---
 
-        async function initApp() {
-            try {
-                await loadUserState();
-                await fetchTRXPrice();
-                
-                profileNameDisplay = document.getElementById('profileNameDisplay');
-                userPointsDisplay = document.getElementById('userPointsDisplay');
-                adsWatchedTodayEl = document.getElementById('adsWatchedToday');
-                adsLeftTodayEl = document.getElementById('adsLeftToday');
-                totalAdsWatchedEl = document.getElementById('totalAdsWatched');
-                
-                document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-                
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.addEventListener('click', function() {
-                        navigateTo(this.getAttribute('data-page'));
+        // Admin panel fonksiyonları
+        window.adminAddBalance = async function(userId) {
+            const amount = prompt("Enter amount in USD to add:");
+            if (amount && !isNaN(parseFloat(amount))) {
+                try {
+                    const userRef = db.collection('users').doc(userId);
+                    await db.runTransaction(async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const newBalance = (userData.balanceUSD || 0) + parseFloat(amount);
+                            transaction.update(userRef, { balanceUSD: newBalance });
+                        }
                     });
+                    showAdminMessage(`Added $${parseFloat(amount).toFixed(3)} to user ${userId}`, 'success');
+                    addConsoleLog(`Admin added $${parseFloat(amount).toFixed(3)} to user ${userId}`, 'success');
+                    showAdminPanel(); // Refresh
+                } catch (error) {
+                    showAdminMessage(`Error: ${error.message}`, 'error');
+                    addConsoleLog(`Admin add balance error: ${error.message}`, 'error');
+                }
+            }
+        };
+
+        window.adminDeductBalance = async function(userId) {
+            const amount = prompt("Enter amount in USD to deduct:");
+            if (amount && !isNaN(parseFloat(amount))) {
+                try {
+                    const userRef = db.collection('users').doc(userId);
+                    await db.runTransaction(async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const newBalance = Math.max(0, (userData.balanceUSD || 0) - parseFloat(amount));
+                            transaction.update(userRef, { balanceUSD: newBalance });
+                        }
+                    });
+                    showAdminMessage(`Deducted $${parseFloat(amount).toFixed(3)} from user ${userId}`, 'success');
+                    addConsoleLog(`Admin deducted $${parseFloat(amount).toFixed(3)} from user ${userId}`, 'success');
+                    showAdminPanel(); // Refresh
+                } catch (error) {
+                    showAdminMessage(`Error: ${error.message}`, 'error');
+                    addConsoleLog(`Admin deduct balance error: ${error.message}`, 'error');
+                }
+            }
+        };
+
+        window.adminResetAds = async function(userId) {
+            try {
+                const userRef = db.collection('users').doc(userId);
+                await userRef.update({
+                    adsWatchedToday: 0,
+                    lastAdWatchDate: new Date().toDateString()
                 });
+                showAdminMessage(`Reset ads for user ${userId}`, 'success');
+                addConsoleLog(`Admin reset ads for user ${userId}`, 'success');
+                showAdminPanel(); // Refresh
+            } catch (error) {
+                showAdminMessage(`Error: ${error.message}`, 'error');
+                addConsoleLog(`Admin reset ads error: ${error.message}`, 'error');
+            }
+        };
+
+        window.adminProcessWithdrawal = async function(withdrawalId, status) {
+            try {
+                const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+                await withdrawalRef.update({ status: status });
                 
-                // Initial UI update and navigation
+                const withdrawalDoc = await withdrawalRef.get();
+                const withdrawalData = withdrawalDoc.data();
+                
+                showAdminMessage(`Withdrawal ${withdrawalId} ${status}`, 'success');
+                addConsoleLog(`Admin processed withdrawal ${withdrawalId} as ${status}`, 'success');
+                
+                sendToTelegram(`💰 *Withdrawal ${status.toUpperCase()}:* User \`${withdrawalData.userName}\` (${withdrawalData.userId}) - ${withdrawalData.amountTRX.toFixed(4)} TRX to \`${withdrawalData.walletAddress}\`.`, true);
+                
+                showAdminPanel(); // Refresh
+            } catch (error) {
+                showAdminMessage(`Error: ${error.message}`, 'error');
+                addConsoleLog(`Admin process withdrawal error: ${error.message}`, 'error');
+            }
+        };
+
+        function showAdminMessage(message, type) {
+            const messageEl = document.getElementById('adminMessage');
+            messageEl.textContent = message;
+            messageEl.className = `admin-message admin-${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
+        }
+
+        // --- INITIALIZATION ---
+        async function initializeApp() {
+            addConsoleLog("Initializing TronAdsFaucet application...", 'info');
+            
+            // Check for Telegram WebApp
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                addConsoleLog("Telegram WebApp initialized successfully", 'success');
+            } else {
+                addConsoleLog("Telegram WebApp not detected, running in standalone mode", 'warn');
+            }
+            
+            // Load saved theme
+            const savedTheme = localStorage.getItem('tronAdsTheme');
+            if (savedTheme === 'dark') {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+            
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                if (document.body.classList.contains('dark-mode')) {
+                    setTheme('light');
+                } else {
+                    setTheme('dark');
+                }
+            });
+            
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const page = this.getAttribute('data-page');
+                    if (page === 'home') renderHomePage();
+                    else if (page === 'referral') renderReferralPage();
+                    else if (page === 'withdraw') renderWithdrawPage();
+                });
+            });
+            
+            // Get user data
+            let tgUser = null;
+            let refCodeFromUrl = null;
+            
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe.user) {
+                tgUser = Telegram.WebApp.initDataUnsafe.user;
+                addConsoleLog(`Telegram user detected: ${tgUser.first_name} (ID: ${tgUser.id})`, 'success');
+                
+                // Check for referral code in start parameter
+                if (Telegram.WebApp.initDataUnsafe.start_param) {
+                    refCodeFromUrl = Telegram.WebApp.initDataUnsafe.start_param;
+                    addConsoleLog(`Referral code detected in URL: ${refCodeFromUrl}`, 'info');
+                }
+            } else {
+                // Demo mode for testing outside Telegram
+                tgUser = {
+                    id: 123456789,
+                    first_name: "Demo",
+                    last_name: "User",
+                    username: "demo_user"
+                };
+                addConsoleLog("Running in demo mode with test user", 'warn');
+            }
+            
+            // Load user data
+            if (tgUser) {
+                let userData = await fetchUser(tgUser.id);
+                
+                if (!userData) {
+                    userData = await createNewUser(tgUser, refCodeFromUrl);
+                } else {
+                    addConsoleLog(`Existing user loaded: ${userData.name}`, 'success');
+                    
+                    // Check if it's a new day to reset ad counter
+                    const today = new Date().toDateString();
+                    if (userData.lastAdWatchDate !== today) {
+                        userData.adsWatchedToday = 0;
+                        userData.lastAdWatchDate = today;
+                        addConsoleLog("New day detected, ad counter reset", 'info');
+                    }
+                }
+                
+                currentUser = userData;
                 updateUI();
-                navigateTo('home');
                 
+                // Show main app
                 loadingScreen.style.display = 'none';
                 fullAppContainer.style.display = 'block';
                 
-                console.log("App initialized successfully.");
+                // Render home page by default
+                renderHomePage();
                 
-            } catch (error) {
-                console.error("App Initialization Error:", error);
-                loadingError.textContent = `Initialization Error: ${error.message}. Please restart the bot or contact support.`;
+                addConsoleLog("Application initialized successfully", 'success');
+                
+                // Send welcome message to admin
+                if (currentUser.telegramId && currentUser.telegramId.toString() !== ADMIN_TELEGRAM_ID) {
+                    sendToTelegram(`👤 *New User Activity:* \`${currentUser.name}\` (${currentUser.telegramId}) opened the app. Balance: ${convertUSDToTRX(currentUser.balanceUSD).toFixed(4)} TRX.`, true);
+                }
+            } else {
+                loadingError.textContent = "User authentication failed. Please restart the bot.";
                 loadingError.style.display = 'block';
+                addConsoleLog("User authentication failed", 'error');
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Start the app
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
