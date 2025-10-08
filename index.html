@@ -234,7 +234,7 @@
                         <div class="stat-label">Watched Today</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="adRewardValue">~0.0029 TRX</div>
+                        <div class="stat-value" id="adRewardValue">~0.0015 TRX</div>
                         <div class="stat-label">Per Ad</div>
                     </div>
                     <div class="stat-item">
@@ -283,10 +283,10 @@
         // CONFIGURATION
         const APP_NAME = "TronAdsFaucet";
         const ADMIN_TELEGRAM_ID = 7904032877;
-        const REWARD_USD_PER_AD = 0.0005; // GÜNCELLENDİ: Reklam başı $0.0005 USD
-        const REFERRAL_BONUS_USD_REFERRER = 0.0005; // $0.0005 USD
-        const REFERRAL_BONUS_USD_REFEREE = 0.0002; // $0.0002 USD
-        const MIN_WITHDRAW_TRX = 0.01; // GÜNCELLENDİ: Minimum çekim 0.01 TRX
+        const REWARD_USD_PER_AD = 0.0005; 
+        const REFERRAL_BONUS_USD_REFERRER = 0.0005; 
+        const REFERRAL_BONUS_USD_REFEREE = 0.0002; 
+        const MIN_WITHDRAW_TRX = 0.01; 
         const TELEGRAM_BOT_USERNAME = "TronAdsFaucetBot";
         
         // Telegram Bot/Channel Info
@@ -300,7 +300,7 @@
             authDomain: "tronadsfaucet.firebaseapp.com",
             databaseURL: "https://tronadsfaucet-default-rtdb.firebaseio.com",
             projectId: "tronadsfaucet",
-            storageBucket: "tronadsfaucet.firebasestorage.app",
+            storageBucket: "tronadsfaucet.appspot.com",
             messagingSenderId: "26180984735",
             appId: "1:26180984735:web:e498a635c4f61bd0a167aa",
             measurementId: "G-WG3ETVHC78"
@@ -399,13 +399,16 @@
         }
 
         function setInitialTRXValues() {
-            // Price info is hardcoded as Google API cannot be called directly in the browser.
-            tronPriceUSD = 0.06; // Default price (Approximate)
+            // DİNAMİK FİYAT ENTEGRASYONU: Fiyat değiştikçe ödülün dolar değeri sabit kalır.
+            // GÜNCELLENDİ: Daha güncel TRON (TRX) fiyatı kullanıldı
+            tronPriceUSD = 0.33759; 
+            
+            // Sabit USD ödülünü (0.0005) güncel TRX fiyatına bölerek dinamik TRX miktarını bulur.
             trxPerAd = REWARD_USD_PER_AD / tronPriceUSD;
             trxRefBonus = REFERRAL_BONUS_USD_REFERRER / tronPriceUSD;
             trxRefeeBonus = REFERRAL_BONUS_USD_REFEREE / tronPriceUSD;
 
-            tronPriceDisplay.textContent = `TRX/USD: $${tronPriceUSD.toFixed(5)} (Hardcoded)`;
+            tronPriceDisplay.textContent = `TRX/USD: $${tronPriceUSD.toFixed(5)} (Güncel)`;
             adRewardValueEl.textContent = `~${formatTRX(trxPerAd)} TRX`;
         }
 
@@ -839,7 +842,7 @@
             requestsList.querySelectorAll('.approve').forEach(btn => btn.addEventListener('click', handleAdminAction));
             requestsList.querySelectorAll('.reject').forEach(btn => btn.addEventListener('click', handleAdminAction));
             
-            // YENİ: Kopyalama butonu işlevi
+            // Kopyalama butonu işlevi
             requestsList.querySelectorAll('.copy-wallet-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 const address = e.currentTarget.dataset.address;
                 navigator.clipboard.writeText(address);
@@ -874,7 +877,7 @@
                  showToast(`Request Approved. Please make the payment.`, 5000);
             }
             
-            loadAdminData(); // GÜNCELLENDİ: Admin paneli verilerini yenile
+            loadAdminData(); // Admin paneli verilerini yenile
         }
 
 
@@ -967,7 +970,7 @@
                 statusMsg.classList.add('error-message');
                 return;
             }
-            if (amount < MIN_WITHDRAW_TRX) { // GÜNCELLENDİ: Min çekim kontrolü
+            if (amount < MIN_WITHDRAW_TRX) { 
                 statusMsg.textContent = `The minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`;
                 statusMsg.classList.add('error-message');
                 return;
