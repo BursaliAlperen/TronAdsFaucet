@@ -130,12 +130,12 @@
             <div id="admin-panel" class="page">
                 <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
                 <div class="card">
-                    <h3>System Stats</h3>
+                    <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
                 </div>
                 
-                <h3 style="margin-top:25px;">Pending Withdrawal Requests</h3>
+                <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
                 <ul id="withdrawal-list">
                     <p style="color:var(--subtle-text);">Loading requests...</p>
                 </ul>
@@ -228,9 +228,14 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-        import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
+        // --- REALTIME DATABASE IMPORTS (Kullanıcı Verileri) ---
+        import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        
+        // --- FIRESTORE IMPORTS (Çekim Talepleri) ---
+        import { getFirestore, collection, addDoc, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+
         // --- CONFIGURATION ---
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAYJqf6Y090mN4fjQAR9m7hNil7hjn0HMg",
@@ -242,13 +247,12 @@
             appId: "1:110511122993:web:99099461844e1fbbe10310",
             measurementId: "G-VZ3Z6SFMXZ"
         };
-        // *** GÜNCELLENDİ: Yeni Admin ID eklendi (8392479231) ***
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti
-        const MAX_WITHDRAW_TRX = 10.00; // Yeni Maksimum Çekim Limiti
+        const MIN_WITHDRAW_TRX = 0.01; 
+        const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
         // --- GLOBAL STATE ---
@@ -258,8 +262,8 @@
 
         // --- FIREBASE INITIALIZATION ---
         const app = initializeApp(FIREBASE_CONFIG);
-        // getAnalytics(app); // Analytics kullanılmadığı için kapatıldı
-        const database = getDatabase(app);
+        const rtdb = getDatabase(app); // Realtime Database
+        const firestore = getFirestore(app); // Cloud Firestore
 
         // --- UTILITY FUNCTIONS ---
         const getUidFromTelegramId = (id) => `tg_user_${id}`;
@@ -306,17 +310,19 @@
             }
         }
         
-        // Real-time listener for user data
+        // Real-time listener for user data (RTDB)
         function setupUserListener() {
             if (!userUid) return;
-            const userRef = ref(database, 'users/' + userUid);
+            // RTDB Ref kullanıldı
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             
-            onValue(userRef, (snapshot) => {
+            // rtdbOnValue kullanıldı
+            rtdbOnValue(userRef, (snapshot) => {
                 let userData = snapshot.val();
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
-                    // Initialize New User
+                    // Initialize New User (RTDB Set kullanıldı)
                     const newUser = {
                         telegram_id: telegramId,
                         username: userTgData?.username || `user_${telegramId}`,
@@ -327,7 +333,7 @@
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
-                    set(userRef, newUser);
+                    rtdbSet(userRef, newUser);
                     userData = newUser;
                 }
 
@@ -348,16 +354,18 @@
                     document.getElementById('enter-referrer-code').placeholder = `Already referred by: ${userData.referred_by}`;
                     document.querySelector('#friends-page .input-group button').disabled = true;
                 }
+            }, (error) => {
+                console.error("User Data Listener Error:", error);
             });
         }
         
-        // --- AD VIEW LOGIC ---
+        // --- AD VIEW LOGIC (RTDB) ---
         
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
-            const userRef = ref(database, 'users/' + userUid);
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
             
-            get(userRef).then((snapshot) => {
+            rtdbGet(userRef).then((snapshot) => { // RTDB Get
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
@@ -370,15 +378,12 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-
-                // Adexora integration
                 window.showAdexora()
                   .then(() => {
-                    // REKLAM BAŞARILI OLDUĞUNDA ÖDÜL VERİLİR
                     adsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
-                    update(userRef, {
+                    rtdbUpdate(userRef, { // RTDB Update
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
                         last_ad_viewed: serverTimestamp()
@@ -388,7 +393,6 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    // HATA DURUMUNDA ÖDÜL VERİLMEZ
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
@@ -400,13 +404,12 @@
             });
         }
 
-        // --- REFERRAL LOGIC ---
+        // --- REFERRAL LOGIC (RTDB) ---
         
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
 
-            // YENİ, DAHA DETAYLI VE İLGİ ÇEKİCİ İNGİLİZCE METİN
             const shareText = 
 `💰 TRON ADS FAUCET - FREE TRX! 🚀
 
@@ -422,13 +425,11 @@ Join now and grab your free crypto reward:
 See you inside! #Tron #TRX #Crypto #FreeMoney`;
             
             if (navigator.share) {
-                // Mobil cihazlarda Telegram, WhatsApp gibi uygulamaları açar
                 navigator.share({ 
                     title: 'Tron Ads Faucet - Free TRX!', 
                     text: shareText 
                 });
             } else {
-                // WebApp/Masaüstü Kullanıcıları için panoya kopyalama
                 navigator.clipboard.writeText(shareText).then(() => {
                     window.Telegram.WebApp.showAlert("Promotional text copied to clipboard! Share it with your friends!");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
@@ -438,30 +439,30 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
         window.applyReferralCode = () => {
             const referrerCode = document.getElementById('enter-referrer-code').value.trim();
-            const userRef = ref(database, 'users/' + userUid);
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
 
             if (!referrerCode) return window.Telegram.WebApp.showAlert("Please enter a referral code.");
             if (referrerCode === telegramId) return window.Telegram.WebApp.showAlert("You cannot refer yourself.");
 
-            get(userRef).then((snapshot) => {
+            rtdbGet(userRef).then((snapshot) => { // RTDB Get
                 if (snapshot.val()?.referred_by) {
                     return window.Telegram.WebApp.showAlert("You have already used a referral code.");
                 }
                 
                 const referrerUid = getUidFromTelegramId(referrerCode); 
-                const referrerRef = ref(database, 'users/' + referrerUid);
+                const referrerRef = rtdbRef(rtdb, 'users/' + referrerUid); // RTDB Ref
 
-                get(referrerRef).then(rSnapshot => {
+                rtdbGet(referrerRef).then(rSnapshot => { // RTDB Get
                     if (!rSnapshot.exists()) return window.Telegram.WebApp.showAlert("Invalid referral code. User not found.");
                     
                     const rData = rSnapshot.val();
                     const newReferrerBalance = (rData.balance_usd || 0.0) + REFERRAL_BONUS_USD;
                     
-                    update(referrerRef, {
+                    rtdbUpdate(referrerRef, { // RTDB Update
                         balance_usd: newReferrerBalance
                     });
 
-                    update(userRef, {
+                    rtdbUpdate(userRef, { // RTDB Update
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
                     }).then(() => {
@@ -472,15 +473,20 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (Client-side logic düzeltildi) ---
+        // --- WITHDRAWAL LOGIC (RTDB Balance Update + Firestore Request Creation) ---
         
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
-            const userRef = ref(database, 'users/' + userUid);
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+            
+            if (!userUid || !telegramId) {
+                return window.Telegram.WebApp.showAlert("Withdrawal failed: User session not loaded. Please restart the bot.");
+            }
+
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
             const tronAddress = document.getElementById('tron-address').value.trim();
             const amountInTrx = parseFloat(document.getElementById('amount-trx').value);
-            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-
+            
             if (!tronAddress || !tronAddress.startsWith('T') || tronAddress.length < 34) {
                 return window.Telegram.WebApp.showAlert("Please enter a valid TRON address (starts with 'T').");
             }
@@ -488,12 +494,10 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
             
-            // MINIMUM LİMİT KONTROLÜ
             if (amountInTrx < MIN_WITHDRAW_TRX) {
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
 
-            // MAKSİMUM LİMİT KONTROLÜ
             if (amountInTrx > MAX_WITHDRAW_TRX) {
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Maximum withdrawal is ${MAX_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
@@ -502,11 +506,16 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
             withdrawSubmitBtn.disabled = true;
 
-            get(userRef).then(snapshot => {
+            // 1. RTDB'den Bakiye Kontrolü (rtdbGet)
+            rtdbGet(userRef).then(snapshot => {
                 const userData = snapshot.val();
-                const usdBalance = userData?.balance_usd || 0.0;
                 
-                // Bakiye Kontrolü (USD bazlı)
+                if (!userData) {
+                    throw new Error("User data is missing on Firebase.");
+                }
+                
+                const usdBalance = userData.balance_usd || 0.0;
+                
                 if (withdrawUsdAmount > usdBalance) {
                     const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
@@ -515,54 +524,59 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
                 const newUsdBalance = usdBalance - withdrawUsdAmount;
 
-                // Çekim talebi oluşturulur (Firebase Rules ile uyumlu olması gereken PUSH işlemi)
-                const requestRef = push(ref(database, 'withdrawal_requests'));
+                // 2. FIRESTORE'a Çekim Talebi Ekleme (addDoc)
+                const requestsCollection = collection(firestore, "withdrawal_requests");
                 
-                requestRef.set({
+                return addDoc(requestsCollection, {
                     user_id: userUid,
                     telegram_id: telegramId,
                     username: userData.username,
                     tron_address: tronAddress,
                     amount_usd: withdrawUsdAmount.toFixed(4),
                     amount_trx: amountInTrx.toFixed(4),
-                    status: "Pending", // Admin Panelinde düşmesi için bu değer kullanılır.
+                    status: "Pending", 
                     timestamp: serverTimestamp()
                 }).then(() => {
-                    // 1. İşlem başarılı: Kullanıcı bakiyesini düşür
-                    return update(userRef, { balance_usd: newUsdBalance });
-                }).then(() => {
-                    // 2. Başarı mesajı göster
-                    window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
-                    document.getElementById('amount-trx').value = '';
-                    // USD karşılığı gösterimini sıfırla
-                    document.getElementById('withdraw-usd-amount').textContent = '$0.00';
-                }).catch(e => {
-                    // Hata durumunda kullanıcıyı bilgilendir
-                    console.error("Firebase Withdrawal Error:", e);
-                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection or check Firebase Rules.");
-                }).finally(() => {
-                    withdrawSubmitBtn.disabled = false;
+                    // 3. RTDB'de Bakiye Düşürme (rtdbUpdate)
+                    return rtdbUpdate(userRef, { balance_usd: newUsdBalance });
                 });
+                
+            }).then(() => {
+                // Başarı mesajı göster
+                window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
+                document.getElementById('amount-trx').value = '';
+                document.getElementById('withdraw-usd-amount').textContent = '$0.00';
             }).catch(e => {
-                // Kullanıcı verisi çekilemezse bu hata gösterilir.
-                console.error("Firebase User Data Fetch Error:", e);
-                window.Telegram.WebApp.showAlert("Failed to retrieve user data. Please refresh the app.");
+                console.error("Withdrawal Error:", e);
+                
+                let errorMessage = "An error occurred during withdrawal. Please try again later.";
+                
+                if (e.message && e.message.includes("User data is missing")) {
+                    errorMessage = "User data could not be initialized. Please restart the bot and try again.";
+                } else if (e.code && e.code.includes("permission-denied")) {
+                    // Firebase Firestore veya RTDB izin hatası
+                    errorMessage = "Withdrawal failed: Database permission denied. Please check your Firebase Rules.";
+                } else if (e.message && e.message.includes("Failed to fetch")) {
+                    errorMessage = "Network error: Failed to connect to Firebase. Check your internet.";
+                }
+                
+                window.Telegram.WebApp.showAlert(`Withdrawal failed: ${errorMessage}`);
+            }).finally(() => {
                 withdrawSubmitBtn.disabled = false;
             });
         }
 
-        // --- ADMIN PANEL LOGIC ---
+        // --- ADMIN PANEL LOGIC (RTDB Stats + Firestore Requests) ---
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
-            // 1. Load System Stats (Total User Balance dahil)
-            const usersRef = ref(database, 'users');
-            onValue(usersRef, (snapshot) => {
+            // 1. Load System Stats (RTDB)
+            const usersRef = rtdbRef(rtdb, 'users');
+            rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
 
                 snapshot.forEach(userSnapshot => {
-                    // TÜM KULLANICILARIN USD BAKİYESİNİ TOPLA
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
                 });
@@ -571,22 +585,25 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
             });
 
-            // 2. Load Withdrawal Requests (Sadece Pending olanları listele)
-            const requestsRef = ref(database, 'withdrawal_requests');
-            onValue(requestsRef, (snapshot) => {
+            // 2. Load Withdrawal Requests (FIRESTORE)
+            const requestsColRef = collection(firestore, 'withdrawal_requests');
+            // Firestore Query (sadece Pending olanları getirir)
+            const q = query(requestsColRef, where("status", "==", "Pending"));
+            
+            // onSnapshot (Firestore Listener)
+            onSnapshot(q, (querySnapshot) => {
                 const ul = document.getElementById('withdrawal-list');
                 ul.innerHTML = ''; 
                 
                 const pendingRequests = [];
 
-                snapshot.forEach(requestSnapshot => {
-                    const request = requestSnapshot.val();
-                    const requestId = requestSnapshot.key;
+                querySnapshot.forEach(docSnapshot => {
+                    const request = docSnapshot.data();
+                    const requestId = docSnapshot.id; // Firestore Document ID
                     
-                    if (request.status === 'Pending') {
-                        const timestamp = request.timestamp || 0;
-                        pendingRequests.push({ ...request, requestId, timestamp });
-                    }
+                    // Firestore Timestamp'i milisaniyeye çevirme
+                    const timestamp = request.timestamp?.seconds * 1000 || 0; 
+                    pendingRequests.push({ ...request, requestId, timestamp });
                 });
 
                 pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
@@ -613,15 +630,20 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         window.processWithdrawal = (requestId, status) => {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
             
-            const requestRef = ref(database, 'withdrawal_requests/' + requestId);
+            // Firestore Document Ref
+            const requestDocRef = doc(firestore, 'withdrawal_requests', requestId);
             
-            update(requestRef, {
+            // Firestore Update (updateDoc)
+            updateDoc(requestDocRef, {
                 status: status,
                 processed_by_admin: telegramId,
                 processed_at: serverTimestamp()
             }).then(() => {
                 window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}.`);
                 window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }).catch(e => {
+                console.error("Firestore Update Error:", e);
+                window.Telegram.WebApp.showAlert(`Admin action failed: ${e.message}`);
             });
         }
         
