@@ -11,7 +11,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+    <script async src="https://partner.adextra.io/jt/48520a9568b1fe05f0e95b682c62971f478f89b2.js"></script>
 
     <style>
         /* CSS Variables for Theming - RED & WHITE */
@@ -154,7 +154,10 @@
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
                     <h3>Watch & Earn</h3>
                     <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">
+                    
+                    <div id="48520a9568b1fe05f0e95b682c62971f478f89b2"></div>
+
+                    <button id="watch-ad-btn" class="action-btn" style="margin-top: 15px;">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
                     <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
@@ -243,7 +246,7 @@
             authDomain: "tronadsfaucet-fd451.firebaseapp.com",
             databaseURL: "https://tronadsfaucet-fd451-default-rtdb.firebaseio.com",
             projectId: "tronadsfaucet-fd451",
-            storageBucket: "tronadsfaucet-fd451.firebasestorage.app",
+            storageBucket: "tronadsfaucet-fd451.appspot.com",
             messagingSenderId: "110511122993",
             appId: "1:110511122993:web:99099461844e1fbbe10310",
             measurementId: "G-VZ3Z6SFMXZ"
@@ -331,7 +334,7 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
-                        total_ads_watched: 0, // YENİ: Toplam reklam sayacı
+                        total_ads_watched: 0, 
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
@@ -370,7 +373,7 @@
             rtdbGet(userRef).then((snapshot) => { // RTDB Get
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
-                let totalAdsWatched = userData.total_ads_watched || 0; // YENİ: Toplam sayaç
+                let totalAdsWatched = userData.total_ads_watched || 0; 
                 const currentBalance = userData.balance_usd || 0.0;
 
                 if (adsWatched >= AD_LIMIT) {
@@ -379,33 +382,46 @@
 
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
-                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
+                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Ad Loading...'; 
 
-                window.showAdexora()
-                  .then(() => {
-                    adsWatched++;
-                    totalAdsWatched++; // YENİ: Toplamı da artır
-                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
+                // --- ADEXTRA ENTEGRASYON NOTU: SİMÜLASYON YOK ---
+                // Bu noktada Adextra'nın ödüllü reklam gösterme fonksiyonu (örneğin: window.Adextra.showRewardedAd()) çağrılmalıdır.
+                // Butona basıldığında reklamın açılması beklenir.
+                
+                // ÖDÜL MANTIĞI, Adextra'nın başarılı reklam gösterimini bildiren Geri Bildirim (Callback) fonksiyonuna taşınmalıdır.
+                // Aksi takdirde, reklam izlense bile ödül verilmeyecektir.
+                
+                window.Telegram.WebApp.showAlert("Ad loaded. If it's visible, watch it! The reward logic must be connected to Adextra's success callback.");
 
-                    rtdbUpdate(userRef, { // RTDB Update
-                        balance_usd: newBalance,
-                        daily_ads_watched: adsWatched,
-                        total_ads_watched: totalAdsWatched, // YENİ: Toplamı kaydet
-                        last_ad_viewed: serverTimestamp()
-                    });
-                    
+                // Adextra'nın başarılı callback'i bilinmediği için, butonu hemen serbest bırakıyoruz.
+                watchAdBtn.disabled = false;
+                watchAdBtn.classList.remove('loading');
+                watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+
+                /* // --- ÖDÜL MANTIĞI: ADEXTRA BAŞARI CALLBACK'İNE TAŞINMALI ---
+                // Lütfen aşağıdaki kod bloğunu, Adextra'nın reklam izlenmesinin başarılı olduğunu bildiren fonksiyona ekleyin.
+                
+                adsWatched++;
+                totalAdsWatched++; 
+                const newBalance = currentBalance + EARNINGS_PER_AD_USD;
+
+                rtdbUpdate(userRef, { 
+                    balance_usd: newBalance,
+                    daily_ads_watched: adsWatched,
+                    total_ads_watched: totalAdsWatched, 
+                    last_ad_viewed: serverTimestamp()
+                }).then(() => {
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
-                  })
-                  .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
-                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                  })
-                  .finally(() => {
-                    watchAdBtn.disabled = false;
-                    watchAdBtn.classList.remove('loading');
-                    watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
-                  });
+                });
+                // --- ÖDÜL MANTIĞI SONU ---
+                */
+
+            }).catch(e => {
+                watchAdBtn.disabled = false;
+                watchAdBtn.classList.remove('loading');
+                watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                window.Telegram.WebApp.showAlert("An error occurred during data fetching. Try again.");
             });
         }
 
