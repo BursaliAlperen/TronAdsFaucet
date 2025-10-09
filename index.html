@@ -192,7 +192,7 @@
                     
                     <h3 style="font-size:1.2rem; margin-top:15px; margin-bottom:5px;">Your Referral Code (Telegram ID)</h3>
                     <div class="input-group">
-                        <input type="text" id="referral-code-input" value="Loading..." readonly>
+                        <input type="text" id="referral-code-input" value="" placeholder="Loading..." readonly>
                         <button onclick="copyToClipboard('referral-code-input')"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                     
@@ -372,6 +372,8 @@
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('daily-ads-watched').textContent = dailyWatched;
                 document.getElementById('ad-section-watched').textContent = dailyWatched;
+                
+                // Referral Code Update: Firebase'dan gelen değeri kullan.
                 document.getElementById('referral-code-input').value = userData.referral_code;
 
                 // Update referral section for users who already applied a code
@@ -384,12 +386,9 @@
         }
         
         // --- AD VIEW LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-             // Add event listener for the ad button
-             document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
-        });
         
         const handleWatchAd = () => {
+            const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = ref(database, 'users/' + userUid);
             
             get(userRef).then((snapshot) => {
@@ -401,7 +400,7 @@
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
 
-                document.getElementById('watch-ad-btn').disabled = true; // Disable button while processing
+                watchAdBtn.disabled = true; // Disable button while processing
                 document.getElementById('loading-modal').style.display = 'flex';
                 document.getElementById('loading-modal').querySelector('p').textContent = 'Loading Ad...';
 
@@ -426,20 +425,17 @@
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
-                    document.getElementById('watch-ad-btn').disabled = false; // Re-enable button
+                    watchAdBtn.disabled = false; // Re-enable button
                     document.getElementById('loading-modal').style.display = 'none';
                   });
             });
         }
 
         // --- REFERRAL LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
-        });
-
+        
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
-            const balanceUsd = parseFloat(document.getElementById('menu-balance-usd').textContent).toFixed(2);
+            // const balanceUsd = parseFloat(document.getElementById('menu-balance-usd').textContent).toFixed(2); // Artık gerek yok
             
             // Share message as requested
             const shareText = `Earnings of $0.30 to $3 per day!\nTron Coin Ads Faucet\nUse it to Make Money (Referral Code: ${userCode})\n${TELEGRAM_LINK}`;
@@ -492,21 +488,7 @@
         }
 
         // --- WITHDRAWAL LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const amountInput = document.getElementById('amount-usd');
-            const receiveTrx = document.getElementById('receive-trx-amount');
-            amountInput.addEventListener('input', () => {
-                const usd = parseFloat(amountInput.value);
-                // Only calculate if price is loaded
-                if (isNaN(usd) || usd <= 0 || currentTronPriceUsd === 0) {
-                    receiveTrx.textContent = '0.0000';
-                } else {
-                    receiveTrx.textContent = (usd / currentTronPriceUsd).toFixed(4);
-                }
-            });
-            document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
-        });
-
+        
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
             const userRef = ref(database, 'users/' + userUid);
@@ -526,7 +508,8 @@
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX} TRX.`);
             }
 
-            document.getElementById('withdraw-submit-btn').disabled = true; // Disable button while processing
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+            withdrawSubmitBtn.disabled = true; // Disable button while processing
             document.getElementById('loading-modal').style.display = 'flex';
             document.getElementById('loading-modal').querySelector('p').textContent = 'Submitting Request...';
 
@@ -536,7 +519,7 @@
                 
                 if (withdrawUsdAmount > usdBalance) {
                     document.getElementById('loading-modal').style.display = 'none';
-                    document.getElementById('withdraw-submit-btn').disabled = false;
+                    withdrawSubmitBtn.disabled = false;
                     return window.Telegram.WebApp.showAlert("Withdrawal failed: Insufficient balance.");
                 }
 
@@ -563,7 +546,7 @@
                     window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission.");
                 }).finally(() => {
                     document.getElementById('loading-modal').style.display = 'none';
-                    document.getElementById('withdraw-submit-btn').disabled = false; // Re-enable button
+                    withdrawSubmitBtn.disabled = false; // Re-enable button
                 });
             });
         }
@@ -574,12 +557,13 @@
 
             // 1. Load System Stats
             const usersRef = ref(database, 'users');
+            // Yeni bir onValue() çağrısı yapmadan önce önceki dinleyiciyi kaldırmak gerekir.
+            // Ancak bu örnekte basitlik için sadece yeni veriyi dinliyoruz.
             onValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
 
                 snapshot.forEach(userSnapshot => {
-                    // Verinin doğru çekildiğinden emin olmak için
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
                 });
@@ -588,15 +572,12 @@
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
             });
 
-            // 2. Load Withdrawal Requests (Ordered by status and then time)
-            // Çekim talepleri için sadece 'Pending' durumunda olanları listele
+            // 2. Load Withdrawal Requests (Sadece Pending olanları listele)
             const requestsRef = ref(database, 'withdrawal_requests');
             onValue(requestsRef, (snapshot) => {
                 const ul = document.getElementById('withdrawal-list');
                 ul.innerHTML = ''; 
-                let pendingCount = 0;
-
-                // Talepleri tarihe göre sıralamak için bir dizi oluştur
+                
                 const pendingRequests = [];
 
                 snapshot.forEach(requestSnapshot => {
@@ -604,12 +585,13 @@
                     const requestId = requestSnapshot.key;
                     
                     if (request.status === 'Pending') {
-                        pendingRequests.push({ ...request, requestId });
+                        // Request timestamp (eğer null ise 0 kabul edilir)
+                        const timestamp = request.timestamp || 0;
+                        pendingRequests.push({ ...request, requestId, timestamp });
                     }
                 });
 
                 // Talepleri en eskisinden en yenisine doğru (en düşük timestamp'ten en yükseğe) sırala.
-                // Firebase serverTimestamp() kullanıldığı için, daha düşük (eski) timestamp'ler öne gelir.
                 pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
 
 
@@ -617,7 +599,6 @@
                     ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
                 } else {
                     pendingRequests.forEach(request => {
-                        pendingCount++;
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <p><strong>User:</strong> ${request.username} (TG ID: ${request.telegram_id})</p>
@@ -646,6 +627,36 @@
                 window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
             });
         }
+        
+        // --- EVENT LISTENERS SETUP ---
+        function setupEventListeners() {
+            // Ad Button
+            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
+
+            // Referral Share Button
+            document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
+
+            // Withdraw Form
+            document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
+            document.getElementById('amount-usd').addEventListener('input', () => {
+                const usd = parseFloat(document.getElementById('amount-usd').value);
+                const receiveTrx = document.getElementById('receive-trx-amount');
+                if (isNaN(usd) || usd <= 0 || currentTronPriceUsd === 0) {
+                    receiveTrx.textContent = '0.0000';
+                } else {
+                    receiveTrx.textContent = (usd / currentTronPriceUsd).toFixed(4);
+                }
+            });
+
+            // Bottom Navigation Buttons
+            const navButtons = document.querySelectorAll('.bottom-nav .nav-btn');
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    window.showSection(pageId); 
+                });
+            });
+        }
 
         // --- INITIALIZATION ---
         const initApp = async () => {
@@ -662,31 +673,32 @@
             telegramId = user.id.toString();
             userUid = getUidFromTelegramId(telegramId);
             
+            // FIX: Set initial referral code immediately (Telegram ID)
+            const referralInput = document.getElementById('referral-code-input');
+            if (referralInput) {
+                referralInput.value = telegramId;
+                referralInput.placeholder = telegramId;
+            }
+
             // Check and handle Admin access
             if (ADMIN_TELEGRAM_IDS.includes(telegramId)) {
                 document.getElementById('admin-indicator').style.display = 'block';
-                // Add Admin Panel button to Nav
+                // Add Admin Panel button to Nav (if not already added)
                 const nav = document.querySelector('.bottom-nav');
-                const adminBtn = document.createElement('button');
-                adminBtn.className = 'nav-btn';
-                adminBtn.dataset.page = 'admin-panel';
-                adminBtn.innerHTML = '<i class="fas fa-user-shield"></i><span>Admin</span>';
-                adminBtn.onclick = () => showSection('admin-panel');
-                nav.appendChild(adminBtn);
+                if (!document.querySelector('.nav-btn[data-page="admin-panel"]')) {
+                    const adminBtn = document.createElement('button');
+                    adminBtn.className = 'nav-btn';
+                    adminBtn.dataset.page = 'admin-panel';
+                    adminBtn.innerHTML = '<i class="fas fa-user-shield"></i><span>Admin</span>';
+                    adminBtn.onclick = () => showSection('admin-panel');
+                    nav.appendChild(adminBtn);
+                }
             }
             
             await fetchTronPrice();
             setupUserListener();
+            setupEventListeners(); // Tüm buton dinleyicilerini burada bağla
             
-            // FIX: Setup Bottom Navigation Click Handlers (Eksik olan kısım burasıydı)
-            const navButtons = document.querySelectorAll('.bottom-nav .nav-btn');
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const pageId = button.dataset.page;
-                    window.showSection(pageId); 
-                });
-            });
-
             // Initial Page Load
             showSection('menu-page'); 
         };
