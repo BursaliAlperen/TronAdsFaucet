@@ -242,7 +242,8 @@
             appId: "1:110511122993:web:99099461844e1fbbe10310",
             measurementId: "G-VZ3Z6SFMXZ"
         };
-        const ADMIN_TELEGRAM_IDS = ["7904032877"];
+        // *** DÜZELTME 2: Yeni Admin ID eklendi ***
+        const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
@@ -471,7 +472,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (DÜZELTİLMİŞ) ---
+        // --- WITHDRAWAL LOGIC (DÜZELTİLDİ) ---
         
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
@@ -505,17 +506,14 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 const userData = snapshot.val();
                 const usdBalance = userData?.balance_usd || 0.0;
                 
-                // KRİTİK DÜZELTME: Kullanıcının gerçek TRX bakiyesini hesapla ve kontrol et.
-                const currentTrxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0;
-                
-                if (amountInTrx > currentTrxBalance) {
+                // *** DÜZELTME 1: Bakiye Kontrolü USD bazlı yapılıyor, ancak hata mesajı daha netleştirildi. ***
+                if (withdrawUsdAmount > usdBalance) {
+                    const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
-                    // Kullanıcının gördüğü bakiye üzerinden uyarı ver.
-                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${currentTrxBalance.toFixed(4)}`);
+                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`);
                 }
 
-                // Bakiye kontrolü başarılı: Yeni USD bakiyesini hesapla.
-                const newBalance = usdBalance - withdrawUsdAmount;
+                const newUsdBalance = usdBalance - withdrawUsdAmount;
 
                 const requestRef = push(ref(database, 'withdrawal_requests'));
                 
@@ -526,24 +524,26 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     tron_address: tronAddress,
                     amount_usd: withdrawUsdAmount.toFixed(4),
                     amount_trx: amountInTrx.toFixed(4),
-                    status: "Pending",
+                    status: "Pending", // Admin Panelinde görünmesi için "Pending" olarak set edilir.
                     timestamp: serverTimestamp()
                 }).then(() => {
                     // 1. İşlem başarılı: Kullanıcı bakiyesini düşür
-                    return update(userRef, { balance_usd: newBalance });
+                    return update(userRef, { balance_usd: newUsdBalance });
                 }).then(() => {
-                    // 2. Başarı mesajı
+                    // 2. Başarı mesajı göster
                     window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
                     document.getElementById('amount-trx').value = '';
+                    // USD karşılığı gösterimini sıfırla
+                    document.getElementById('withdraw-usd-amount').textContent = '$0.00';
                 }).catch(e => {
-                    // HATA DURUMUNDA KULLANICIYI BİLGİLENDİR
+                    // Hata durumunda kullanıcıyı bilgilendir
                     console.error("Firebase Withdrawal Error:", e);
                     window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection and try again.");
                 }).finally(() => {
                     withdrawSubmitBtn.disabled = false;
                 });
             }).catch(e => {
-                 // get(userRef) hatası olursa
+                 // *** ÇÖZÜM: Kullanıcı verisi çekilemezse bu hata gösterilir. ***
                 console.error("Firebase User Data Fetch Error:", e);
                 window.Telegram.WebApp.showAlert("Failed to retrieve user data. Please refresh the app.");
                 withdrawSubmitBtn.disabled = false;
