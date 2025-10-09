@@ -471,9 +471,9 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (DÜZELTİLDİ) ---
+        // --- WITHDRAWAL LOGIC (DÜZELTİLMİŞ) ---
         
-        const handleWithdrawSubmit = async (e) => {
+        const handleWithdrawSubmit = (e) => {
             e.preventDefault();
             const userRef = ref(database, 'users/' + userUid);
             const tronAddress = document.getElementById('tron-address').value.trim();
@@ -500,29 +500,26 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             const withdrawUsdAmount = amountInTrx * currentTronPriceUsd;
 
             withdrawSubmitBtn.disabled = true;
-            withdrawSubmitBtn.classList.add('loading'); // Yükleniyor durumunu göster
 
-            try {
-                const snapshot = await get(userRef);
-                
-                if (!snapshot.exists()) {
-                    window.Telegram.WebApp.showAlert("Withdrawal failed: User data not found. Please refresh the app.");
-                    return;
-                }
-                
+            get(userRef).then(snapshot => {
                 const userData = snapshot.val();
                 const usdBalance = userData?.balance_usd || 0.0;
                 
-                if (withdrawUsdAmount > usdBalance) {
-                    window.Telegram.WebApp.showAlert("Withdrawal failed: Insufficient balance. (You don't have enough USD equivalent)");
-                    return;
+                // KRİTİK DÜZELTME: Kullanıcının gerçek TRX bakiyesini hesapla ve kontrol et.
+                const currentTrxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0;
+                
+                if (amountInTrx > currentTrxBalance) {
+                    withdrawSubmitBtn.disabled = false;
+                    // Kullanıcının gördüğü bakiye üzerinden uyarı ver.
+                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${currentTrxBalance.toFixed(4)}`);
                 }
 
+                // Bakiye kontrolü başarılı: Yeni USD bakiyesini hesapla.
                 const newBalance = usdBalance - withdrawUsdAmount;
 
                 const requestRef = push(ref(database, 'withdrawal_requests'));
                 
-                await requestRef.set({
+                requestRef.set({
                     user_id: userUid,
                     telegram_id: telegramId,
                     username: userData.username,
@@ -531,25 +528,29 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     amount_trx: amountInTrx.toFixed(4),
                     status: "Pending",
                     timestamp: serverTimestamp()
+                }).then(() => {
+                    // 1. İşlem başarılı: Kullanıcı bakiyesini düşür
+                    return update(userRef, { balance_usd: newBalance });
+                }).then(() => {
+                    // 2. Başarı mesajı
+                    window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
+                    document.getElementById('amount-trx').value = '';
+                }).catch(e => {
+                    // HATA DURUMUNDA KULLANICIYI BİLGİLENDİR
+                    console.error("Firebase Withdrawal Error:", e);
+                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection and try again.");
+                }).finally(() => {
+                    withdrawSubmitBtn.disabled = false;
                 });
-                
-                // İşlem başarılı: Kullanıcı bakiyesini düşür
-                await update(userRef, { balance_usd: newBalance });
-
-                window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
-                document.getElementById('amount-trx').value = '';
-
-            } catch (e) {
-                // Hata durumunda kullanıcıyı bilgilendir (Hata mesajı artık daha spesifik)
-                console.error("Firebase Withdrawal Error:", e);
-                window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection and try again.");
-            } finally {
+            }).catch(e => {
+                 // get(userRef) hatası olursa
+                console.error("Firebase User Data Fetch Error:", e);
+                window.Telegram.WebApp.showAlert("Failed to retrieve user data. Please refresh the app.");
                 withdrawSubmitBtn.disabled = false;
-                withdrawSubmitBtn.classList.remove('loading');
-            }
+            });
         }
 
-        // --- ADMIN PANEL LOGIC (BAKİYE İADESİ DÜZELTİLDİ) ---
+        // --- ADMIN PANEL LOGIC ---
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
@@ -613,67 +614,13 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             
             const requestRef = ref(database, 'withdrawal_requests/' + requestId);
             
-            // İlk olarak talebin mevcut verilerini al
-            get(requestRef).then(snapshot => {
-                const request = snapshot.val();
-                if (!request || request.status !== 'Pending') {
-                    window.Telegram.WebApp.showAlert("This request is already processed or does not exist.");
-                    return;
-                }
-                
-                // Reddedilme durumunda bakiyeyi geri iade et
-                if (status === 'Rejected') {
-                    const userId = request.user_id;
-                    const amountUsd = parseFloat(request.amount_usd);
-                    const userRef = ref(database, 'users/' + userId);
-
-                    // Kullanıcının mevcut bakiyesini al ve iadeyi gerçekleştir
-                    get(userRef).then(userSnapshot => {
-                        const userData = userSnapshot.val();
-                        const currentBalance = userData?.balance_usd || 0.0;
-                        const newBalance = currentBalance + amountUsd; // Reddedilen miktarı geri ekle
-
-                        // Kullanıcı bakiyesini güncelle
-                        update(userRef, { 
-                            balance_usd: newBalance 
-                        }).then(() => {
-                            // Talep durumunu güncelle
-                            update(requestRef, {
-                                status: status,
-                                processed_by_admin: telegramId,
-                                processed_at: serverTimestamp(),
-                                rejection_refund_usd: amountUsd.toFixed(4) // İade edilen miktarı kaydet
-                            }).then(() => {
-                                window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}. Balance of $${amountUsd.toFixed(4)} refunded.`);
-                                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                            });
-                        }).catch(e => {
-                            console.error("Refund Error:", e);
-                            window.Telegram.WebApp.showAlert("Error during refund! Check logs.");
-                        });
-                    });
-                } else if (status === 'Completed') {
-                    // Tamamlanma durumunda sadece durumu güncelle (Bakiye zaten başta düşülmüştü)
-                    update(requestRef, {
-                        status: status,
-                        processed_by_admin: telegramId,
-                        processed_at: serverTimestamp()
-                    }).then(() => {
-                        window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}.`);
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                        
-                        /*
-                          // OTOMATİK SİLME NOTU:
-                          // İstenen "Admin onayladıktan hemen 1 saat sonra otomatik olarak silme"
-                          // işlemi, bu front-end (tarayıcı) kodunda güvenilir bir şekilde yapılamaz
-                          // çünkü tarayıcı kapatıldığında zamanlayıcı durur.
-                          // Güvenli uygulama için Firebase Cloud Functions kullanılmalıdır.
-                        */
-                    });
-                }
-            }).catch(e => {
-                console.error("Withdrawal Process Error:", e);
-                window.Telegram.WebApp.showAlert("An error occurred while processing the request data.");
+            update(requestRef, {
+                status: status,
+                processed_by_admin: telegramId,
+                processed_at: serverTimestamp()
+            }).then(() => {
+                window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}.`);
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
             });
         }
         
