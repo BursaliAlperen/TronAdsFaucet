@@ -62,6 +62,9 @@
         .action-btn:active { transform: scale(0.98); }
         .action-btn:hover { background-color: var(--primary-color-hover); }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Loading/Processing State */
+        .action-btn.loading { background-color: #FF5722; cursor: wait; pointer-events: none; }
+
 
         /* Menu Page - Balance */
         .balance-card { text-align: center; border: 2px solid var(--primary-color); background-color: #FFF3F3; }
@@ -105,12 +108,6 @@
         .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.75rem; transition: color 0.2s; flex-grow: 1; color: var(--subtle-text); }
         .nav-btn i { font-size: 1.6rem; margin-bottom: 3px; }
         .nav-btn.active { font-weight: 700; color: var(--primary-color); }
-
-        /* Modal & Loader */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; }
-        .modal-content { padding: 30px; border-radius: 15px; text-align: center; background-color: white; box-shadow: var(--shadow); }
-        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid var(--primary-color); width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -145,18 +142,24 @@
             </div>
 
             <div id="menu-page" class="page active">
-                <h2><i class="fas fa-bars"></i> Main Menu</h2>
+                <h2><i class="fas fa-home"></i> Home & Earning</h2>
                 <div class="card balance-card">
-                    <p style="font-size:1.1rem; color:var(--subtle-text);">Your Current Balance</p>
-                    <div class="usd-value">$<span id="menu-balance-usd">0.00</span></div>
-                    <div class="trx-value">≈ <span id="menu-balance-trx">0.0000</span> TRX</div>
+                    <p style="font-size:1.1rem; color:var(--subtle-text);">Your Current Balance (TRX)</p>
+                    <div class="usd-value" style="font-size: 2.5rem;"><span id="menu-balance-trx">0.0000</span> TRX</div>
+                    <div class="trx-value">≈ $<span id="menu-balance-usd">0.00</span></div>
                 </div>
                 
-                <div class="menu-grid">
-                    <div onclick="showSection('ad-section')" class="menu-tile">
-                        <i class="fas fa-play-circle"></i>
-                        <span>View Ad (Today: <span id="daily-ads-watched">0</span>/100)</span>
-                    </div>
+                <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
+                    <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
+                    <h3>Watch & Earn</h3>
+                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
+                    <button id="watch-ad-btn" class="action-btn">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
+                    </button>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
+                </div>
+
+                <div class="menu-grid" style="margin-top: 15px;">
                     <div onclick="showSection('friends-page')" class="menu-tile">
                         <i class="fas fa-users"></i>
                         <span>Friends & Referrals</span>
@@ -165,23 +168,6 @@
                         <i class="fas fa-wallet"></i>
                         <span>Withdraw TRX</span>
                     </div>
-                    <div onclick="showSection('rules-page')" class="menu-tile" style="background-color:#fefefe;">
-                        <i class="fas fa-gavel" style="color:#222;"></i>
-                        <span style="color:#222;">Rules</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="ad-section" class="page">
-                <h2><i class="fas fa-video"></i> Watch Ad</h2>
-                <div class="card" style="text-align: center;">
-                    <i class="fas fa-dollar-sign" style="font-size:3rem; color: var(--primary-color);"></i>
-                    <h3>Watch & Earn</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** per rewarded ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">
-                        <i class="fas fa-check-circle" style="margin-right:10px;"></i> Start Ad
-                    </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="ad-section-watched">0</strong> / 100</p>
                 </div>
             </div>
 
@@ -190,10 +176,10 @@
                 <div class="card">
                     <p style="font-weight:700; color:var(--primary-color);">Referral Bonus: Get **$0.02** worth of TRX for every successful friend!</p>
                     
-                    <h3 style="font-size:1.2rem; margin-top:15px; margin-bottom:5px;">Your Referral Code (Telegram ID)</h3>
+                    <h3 style="font-size:1.2rem; margin-top:15px; margin-bottom:5px;">Your Referral Link (Share this!)</h3>
                     <div class="input-group">
                         <input type="text" id="referral-code-input" value="" placeholder="Loading..." readonly>
-                        <button onclick="copyToClipboard('referral-code-input')"><i class="fas fa-copy"></i> Copy</button>
+                        <button onclick="copyToClipboard('referral-code-input')"><i class="fas fa-copy"></i> Copy Link</button>
                     </div>
                     
                     <button id="share-ref-btn" class="action-btn" style="margin-top:0;"><i class="fas fa-share-alt" style="margin-right:10px;"></i> Share Promotional Text</button>
@@ -213,56 +199,37 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700;">Minimum withdrawal is **0.01 TRX**.</p>
+                <p style="font-weight:700;">Minimum withdrawal is **0.10 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
                         <input type="text" id="tron-address" placeholder="Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
                     </div>
                     <div class="form-group">
-                        <label for="amount-usd"><i class="fas fa-dollar-sign"></i> Amount (USD):</label>
-                        <input type="number" id="amount-usd" step="0.0001" placeholder="e.g., 1.00" required>
+                        <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
+                        <input type="number" id="amount-trx" step="0.01" placeholder="e.g., 0.10" required>
                     </div>
-                    <p class="withdraw-note">You will receive: <strong id="receive-trx-amount">0.0000</strong> TRX</p>
+                    <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
                         <i class="fas fa-paper-plane" style="margin-right:10px;"></i> Submit Withdrawal Request
                     </button>
                 </form>
             </div>
-            
-            <div id="rules-page" class="page">
-                <h2><i class="fas fa-gavel"></i> Rules</h2>
-                <div class="card">
-                    <ul style="padding-left:20px; font-size:0.95rem;">
-                        <li style="margin-bottom:10px;">**Earnings Policy:** Users earn **$0.001** for each ad viewed.</li>
-                        <li style="margin-bottom:10px;">**Daily Limit:** The maximum number of ads a user can view per day is **100**.</li>
-                        <li style="margin-bottom:10px;">**Referral Bonus:** Users receive **$0.02** worth of TRX for each successful manual referral.</li>
-                        <li style="margin-bottom:10px;">**Withdrawal Threshold:** The minimum withdrawal amount is **0.01 TRX**. Only TRON (TRX) withdrawals are supported.</li>
-                        <li style="margin-bottom:10px;">**Fair Use:** Any attempt to use bots, VPNs, or manipulate the system to artificially increase earnings will result in an immediate and permanent **account ban**.</li>
-                        <li style="margin-bottom:0;">**Processing Time:** Withdrawal requests are processed manually by the admin and may take up to **48 hours**.</li>
-                    </ul>
-                </div>
-            </div>
-
         </main>
 
         <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="menu-page"><i class="fas fa-home"></i><span>Menu</span></button>
+            <button class="nav-btn active" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
             <button class="nav-btn" data-page="friends-page"><i class="fas fa-users"></i><span>Friends</span></button>
             <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-        </nav>
+            </nav>
     </div>
 
-    <div id="loading-modal" class="modal">
-        <div class="modal-content"><div class="loader"></div><p>Processing request...</p></div>
-    </div>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-        import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp, query, orderByChild } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
         // --- CONFIGURATION ---
         const FIREBASE_CONFIG = {
@@ -279,18 +246,17 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 0.01;
+        const MIN_WITHDRAW_TRX = 0.10; // New minimum
         const BOT_USERNAME = "TronAdsFaucetBot"; 
-        const TELEGRAM_LINK = `https://t.me/${BOT_USERNAME}`;
-
+        
         // --- GLOBAL STATE ---
         let currentTronPriceUsd = 0.0; 
         let userUid = null;
         let telegramId = null;
 
-        // --- FIREBASE INITIALIZATION (Realtime Database Only) ---
+        // --- FIREBASE INITIALIZATION ---
         const app = initializeApp(FIREBASE_CONFIG);
-        const analytics = getAnalytics(app);
+        // const analytics = getAnalytics(app); // Analytics kullanılmadığı için kapatıldı
         const database = getDatabase(app);
 
         // --- UTILITY FUNCTIONS ---
@@ -312,11 +278,15 @@
         // Copy to Clipboard
         window.copyToClipboard = (elementId) => {
             const copyText = document.getElementById(elementId);
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                window.Telegram.WebApp.showAlert("Code copied to clipboard!");
+            // Referans linki alınıp, kullanıcıya özel kodu kullanılarak Telegram linki oluşturulur
+            const code = copyText.value;
+            const fullLink = `https://t.me/${BOT_USERNAME}?start=${code}`;
+
+            navigator.clipboard.writeText(fullLink).then(() => {
+                window.Telegram.WebApp.showAlert("Referral Link copied to clipboard!");
                 window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }).catch(err => {
+                 window.Telegram.WebApp.showAlert(`Failed to copy: ${err}`);
             });
         }
         
@@ -324,7 +294,7 @@
         
         async function fetchTronPrice() {
             try {
-                // Fetching live price (Requires CORS proxy or server-side fetch in a production environment)
+                // Coingecko'dan güncel fiyat çekme
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
                 const data = await response.json();
                 currentTronPriceUsd = data.tron.usd;
@@ -343,18 +313,18 @@
             
             onValue(userRef, (snapshot) => {
                 let userData = snapshot.val();
+                const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
                     // Initialize New User
-                    const user = window.Telegram.WebApp.initDataUnsafe.user;
                     const newUser = {
                         telegram_id: telegramId,
-                        username: user?.username || `user_${telegramId}`,
-                        first_name: user?.first_name || 'User',
-                        balance_usd: 0.0,
+                        username: userTgData?.username || `user_${telegramId}`,
+                        first_name: userTgData?.first_name || 'User',
+                        balance_usd: 0.0, // Bakiye USD olarak tutulur
                         referred_by: null,
                         daily_ads_watched: 0,
-                        referral_code: telegramId.toString(),
+                        referral_code: telegramId.toString(), // Benzersiz kod Telegram ID'si
                         created_at: serverTimestamp()
                     };
                     set(userRef, newUser);
@@ -362,18 +332,17 @@
                 }
 
                 const balanceUsd = userData.balance_usd || 0.0;
-                // Ensure price is loaded before calculating TRX
+                // Bakiye gösterimi sadece TRX
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
                 const dailyWatched = userData.daily_ads_watched || 0;
 
-                // Update UI
-                document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
+                // Update UI (TRX & USD)
                 document.getElementById('menu-balance-trx').textContent = balanceTrx.toFixed(4);
+                document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('daily-ads-watched').textContent = dailyWatched;
-                document.getElementById('ad-section-watched').textContent = dailyWatched;
                 
-                // Referral Code Update: Firebase'dan gelen değeri kullan.
+                // Referral Code Update
                 document.getElementById('referral-code-input').value = userData.referral_code;
 
                 // Update referral section for users who already applied a code
@@ -385,7 +354,7 @@
             });
         }
         
-        // --- AD VIEW LOGIC ---
+        // --- AD VIEW LOGIC (CRUCIAL FIX) ---
         
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
@@ -400,13 +369,16 @@
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
 
-                watchAdBtn.disabled = true; // Disable button while processing
-                document.getElementById('loading-modal').style.display = 'flex';
-                document.getElementById('loading-modal').querySelector('p').textContent = 'Loading Ad...';
+                // Butonu deaktive et ve yükleniyor sınıfı ekle (görsel feedback için)
+                watchAdBtn.disabled = true;
+                watchAdBtn.classList.add('loading');
+                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
+
 
                 // Adexora integration
                 window.showAdexora()
                   .then(() => {
+                    // REKLAM BAŞARILI OLDUĞUNDA ÖDÜL VERİLİR (En önemli düzeltme)
                     adsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
@@ -418,15 +390,18 @@
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)}.`);
+                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
+                    // HATA DURUMUNDA ÖDÜL VERİLMEZ
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
-                    watchAdBtn.disabled = false; // Re-enable button
-                    document.getElementById('loading-modal').style.display = 'none';
+                    // İşlem bittiğinde butonu eski haline getir
+                    watchAdBtn.disabled = false;
+                    watchAdBtn.classList.remove('loading');
+                    watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
                   });
             });
         }
@@ -435,14 +410,16 @@
         
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
-            // const balanceUsd = parseFloat(document.getElementById('menu-balance-usd').textContent).toFixed(2); // Artık gerek yok
             
-            // Share message as requested
-            const shareText = `Earnings of $0.30 to $3 per day!\nTron Coin Ads Faucet\nUse it to Make Money (Referral Code: ${userCode})\n${TELEGRAM_LINK}`;
+            // İstek üzerine Telegram Link formatı
+            const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
+
+            const shareText = `Earnings of $0.30 to $3 per day!\nTron Coin Ads Faucet\nUse it to Make Money (Referral Link: ${telegramLink})`;
             
             if (navigator.share) {
                 navigator.share({ title: 'Tron Ads Faucet', text: shareText });
             } else {
+                // Clipboard'a kopyala
                 navigator.clipboard.writeText(shareText).then(() => {
                     window.Telegram.WebApp.showAlert("Promotional text copied to clipboard!");
                 });
@@ -493,34 +470,32 @@
             e.preventDefault();
             const userRef = ref(database, 'users/' + userUid);
             const tronAddress = document.getElementById('tron-address').value.trim();
-            const withdrawUsdAmount = parseFloat(document.getElementById('amount-usd').value);
+            const amountInTrx = parseFloat(document.getElementById('amount-trx').value); // TRX olarak çekilen miktar
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
 
             if (!tronAddress || !tronAddress.startsWith('T') || tronAddress.length < 34) {
                 return window.Telegram.WebApp.showAlert("Please enter a valid TRON address (starts with 'T').");
             }
-            if (isNaN(withdrawUsdAmount) || withdrawUsdAmount <= 0) {
-                return window.Telegram.WebApp.showAlert("Please enter a valid amount.");
+            if (isNaN(amountInTrx) || amountInTrx <= 0) {
+                return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
-            
-            const amountInTrx = withdrawUsdAmount / currentTronPriceUsd;
             
             if (amountInTrx < MIN_WITHDRAW_TRX) {
-                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX} TRX.`);
+                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
+            
+            // TRX miktarını USD'ye çevirerek bakiye kontrolü için kullan
+            const withdrawUsdAmount = amountInTrx * currentTronPriceUsd;
 
-            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
             withdrawSubmitBtn.disabled = true; // Disable button while processing
-            document.getElementById('loading-modal').style.display = 'flex';
-            document.getElementById('loading-modal').querySelector('p').textContent = 'Submitting Request...';
 
             get(userRef).then(snapshot => {
                 const userData = snapshot.val();
                 const usdBalance = userData?.balance_usd || 0.0;
                 
                 if (withdrawUsdAmount > usdBalance) {
-                    document.getElementById('loading-modal').style.display = 'none';
                     withdrawSubmitBtn.disabled = false;
-                    return window.Telegram.WebApp.showAlert("Withdrawal failed: Insufficient balance.");
+                    return window.Telegram.WebApp.showAlert("Withdrawal failed: Insufficient balance. (You don't have enough USD equivalent)");
                 }
 
                 const newBalance = usdBalance - withdrawUsdAmount;
@@ -541,11 +516,10 @@
                     // 2. Deduct the balance from the user's account
                     update(userRef, { balance_usd: newBalance });
                     window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully.`);
-                    document.getElementById('amount-usd').value = '';
+                    document.getElementById('amount-trx').value = '';
                 }).catch(e => {
                     window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission.");
                 }).finally(() => {
-                    document.getElementById('loading-modal').style.display = 'none';
                     withdrawSubmitBtn.disabled = false; // Re-enable button
                 });
             });
@@ -557,8 +531,6 @@
 
             // 1. Load System Stats
             const usersRef = ref(database, 'users');
-            // Yeni bir onValue() çağrısı yapmadan önce önceki dinleyiciyi kaldırmak gerekir.
-            // Ancak bu örnekte basitlik için sadece yeni veriyi dinliyoruz.
             onValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
@@ -585,13 +557,12 @@
                     const requestId = requestSnapshot.key;
                     
                     if (request.status === 'Pending') {
-                        // Request timestamp (eğer null ise 0 kabul edilir)
                         const timestamp = request.timestamp || 0;
                         pendingRequests.push({ ...request, requestId, timestamp });
                     }
                 });
 
-                // Talepleri en eskisinden en yenisine doğru (en düşük timestamp'ten en yükseğe) sırala.
+                // Talepleri en eskisinden en yenisine doğru sırala.
                 pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
 
 
@@ -638,13 +609,14 @@
 
             // Withdraw Form
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
-            document.getElementById('amount-usd').addEventListener('input', () => {
-                const usd = parseFloat(document.getElementById('amount-usd').value);
-                const receiveTrx = document.getElementById('receive-trx-amount');
-                if (isNaN(usd) || usd <= 0 || currentTronPriceUsd === 0) {
-                    receiveTrx.textContent = '0.0000';
+            document.getElementById('amount-trx').addEventListener('input', () => {
+                const trx = parseFloat(document.getElementById('amount-trx').value);
+                const withdrawUsd = document.getElementById('withdraw-usd-amount');
+                if (isNaN(trx) || trx <= 0 || currentTronPriceUsd === 0) {
+                    withdrawUsd.textContent = '$0.00';
                 } else {
-                    receiveTrx.textContent = (usd / currentTronPriceUsd).toFixed(4);
+                    // TRX'i USD'ye çevir
+                    withdrawUsd.textContent = `$${(trx * currentTronPriceUsd).toFixed(4)}`;
                 }
             });
 
@@ -673,7 +645,7 @@
             telegramId = user.id.toString();
             userUid = getUidFromTelegramId(telegramId);
             
-            // FIX: Set initial referral code immediately (Telegram ID)
+            // Set initial referral code immediately 
             const referralInput = document.getElementById('referral-code-input');
             if (referralInput) {
                 referralInput.value = telegramId;
@@ -690,14 +662,15 @@
                     adminBtn.className = 'nav-btn';
                     adminBtn.dataset.page = 'admin-panel';
                     adminBtn.innerHTML = '<i class="fas fa-user-shield"></i><span>Admin</span>';
-                    adminBtn.onclick = () => showSection('admin-panel');
+                    // İlk tıklamada showSection'ı çağır
+                    adminBtn.addEventListener('click', () => showSection('admin-panel')); 
                     nav.appendChild(adminBtn);
                 }
             }
             
             await fetchTronPrice();
             setupUserListener();
-            setupEventListeners(); // Tüm buton dinleyicilerini burada bağla
+            setupEventListeners();
             
             // Initial Page Load
             showSection('menu-page'); 
