@@ -242,7 +242,7 @@
             appId: "1:110511122993:web:99099461844e1fbbe10310",
             measurementId: "G-VZ3Z6SFMXZ"
         };
-        // *** DÜZELTME 2: Yeni Admin ID eklendi ***
+        // *** GÜNCELLENDİ: Yeni Admin ID eklendi (8392479231) ***
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
@@ -472,7 +472,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (DÜZELTİLDİ) ---
+        // --- WITHDRAWAL LOGIC (Client-side logic düzeltildi) ---
         
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
@@ -506,7 +506,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 const userData = snapshot.val();
                 const usdBalance = userData?.balance_usd || 0.0;
                 
-                // *** DÜZELTME 1: Bakiye Kontrolü USD bazlı yapılıyor, ancak hata mesajı daha netleştirildi. ***
+                // Bakiye Kontrolü (USD bazlı)
                 if (withdrawUsdAmount > usdBalance) {
                     const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
@@ -515,6 +515,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
                 const newUsdBalance = usdBalance - withdrawUsdAmount;
 
+                // Çekim talebi oluşturulur (Firebase Rules ile uyumlu olması gereken PUSH işlemi)
                 const requestRef = push(ref(database, 'withdrawal_requests'));
                 
                 requestRef.set({
@@ -524,7 +525,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     tron_address: tronAddress,
                     amount_usd: withdrawUsdAmount.toFixed(4),
                     amount_trx: amountInTrx.toFixed(4),
-                    status: "Pending", // Admin Panelinde görünmesi için "Pending" olarak set edilir.
+                    status: "Pending", // Admin Panelinde düşmesi için bu değer kullanılır.
                     timestamp: serverTimestamp()
                 }).then(() => {
                     // 1. İşlem başarılı: Kullanıcı bakiyesini düşür
@@ -538,12 +539,12 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 }).catch(e => {
                     // Hata durumunda kullanıcıyı bilgilendir
                     console.error("Firebase Withdrawal Error:", e);
-                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection and try again.");
+                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection or check Firebase Rules.");
                 }).finally(() => {
                     withdrawSubmitBtn.disabled = false;
                 });
             }).catch(e => {
-                 // *** ÇÖZÜM: Kullanıcı verisi çekilemezse bu hata gösterilir. ***
+                // Kullanıcı verisi çekilemezse bu hata gösterilir.
                 console.error("Firebase User Data Fetch Error:", e);
                 window.Telegram.WebApp.showAlert("Failed to retrieve user data. Please refresh the app.");
                 withdrawSubmitBtn.disabled = false;
