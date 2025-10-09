@@ -1,3 +1,4 @@
+  console.error
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -132,6 +133,7 @@
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
+                    <div class="stat-display"><span>Total Paid (USD):</span> <strong id="admin-total-paid-usd">$0.00</strong></div>
                 </div>
                 
                 <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
@@ -198,7 +200,7 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700;">Minimum withdrawal: **0.01 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
+                <p style="font-weight:700;">Minimum withdrawal: **2.5 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
@@ -206,7 +208,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 0.019" required>
+                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 2.50" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -248,10 +250,9 @@
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
-        const EARNINGS_PER_AD_USD = 0.001;
-        // REFERRAL BONUS GÜNCELLENDİ
-        const REFERRAL_BONUS_USD = 0.005; 
-        const MIN_WITHDRAW_TRX = 0.01; 
+        const EARNINGS_PER_AD_USD = 0.001; // Reklam başı kazanç (Doğru)
+        const REFERRAL_BONUS_USD = 0.005; // GÜNCELLENDİ
+        const MIN_WITHDRAW_TRX = 2.5; // GÜNCELLENDİ
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
@@ -394,7 +395,7 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again, or check your Ad Blockers/VPNs. (Ad network issue: " + (e?.message || "Unknown") + ")");
+                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
@@ -411,7 +412,7 @@
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
 
-            // REFERRAL BONUS METNİ GÜNCELLENDİ
+            // REFERRAL BONUS VE MIN ÇEKİM METNİ GÜNCELLENDİ (Sabitler kullanıldı)
             const shareText = 
 `💰 TRON ADS FAUCET - FREE TRX! 🚀
 
@@ -468,7 +469,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
                     }).then(() => {
-                        // Bu kısım REFERRAL_BONUS_USD sabitini kullandığı için otomatik güncellenmiştir.
                         window.Telegram.WebApp.showAlert(`Referral code applied successfully! Your referrer received $${REFERRAL_BONUS_USD} in TRX.`);
                         document.getElementById('enter-referrer-code').value = '';
                     });
@@ -573,6 +573,8 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
+            const requestsColRef = collection(firestore, 'withdrawal_requests');
+            
             // 1. Load System Stats (RTDB)
             const usersRef = rtdbRef(rtdb, 'users');
             rtdbOnValue(usersRef, (snapshot) => {
@@ -588,8 +590,21 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
             });
 
-            // 2. Load Withdrawal Requests (FIRESTORE)
-            const requestsColRef = collection(firestore, 'withdrawal_requests');
+            // YENİ EKLENEN: 2. Calculate Total Paid (Firestore - Completed Requests)
+            const qCompleted = query(requestsColRef, where("status", "==", "Completed"));
+            
+            onSnapshot(qCompleted, (querySnapshot) => {
+                let totalPaidUsd = 0.0;
+                querySnapshot.forEach(docSnapshot => {
+                    const request = docSnapshot.data();
+                    // amount_usd firestore'a string olarak kaydedildiği için parseFloat ile çeviriyoruz.
+                    totalPaidUsd += parseFloat(request.amount_usd) || 0.0; 
+                });
+                document.getElementById('admin-total-paid-usd').textContent = `$${totalPaidUsd.toFixed(2)}`;
+            });
+
+
+            // 3. Load Pending Withdrawal Requests (FIRESTORE)
             // Firestore Query (sadece Pending olanları getirir)
             const q = query(requestsColRef, where("status", "==", "Pending"));
             
