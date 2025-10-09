@@ -199,7 +199,7 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700;">Minimum withdrawal is **0.01 TRX**.</p>
+                <p style="font-weight:700;">Minimum withdrawal: **0.01 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
@@ -207,7 +207,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="0.01" placeholder="e.g., 0.01" required>
+                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 0.019" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -232,7 +232,6 @@
         import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
         // --- CONFIGURATION ---
-        // YENİ FIREBASE CONFIG
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAYJqf6Y090mN4fjQAR9m7hNil7hjn0HMg",
             authDomain: "tronadsfaucet-fd451.firebaseapp.com",
@@ -247,7 +246,8 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti (0.01 TRX ve üzeri)
+        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti
+        const MAX_WITHDRAW_TRX = 10.00; // Yeni Maksimum Çekim Limiti
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
         // --- GLOBAL STATE ---
@@ -413,7 +413,7 @@ I'm earning free TRX every day just by watching short ads! You can earn up to $0
 
 🔥 **REFERRAL BONUS:** Join using my link and start earning. When you invite friends, you get a bonus $0.02 worth of TRX for each successful referral!
 
-✅ **MINIMUM WITHDRAWAL:** Only 0.01 TRX. Fast & Easy!
+✅ **MINIMUM WITHDRAWAL:** Only ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Fast & Easy!
 
 Join now and grab your free crypto reward:
 🔗 ${telegramLink}
@@ -471,7 +471,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC ---
+        // --- WITHDRAWAL LOGIC (GÜNCELLENDİ) ---
         
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
@@ -487,9 +487,14 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
             
+            // MINIMUM LİMİT KONTROLÜ
             if (amountInTrx < MIN_WITHDRAW_TRX) {
-                // 0.01 TRX ve üzeri kontrolü
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
+            }
+
+            // MAKSİMUM LİMİT KONTROLÜ
+            if (amountInTrx > MAX_WITHDRAW_TRX) {
+                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Maximum withdrawal is ${MAX_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
             
             const withdrawUsdAmount = amountInTrx * currentTronPriceUsd;
@@ -519,14 +524,24 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     status: "Pending",
                     timestamp: serverTimestamp()
                 }).then(() => {
-                    update(userRef, { balance_usd: newBalance });
-                    window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully.`);
+                    // 1. İşlem başarılı: Kullanıcı bakiyesini düşür
+                    return update(userRef, { balance_usd: newBalance });
+                }).then(() => {
+                    // 2. İstenen BAŞARI MESAJI GÖSTER
+                    window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
                     document.getElementById('amount-trx').value = '';
                 }).catch(e => {
-                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission.");
+                    // HATA DURUMUNDA KULLANICIYI BİLGİLENDİR (2. talep)
+                    console.error("Firebase Withdrawal Error:", e);
+                    window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission. Please check your internet connection and try again.");
                 }).finally(() => {
                     withdrawSubmitBtn.disabled = false;
                 });
+            }).catch(e => {
+                 // get(userRef) hatası olursa
+                console.error("Firebase User Data Fetch Error:", e);
+                window.Telegram.WebApp.showAlert("Failed to retrieve user data. Please refresh the app.");
+                withdrawSubmitBtn.disabled = false;
             });
         }
 
