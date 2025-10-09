@@ -133,6 +133,8 @@
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
+                    <div class="stat-display"><span>Total Ads Watched (Lifetime):</span> <strong id="admin-total-ads">0</strong></div>
+                    <div class="stat-display"><span>Total Approved Payments (USD):</span> <strong id="admin-approved-payments">$0.00</strong></div>
                 </div>
                 
                 <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
@@ -199,16 +201,7 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700; color: var(--primary-color);">
-                    🚨 **IMPORTANT UPDATE:** The minimum withdrawal is now **10 TRX**.<br>
-                    A fixed **2.5 TRX transaction fee** will be deducted from your account for each withdrawal.
-                </p>
-                <p style="font-weight:700; color: var(--text-color); margin-top: 10px;">
-                    Maximum withdrawal: **10000.00 TRX**.
-                </p>
-                <p class="withdraw-note" style="margin-top: 15px; background-color: #fce4ec; border-left: 3px solid var(--primary-color);">
-                    **Notice:** The minimum withdrawal has been updated to **10 TRX** due to high network transaction fees, ensuring that all users receive their payment reliably.
-                </p>
+                <p style="font-weight:700;">Minimum withdrawal: **0.01 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
@@ -216,7 +209,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="0.01" placeholder="e.g., 10.00" required>
+                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 0.019" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -260,11 +253,8 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        // GÜNCELLENMİŞ AYARLAR
-        const MIN_WITHDRAW_TRX = 10.00; // YENİ: Minimum çekim miktarı 10 TRX
-        const MAX_WITHDRAW_TRX = 10000.00; // Maksimum çekim miktarı
-        const TRANSACTION_FEE_TRX = 2.5; // İşlem ücreti
-        // BİTİŞ
+        const MIN_WITHDRAW_TRX = 0.01; 
+        const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
         // --- GLOBAL STATE ---
@@ -342,6 +332,7 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
+                        lifetime_ads_watched: 0, // Yeni eklenen alan
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
@@ -381,6 +372,7 @@
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
+                const lifetimeAds = userData.lifetime_ads_watched || 0; // Yeni: Lifetime Ad count
 
                 if (adsWatched >= AD_LIMIT) {
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
@@ -398,6 +390,7 @@
                     rtdbUpdate(userRef, { // RTDB Update
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
+                        lifetime_ads_watched: lifetimeAds + 1, // Yeni: Lifetime artırıldı
                         last_ad_viewed: serverTimestamp()
                     });
                     
@@ -506,18 +499,15 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
             
-            // MİNİMUM KONTROLÜ
             if (amountInTrx < MIN_WITHDRAW_TRX) {
-                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Due to high transaction fees, the minimum withdrawal amount has been updated to 10 TRX to ensure all users receive their payment.`);
+                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
 
             if (amountInTrx > MAX_WITHDRAW_TRX) {
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Maximum withdrawal is ${MAX_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
             
-            // İŞLEM ÜCRETİNİ EKLİYORUZ (Bakiyeden düşülecek toplam miktar)
-            const totalTrxToDeduct = amountInTrx + TRANSACTION_FEE_TRX; 
-            const withdrawUsdAmount = totalTrxToDeduct * currentTronPriceUsd;
+            const withdrawUsdAmount = amountInTrx * currentTronPriceUsd;
 
             withdrawSubmitBtn.disabled = true;
 
@@ -531,11 +521,10 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 
                 const usdBalance = userData.balance_usd || 0.0;
                 
-                // KONTROL: Bakiyeden düşülecek toplam USD miktarını kontrol edin
                 if (withdrawUsdAmount > usdBalance) {
                     const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
-                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}. You need ${totalTrxToDeduct.toFixed(2)} TRX (amount + ${TRANSACTION_FEE_TRX.toFixed(2)} TRX fee) to proceed.`);
+                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`);
                 }
 
                 const newUsdBalance = usdBalance - withdrawUsdAmount;
@@ -548,11 +537,8 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     telegram_id: telegramId,
                     username: userData.username,
                     tron_address: tronAddress,
-                    amount_usd: (amountInTrx * currentTronPriceUsd).toFixed(4), // Kullanıcının alacağı miktarın USD karşılığı
-                    amount_trx: amountInTrx.toFixed(4), // Kullanıcının alacağı TRX miktarı
-                    deducted_usd: withdrawUsdAmount.toFixed(4), // Bakiyeden düşülen toplam USD
-                    deducted_trx: totalTrxToDeduct.toFixed(4), // Bakiyeden düşülen toplam TRX
-                    transaction_fee_trx: TRANSACTION_FEE_TRX, // İşlem ücretini kaydet
+                    amount_usd: withdrawUsdAmount.toFixed(4),
+                    amount_trx: amountInTrx.toFixed(4),
                     status: "Pending", 
                     timestamp: serverTimestamp()
                 }).then(() => {
@@ -562,7 +548,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 
             }).then(() => {
                 // Başarı mesajı göster
-                window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. ${TRANSACTION_FEE_TRX.toFixed(2)} TRX fee was deducted. Your request is now pending admin approval.`);
+                window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
                 document.getElementById('amount-trx').value = '';
                 document.getElementById('withdraw-usd-amount').textContent = '$0.00';
             }).catch(e => {
@@ -589,22 +575,28 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
-            // 1. Load System Stats (RTDB)
+            // 1. Load System Stats (RTDB) & Total Ads (RTDB)
             const usersRef = rtdbRef(rtdb, 'users');
             rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
-
+                let totalAds = 0; // Yeni: Total Ads
+                
                 snapshot.forEach(userSnapshot => {
-                    totalBalance += userSnapshot.val().balance_usd || 0.0;
+                    const userData = userSnapshot.val();
+                    totalBalance += userData.balance_usd || 0.0;
                     userCount++;
+                    // Yeni: Total Ads hesaplama
+                    totalAds += userData.lifetime_ads_watched || 0; 
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
+                // Yeni: Total Ads UI güncelleme
+                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); 
             });
 
-            // 2. Load Withdrawal Requests (FIRESTORE)
+            // 2. Load Withdrawal Requests (FIRESTORE) - Pending
             const requestsColRef = collection(firestore, 'withdrawal_requests');
             // Firestore Query (sadece Pending olanları getirir)
             const q = query(requestsColRef, where("status", "==", "Pending"));
@@ -633,21 +625,34 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 } else {
                     pendingRequests.forEach(request => {
                         const li = document.createElement('li');
-                        // ADMIN PANELİ BİLGİ GÖSTERİMİ GÜNCELLENDİ
-                        const deductedTrx = request.deducted_trx || (parseFloat(request.amount_trx) + TRANSACTION_FEE_TRX).toFixed(4); // Eski kayıtlar için fallback
-                        const deductedUsd = request.deducted_usd || ((parseFloat(request.amount_trx) + TRANSACTION_FEE_TRX) * currentTronPriceUsd).toFixed(4); // Eski kayıtlar için fallback
-
                         li.innerHTML = `
                             <p><strong>User:</strong> ${request.username} (TG ID: ${request.telegram_id})</p>
                             <p><strong>Address:</strong> <code>${request.tron_address}</code></p>
-                            <p><strong>Withdraw Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
-                            <p style="color:#D32F2F;"><strong>Deducted (Incl. Fee ${TRANSACTION_FEE_TRX} TRX):</strong> ${deductedTrx} TRX <strong>($${deductedUsd})</strong></p>
+                            <p><strong>Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
                             <button onclick="processWithdrawal('${request.requestId}', 'Completed')" class="approve-btn"><i class="fas fa-check"></i> Approve</button>
                             <button onclick="processWithdrawal('${request.requestId}', 'Rejected')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
                         `;
                         ul.appendChild(li);
                     });
                 }
+            });
+            
+            // 3. YENİ: Load Approved Payments (FIRESTORE)
+            const requestsColRefForApproved = collection(firestore, 'withdrawal_requests');
+            // Firestore Query (sadece Completed olanları getirir)
+            const approvedQ = query(requestsColRefForApproved, where("status", "==", "Completed"));
+            
+            // onSnapshot (Firestore Listener)
+            onSnapshot(approvedQ, (querySnapshot) => {
+                let totalApprovedUsd = 0.0;
+
+                querySnapshot.forEach(docSnapshot => {
+                    const request = docSnapshot.data();
+                    totalApprovedUsd += parseFloat(request.amount_usd) || 0.0;
+                });
+
+                // UI Güncelleme
+                document.getElementById('admin-approved-payments').textContent = `$${totalApprovedUsd.toFixed(2)}`;
             });
         }
 
@@ -684,7 +689,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 if (isNaN(trx) || trx <= 0 || currentTronPriceUsd === 0) {
                     withdrawUsd.textContent = '$0.00';
                 } else {
-                    // Kullanıcının girdiği miktarı (çekim miktarını) USD'ye çevirip gösteriyoruz.
                     withdrawUsd.textContent = `$${(trx * currentTronPriceUsd).toFixed(4)}`;
                 }
             });
