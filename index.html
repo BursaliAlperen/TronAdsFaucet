@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -17,8 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
 
     <style>
-        /* ... (CSS kodu aynı kaldı) ... */
-        /* CSS Variables for Theming (Red & White) */
+        /* CSS kodu aynı kaldı */
         :root {
             --font-family: 'Nunito', sans-serif;
             --bg-color-light: #fefefe; 
@@ -35,91 +33,53 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font-family);
-            transition: background-color 0.3s, color 0.3s;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
+        body { font-family: var(--font-family); transition: background-color 0.3s, color 0.3s; }
         body, #app { background-color: var(--bg-color-light); color: var(--text-color-light); }
         #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
-
         .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color-light); }
         .profile-info { display: flex; align-items: center; gap: 15px; }
         #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); }
         .user-details h1 { font-size: 1.2rem; font-weight: 700; }
         .verified-icon { font-size: 1rem; margin-left: 5px; color: var(--primary-color); }
         .user-details p { font-size: 0.9rem; font-weight: 600; color: var(--subtle-text-light); }
-
         main { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         h2 { font-size: 1.5rem; margin-bottom: 15px; }
         .info-text { margin-bottom: 15px; font-weight: 600; color: var(--subtle-text-light); }
         .tron-faucet-text { font-size: 1.2rem; margin-top: 10px; margin-bottom: 20px; font-weight: 700; color: var(--primary-color); text-align: center; }
-
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; text-align: center; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; color: var(--subtle-text-light); }
         .stat-card p { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
-        
         .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .task-icon { font-size: 3rem; margin-bottom: 15px; color: var(--primary-color); }
         .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
         .task-container p { font-size: 0.9rem; margin-bottom: 20px; color: var(--subtle-text-light); }
-
         .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .referral-section h3 { text-align: center; margin-bottom: 15px; font-size: 1.2rem; }
         .ref-group { margin-bottom: 20px; }
         .ref-group label { display: block; margin-bottom: 5px; font-weight: 600; }
         .ref-input-group { display: flex; gap: 10px; }
-        #referral-code, #enter-referral-code { 
-            flex-grow: 1; 
-            padding: 10px; 
-            text-align: center; 
-            border: 1px dashed var(--primary-color); 
-            border-radius: 8px; 
-            font-size: 0.9rem;
-            background-color: var(--bg-color-light); 
-            color: var(--text-color-light);
-            outline: none;
-        }
-        .ref-btn { 
-            padding: 10px 15px; 
-            border: none; 
-            border-radius: 8px; 
-            color: #fff; 
-            cursor: pointer; 
-            font-weight: 600; 
-            background-color: var(--primary-color); 
-            white-space: nowrap;
-        }
-
+        #referral-code, #enter-referral-code { flex-grow: 1; padding: 10px; text-align: center; border: 1px dashed var(--primary-color); border-radius: 8px; font-size: 0.9rem; background-color: var(--bg-color-light); color: var(--text-color-light); outline: none; }
+        .ref-btn { padding: 10px 15px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; background-color: var(--primary-color); white-space: nowrap; }
         .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; background-color: var(--primary-color); }
         .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
         .action-btn.loading .btn-text { visibility: hidden; }
         .action-btn.loading .btn-loader { display: block; position: absolute; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         #withdraw-form .form-group { margin-bottom: 15px; }
         #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
-        #withdraw-form input { 
-            width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s;
-            background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); 
-        }
+        #withdraw-form input { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
         input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15); }
-        
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid var(--border-color-light); z-index: 1000; background-color: var(--secondary-bg-light); }
         .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; color: var(--subtle-text-light); }
         .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
         .nav-btn.active { font-weight: 700; color: var(--primary-color); }
-
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
         .modal-content { padding: 30px; border-radius: 15px; text-align: center; background-color: var(--secondary-bg-light); }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid var(--primary-color); width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        
         #admin-panel { padding: 20px; border-radius: 12px; background-color: #fff8f8; border: 2px solid var(--primary-color); margin-top: 20px; }
         #admin-panel h2 { color: var(--primary-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 15px; }
         .admin-stat { margin-bottom: 10px; padding: 10px; border-bottom: 1px dashed #ccc; }
@@ -267,7 +227,7 @@
             const POINTS_PER_AD = 0.001; // $0.001
             const MIN_WITHDRAW_TRX = 0.01;
 
-            // --- Firebase Config ---
+            // --- Firebase Config (Kendi ayarlarınızı kullanın) ---
             const firebaseConfig = {
                 apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
                 authDomain: "tronadsfaucet.firebaseapp.com",
@@ -283,7 +243,6 @@
             const firebaseApp = firebase.initializeApp(firebaseConfig);
             const database = firebaseApp.database();
             const auth = firebaseApp.auth(); 
-            // firebase.analytics(); 
 
             // --- State Management ---
             let userState = {
@@ -312,7 +271,7 @@
                     username: userDetails.username || 'N/A',
                     lastSeen: firebase.database.ServerValue.TIMESTAMP
                 };
-                // Telegram ID'yi key olarak kullan
+                // Telegram ID'yi key olarak kullan ve Firebase'e yaz
                 await database.ref(`users/${userId}`).set(newUser);
                 return newUser;
             };
@@ -324,7 +283,6 @@
                 if (userData) {
                     userState = { ...userState, ...userData, userId };
                     
-                    // Reset daily count if it's a new day
                     const today = new Date().toISOString().slice(0, 10);
                     if (userState.lastAdWatchDate !== today) {
                         userState.dailyAdWatchCount = 0;
@@ -358,9 +316,7 @@
                 
                 const userId = user.id.toString();
 
-                // KRİTİK ADIM: Telegram ID'yi Firebase Auth'a özel token olarak geçmek yerine,
-                // sadece anonim giriş yaparak auth != null kuralını karşılıyor ve 
-                // Telegram ID'yi veri yolu anahtarı olarak kullanıyoruz.
+                // KRİTİK: Anonim giriş yaparak `auth != null` kuralını sağla
                 try {
                     await auth.signInAnonymously();
                 } catch (error) {
@@ -369,16 +325,16 @@
                     return;
                 }
                 
-                // Telegram ID'yi state'e kaydet
                 userState.userId = userId;
 
                 try {
-                    // Firebase'e sadece Telegram ID'yi kullanarak eriş
+                    // Telegram ID'yi kullanarak verileri yükle
                     await loadConfig();
                     await loadUserState(userId, user); 
                 } catch (error) {
                     console.error("Firebase Load Data Error:", error);
-                    tg.showAlert("An error occurred while loading user data. Please check your Firebase rules and connection.", () => tg.close());
+                    // Yükleniyor hatasının kaynağı burası. Kural hatası varsa burada yakalanır.
+                    tg.showAlert(`An error occurred while loading data: ${error.message}. Check your Firebase rules and internet connection.`, () => tg.close());
                     return;
                 }
 
@@ -399,6 +355,12 @@
                 setupNavigation();
                 setupEventListeners();
             };
+            
+            // Diğer tüm fonksiyonlar (updateUI, handleWatchAd, handleSubmitReferralCode, handleWithdraw vb.) 
+            // Telegram ID'si olan `userState.userId`'yi kullanmaya devam eder.
+            // ... (Kalan tüm kod parçaları aynı kalır, yukarıdaki HTML yapısındaki yerlerine kopyalanmalıdır) ...
+
+            // --- Sadece kritik fonksiyonları tekrar ediyorum ---
             
             const updateUI = () => {
                 const user = tg.initDataUnsafe.user;
@@ -462,11 +424,11 @@
                     userState.dailyAdWatchCount++;
                     
                     const updates = {};
-                    // Telegram ID'yi key olarak kullan
                     updates[`/users/${userState.userId}/points`] = userState.points;
                     updates[`/users/${userState.userId}/dailyAdWatchCount`] = userState.dailyAdWatchCount;
                     updates[`/users/${userState.userId}/lastAdWatchDate`] = new Date().toISOString().slice(0, 10);
                     
+                    // Veritabanı yazma
                     await database.ref().update(updates);
 
                     updateUI();
@@ -495,7 +457,6 @@
                     return;
                 }
                 
-                // Referans kodunu ara
                 const usersRef = database.ref('users');
                 const snapshot = await usersRef.orderByChild('referralCode').equalTo(code).once('value');
                 
@@ -503,11 +464,11 @@
                 if (referrerData) {
                     const referrerId = Object.keys(referrerData)[0];
                     
-                    // Mevcut kullanıcıyı güncelle (Telegram ID'si kullanılarak)
+                    // Mevcut kullanıcıyı güncelle
                     await database.ref(`users/${userState.userId}/referredBy`).set(referrerId);
                     userState.referredBy = referrerId;
 
-                    // Referans veren kullanıcının sayısını artır (Referrer'ın Telegram ID'si kullanılarak)
+                    // Referans veren kullanıcının sayısını artır (Transaction güvenlidir)
                     await database.ref(`users/${referrerId}/referrals`).transaction((currentCount) => {
                         return (currentCount || 0) + 1;
                     });
@@ -563,7 +524,7 @@
                 const newWithdrawalRef = database.ref('withdrawals').push();
                 await newWithdrawalRef.set(withdrawalData);
 
-                // Send notification to Admin via Telegram Bot API (Aynı kaldı)
+                // Send notification to Admin via Telegram Bot API
                 const message = `<b>🚨 NEW WITHDRAWAL REQUEST 🚨</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Amount USD:</b> $${withdrawalData.amountUSD}\n<b>Amount TRX:</b> ${withdrawalData.amountTRX} TRX\n<b>TRON Address:</b> <code>${walletAddress}</code>\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
                 
                 const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -629,18 +590,12 @@
                 });
             };
 
-            // --- Admin Panel Functions ---
-
             const loadAdminData = async () => {
-                // Admin ID eşleştiği için tüm verileri okuyabilir (yeni kural)
-
-                // Total Users
                 const usersSnapshot = await database.ref('users').once('value');
                 const users = usersSnapshot.val();
                 const userCount = users ? Object.keys(users).length : 0;
                 adminTotalUsersElem.textContent = userCount;
 
-                // Total Platform Balance & TRX Price
                 let totalPoints = 0;
                 if (users) {
                     Object.values(users).forEach(u => {
@@ -650,7 +605,6 @@
                 adminTotalBalanceElem.textContent = `$${totalPoints.toFixed(2)}`;
                 adminTrxPriceElem.textContent = `$${trxPriceUSD.toFixed(4)}`;
 
-                // Withdrawal Requests (Real-time listener)
                 const withdrawalsRef = database.ref('withdrawals').orderByChild('status').equalTo('Pending');
                 withdrawalsRef.on('value', (snapshot) => {
                     const requests = snapshot.val();
@@ -680,6 +634,7 @@
                     withdrawalRequestsList.innerHTML = '<p style="text-align: center; color: var(--subtle-text-light);">Error loading requests.</p>';
                 });
             };
+
 
             initApp();
         });
