@@ -11,6 +11,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
+    <script async src="https://partner.adextra.io/jt/1b094dadbb2393355a88e208d5faa706eb972bed.js"></script>
     <script async src="https://partner.adextra.io/jt/48520a9568b1fe05f0e95b682c62971f478f89b2.js"></script>
 
     <style>
@@ -133,7 +134,6 @@
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
-                    <div class="stat-display"><span>Total Ads Watched (System):</span> <strong id="admin-total-ads">0</strong></div>
                 </div>
                 
                 <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
@@ -143,25 +143,41 @@
             </div>
 
             <div id="menu-page" class="page active">
-                <h2><i class="fas fa-home"></i> Home & Earning</h2>
+                <h2><i class="fas fa-home"></i> Home & Earning (2 Ad Units)</h2>
                 <div class="card balance-card">
                     <p style="font-size:1.1rem; color:var(--subtle-text);">Your Current Balance (TRX)</p>
                     <div class="usd-value"><span id="menu-balance-trx">0.0000</span> TRX</div>
                     <div class="trx-value">≈ $<span id="menu-balance-usd">0.00</span></div>
                 </div>
                 
-                <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
-                    <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
-                    <h3>Watch & Earn</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
+                <div class="card" style="text-align: center; border-left: 5px solid #FF9800;">
+                    <i class="fas fa-money-bill-wave" style="font-size:3rem; color: #FF9800;"></i>
+                    <h3>Ad Unit 1: Watch & Earn $0.001</h3>
+                    <p style="margin-bottom:15px; font-size: 0.9rem;">(ID: 1b094d...)</p>
+                    
+                    <div id="1b094dadbb2393355a88e208d5faa706eb972bed"></div>
+
+                    <button id="watch-ad-btn-1" data-ad-id="1b094dadbb2393355a88e208d5faa706eb972bed" class="action-btn ad-btn-unit" style="margin-top: 15px; background-color: #FF9800;">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad 1
+                    </button>
+                </div>
+
+                <div class="card" style="text-align: center; border-left: 5px solid #4CAF50;">
+                    <i class="fas fa-sack-dollar" style="font-size:3rem; color: #4CAF50;"></i>
+                    <h3>Ad Unit 2: Watch & Earn $0.001</h3>
+                    <p style="margin-bottom:15px; font-size: 0.9rem;">(ID: 48520a...)</p>
                     
                     <div id="48520a9568b1fe05f0e95b682c62971f478f89b2"></div>
 
-                    <button id="watch-ad-btn" class="action-btn" style="margin-top: 15px;">
-                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
+                    <button id="watch-ad-btn-2" data-ad-id="48520a9568b1fe05f0e95b682c62971f478f89b2" class="action-btn ad-btn-unit" style="margin-top: 15px; background-color: #4CAF50;">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad 2
                     </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
                 </div>
+                
+                <div class="card" style="padding: 10px 20px;">
+                    <p class="withdraw-note" style="margin-top:0; text-align: center; font-size: 1rem;">Total Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
+                </div>
+
 
                 <div class="menu-grid" style="margin-top: 15px;">
                     <div onclick="showSection('friends-page')" class="menu-tile">
@@ -203,7 +219,7 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700;">Minimum withdrawal: **2.50 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
+                <p style="font-weight:700;">Minimum withdrawal: **0.01 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
@@ -211,7 +227,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 2.50" required>
+                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 0.019" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -246,7 +262,7 @@
             authDomain: "tronadsfaucet-fd451.firebaseapp.com",
             databaseURL: "https://tronadsfaucet-fd451-default-rtdb.firebaseio.com",
             projectId: "tronadsfaucet-fd451",
-            storageBucket: "tronadsfaucet-fd451.appspot.com",
+            storageBucket: "tronadsfaucet-fd451.firebasestorage.app",
             messagingSenderId: "110511122993",
             appId: "1:110511122993:web:99099461844e1fbbe10310",
             measurementId: "G-VZ3Z6SFMXZ"
@@ -255,7 +271,7 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 2.5; // GÜNCELLENDİ
+        const MIN_WITHDRAW_TRX = 0.01; 
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
@@ -308,7 +324,7 @@
                 currentTronPriceUsd = data.tron.usd;
                 document.getElementById('current-trx-price').textContent = currentTronPriceUsd.toFixed(4);
             } catch (error) {
-                // console.error("Error fetching Tron price, using fallback:", error); // KALDIRILDI
+                console.error("Error fetching Tron price, using fallback:", error);
                 currentTronPriceUsd = 0.03389; // Fallback value
                 document.getElementById('current-trx-price').textContent = `F: ${currentTronPriceUsd.toFixed(4)}`;
             }
@@ -334,7 +350,6 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
-                        total_ads_watched: 0, 
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
@@ -360,20 +375,20 @@
                     document.querySelector('#friends-page .input-group button').disabled = true;
                 }
             }, (error) => {
-                // console.error("User Data Listener Error:", error); // KALDIRILDI
+                console.error("User Data Listener Error:", error);
             });
         }
         
         // --- AD VIEW LOGIC (RTDB) ---
         
-        const handleWatchAd = () => {
-            const watchAdBtn = document.getElementById('watch-ad-btn');
+        const handleWatchAd = (e) => {
+            const watchAdBtn = e.currentTarget; // The button that was clicked
+            const adContainerId = watchAdBtn.getAttribute('data-ad-id'); // Get the specific ad ID
             const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
             
             rtdbGet(userRef).then((snapshot) => { // RTDB Get
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
-                let totalAdsWatched = userData.total_ads_watched || 0; 
                 const currentBalance = userData.balance_usd || 0.0;
 
                 if (adsWatched >= AD_LIMIT) {
@@ -384,36 +399,43 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Ad Loading...'; 
 
-                // --- ADEXTRA ENTEGRASYON NOTU: SİMÜLASYON YOK ---
-                // Bu noktada Adextra'nın ödüllü reklam gösterme fonksiyonu (örneğin: window.Adextra.showRewardedAd()) çağrılmalıdır.
-                // Butona basıldığında reklamın açılması beklenir.
-                
-                // ÖDÜL MANTIĞI, Adextra'nın başarılı reklam gösterimini bildiren Geri Bildirim (Callback) fonksiyonuna taşınmalıdır.
-                // Aksi takdirde, reklam izlense bile ödül verilmeyecektir.
-                
-                window.Telegram.WebApp.showAlert("Ad loaded. If it's visible, watch it! The reward logic must be connected to Adextra's success callback.");
+                // Adextra'nın reklamının tetiklenmesi için ilgili div'e tıklama simülasyonu
+                const adContainer = document.getElementById(adContainerId);
+                if (adContainer && typeof adContainer.click === 'function') {
+                    adContainer.click(); 
+                }
+
+                // --- ADEXTRA ENTEGRASYON UYARISI ---
+                window.Telegram.WebApp.showAlert(`Adextra Ad Loaded (Unit ID: ${adContainerId}). The reward logic IS COMMENTED OUT and must be connected to Adextra's success callback.`);
 
                 // Adextra'nın başarılı callback'i bilinmediği için, butonu hemen serbest bırakıyoruz.
-                watchAdBtn.disabled = false;
-                watchAdBtn.classList.remove('loading');
-                watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                // Gerçek ortamda bu serbest bırakma ve ödül verme işlemi, Adextra'nın callback'i içinde OLMALIDIR.
+                setTimeout(() => {
+                    watchAdBtn.disabled = false;
+                    watchAdBtn.classList.remove('loading');
+                    watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                }, 1000); // 1 saniye sonra serbest bırak
 
                 /* // --- ÖDÜL MANTIĞI: ADEXTRA BAŞARI CALLBACK'İNE TAŞINMALI ---
                 // Lütfen aşağıdaki kod bloğunu, Adextra'nın reklam izlenmesinin başarılı olduğunu bildiren fonksiyona ekleyin.
                 
                 adsWatched++;
-                totalAdsWatched++; 
                 const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
                 rtdbUpdate(userRef, { 
                     balance_usd: newBalance,
                     daily_ads_watched: adsWatched,
-                    total_ads_watched: totalAdsWatched, 
                     last_ad_viewed: serverTimestamp()
                 }).then(() => {
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                 });
+                
+                // Ayrıca, bu callback içinde butonu da serbest bırakmalısınız:
+                // watchAdBtn.disabled = false;
+                // watchAdBtn.classList.remove('loading');
+                // watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+
                 // --- ÖDÜL MANTIĞI SONU ---
                 */
 
@@ -568,7 +590,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 document.getElementById('amount-trx').value = '';
                 document.getElementById('withdraw-usd-amount').textContent = '$0.00';
             }).catch(e => {
-                // console.error("Withdrawal Error:", e); // KALDIRILDI
+                console.error("Withdrawal Error:", e);
                 
                 let errorMessage = "An error occurred during withdrawal. Please try again later.";
                 
@@ -596,28 +618,25 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
-                let totalAds = 0; // YENİ: Toplam reklam sayacı
 
                 snapshot.forEach(userSnapshot => {
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
-                    totalAds += userSnapshot.val().total_ads_watched || 0; // YENİ: Toplam reklam sayısını topla
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
-                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); // YENİ: Toplam reklam sayısını göster
             });
 
-            // 2. Load Pending Withdrawal Requests (FIRESTORE)
+            // 2. Load Withdrawal Requests (FIRESTORE)
             const requestsColRef = collection(firestore, 'withdrawal_requests');
             // Firestore Query (sadece Pending olanları getirir)
             const q = query(requestsColRef, where("status", "==", "Pending"));
             
             // onSnapshot (Firestore Listener)
-            onSnapshot(q, async (querySnapshot) => { // Async yapıldı
+            onSnapshot(q, (querySnapshot) => {
                 const ul = document.getElementById('withdrawal-list');
-                ul.innerHTML = '<p style="color:var(--subtle-text);">Loading requests...</p>'; 
+                ul.innerHTML = ''; 
                 
                 const pendingRequests = [];
 
@@ -632,44 +651,18 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
                 pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
 
-                // --- ASYNC RTDB'den Kullanıcı Bakiyesini ve Reklam Sayısını Çekme ---
-                const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
-                    // user_id'yi kullanarak RTDB'den anlık bakiyeyi ve toplam reklam sayısını çek
-                    const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
-                    const userSnapshot = await rtdbGet(userRef);
-                    // YENİ: total_ads_watched varsayılan değeri eklendi
-                    const userData = userSnapshot.val() || { balance_usd: 0.0, total_ads_watched: 0 }; 
-                    return {
-                        ...request,
-                        current_balance_usd: userData.balance_usd || 0.0,
-                        user_total_ads: userData.total_ads_watched || 0 // YENİ: Toplam reklam sayısını kaydet
-                    };
-                });
-                
-                const requestsWithUserData = await Promise.all(requestsWithUserDataPromises);
-                // --- ASYNC Veri Çekme Bitti ---
-                
-                ul.innerHTML = ''; // 'Loading' mesajını temizle
 
-                if (requestsWithUserData.length === 0) {
+                if (pendingRequests.length === 0) {
                     ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
                 } else {
-                    requestsWithUserData.forEach(request => {
+                    pendingRequests.forEach(request => {
                         const li = document.createElement('li');
-                        
-                        // Bakiyenin çekim tutarından sonra ne kadar kalacağını hesapla
-                        const remainingBalance = (request.current_balance_usd - parseFloat(request.amount_usd));
-                        
                         li.innerHTML = `
                             <p><strong>User:</strong> ${request.username} (TG ID: ${request.telegram_id})</p>
-                            <p><strong>Total Ads Watched:</strong> ${request.user_total_ads.toLocaleString()}</p>
                             <p><strong>Address:</strong> <code>${request.tron_address}</code></p>
-                            <p><strong>Request Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
-                            <p><strong>User's Balance (Current):</strong> 
-                                <strong style="color: ${remainingBalance >= 0 ? 'green' : 'red'};">$${request.current_balance_usd.toFixed(4)}</strong>
-                            </p>
+                            <p><strong>Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
                             <button onclick="processWithdrawal('${request.requestId}', 'Completed')" class="approve-btn"><i class="fas fa-check"></i> Approve</button>
-                            <button onclick="processWithdrawal('${request.requestId}', 'Rejected', '${request.user_id}', '${request.amount_usd}')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
+                            <button onclick="processWithdrawal('${request.requestId}', 'Rejected')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
                         `;
                         ul.appendChild(li);
                     });
@@ -677,13 +670,13 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        window.processWithdrawal = (requestId, status, userIdToRefund, amountUsdToRefund) => {
+        window.processWithdrawal = (requestId, status) => {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
             
             // Firestore Document Ref
             const requestDocRef = doc(firestore, 'withdrawal_requests', requestId);
             
-            // 1. Update Firestore Status
+            // Firestore Update (updateDoc)
             updateDoc(requestDocRef, {
                 status: status,
                 processed_by_admin: telegramId,
@@ -691,35 +684,19 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             }).then(() => {
                 window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}.`);
                 window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                
-                // 2. Handle Refund if Rejected (RTDB Update)
-                if (status === 'Rejected' && userIdToRefund && amountUsdToRefund) {
-                    const refundAmount = parseFloat(amountUsdToRefund);
-                    if (isNaN(refundAmount) || refundAmount <= 0) {
-                        return window.Telegram.WebApp.showAlert("Rejection successful, but refund amount is invalid.");
-                    }
-                    
-                    const userRef = rtdbRef(rtdb, 'users/' + userIdToRefund);
-                    rtdbGet(userRef).then(snapshot => {
-                        const userData = snapshot.val();
-                        if (userData) {
-                            const newBalance = (userData.balance_usd || 0.0) + refundAmount;
-                            return rtdbUpdate(userRef, { balance_usd: newBalance });
-                        }
-                    }).then(() => {
-                        window.Telegram.WebApp.showAlert(`Request rejected and $${refundAmount.toFixed(4)} refunded to user.`);
-                    });
-                }
-                
             }).catch(e => {
-                // console.error("Firestore Update Error:", e); // KALDIRILDI
+                console.error("Firestore Update Error:", e);
                 window.Telegram.WebApp.showAlert(`Admin action failed: ${e.message}`);
             });
         }
         
         // --- EVENT LISTENERS SETUP ---
         function setupEventListeners() {
-            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
+            // İki butona da aynı handleWatchAd fonksiyonunu atar
+            document.querySelectorAll('.ad-btn-unit').forEach(btn => {
+                btn.addEventListener('click', handleWatchAd);
+            });
+            
             document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
             
