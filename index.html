@@ -11,8 +11,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
-
+    <script src='//libtl.com/sdk.js' data-zone='10016797' data-sdk='show_10016797'></script>
     <style>
         /* CSS Variables for Theming - RED & WHITE */
         :root {
@@ -253,7 +252,7 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 1.00; // GÜNCELLENDİ: 0.01'den 1.00 TRX'e
+        const MIN_WITHDRAW_TRX = 1.00; 
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
@@ -382,7 +381,8 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                window.showAdexora()
+                // REKLAM ÇAĞRISI GÜNCELLENDİ: window.showAdexora() yerine window.show_10016797() kullanıldı.
+                window.show_10016797()
                   .then(() => {
                     adsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
@@ -398,7 +398,8 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
+                    // Reklamın gösterilemediği veya kullanıcının reklamı kapattığı durum.
+                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again, or check your Ad Blockers/VPNs. (Ad network issue: " + (e?.message || "Unknown") + ")");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
@@ -499,7 +500,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
             
-            // MIN_WITHDRAW_TRX kontrolü güncellendi
             if (amountInTrx < MIN_WITHDRAW_TRX) {
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
@@ -587,13 +587,12 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     const userData = userSnapshot.val();
                     totalBalance += userData.balance_usd || 0.0;
                     userCount++;
-                    // Total Ads hesaplama
+                    // BU NOKTADA TÜM KULLANICILARIN VERİSİ TOPLANIYOR. İŞLEM DOĞRU.
                     totalAds += userData.lifetime_ads_watched || 0; 
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
-                // Total Ads UI güncelleme
                 document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); 
             });
 
