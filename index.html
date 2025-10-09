@@ -200,14 +200,14 @@
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
                 <p style="font-weight:700; color: var(--primary-color);">
-                    🚨 **IMPORTANT UPDATE:** The minimum withdrawal is now **510 TRX**.<br>
+                    🚨 **IMPORTANT UPDATE:** The minimum withdrawal is now **10 TRX**.<br>
                     A fixed **2.5 TRX transaction fee** will be deducted from your account for each withdrawal.
                 </p>
                 <p style="font-weight:700; color: var(--text-color); margin-top: 10px;">
                     Maximum withdrawal: **10000.00 TRX**.
                 </p>
                 <p class="withdraw-note" style="margin-top: 15px; background-color: #fce4ec; border-left: 3px solid var(--primary-color);">
-                    **Notice:** The minimum withdrawal has been updated to **510 TRX** (effective 10 TRX) due to high network transaction fees, ensuring that all users receive their payment reliably.
+                    **Notice:** The minimum withdrawal has been updated to **10 TRX** due to high network transaction fees, ensuring that all users receive their payment reliably.
                 </p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
@@ -216,7 +216,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="1.0" placeholder="e.g., 510.00" required>
+                        <input type="number" id="amount-trx" step="0.01" placeholder="e.g., 10.00" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -261,7 +261,7 @@
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
         // GÜNCELLENMİŞ AYARLAR
-        const MIN_WITHDRAW_TRX = 510.00; // Yeni minimum çekim miktarı (Sizin isteğiniz)
+        const MIN_WITHDRAW_TRX = 10.00; // YENİ: Minimum çekim miktarı 10 TRX
         const MAX_WITHDRAW_TRX = 10000.00; // Maksimum çekim miktarı
         const TRANSACTION_FEE_TRX = 2.5; // İşlem ücreti
         // BİTİŞ
@@ -429,7 +429,7 @@ I'm earning free TRX every day just by watching short ads! You can earn up to $0
 
 🔥 **REFERRAL BONUS:** Join using my link and start earning. When you invite friends, you get a bonus $0.02 worth of TRX for each successful referral!
 
-✅ **MINIMUM WITHDRAWAL:** Only ${MIN_WITHDRAW_TRX.toFixed(2)} TRX (effective 10 TRX). Fast & Easy!
+✅ **MINIMUM WITHDRAWAL:** Only ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Fast & Easy!
 
 Join now and grab your free crypto reward:
 🔗 ${telegramLink}
@@ -506,16 +506,16 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Please enter a valid amount in TRX.");
             }
             
-            // MİNİMUM KONTROLÜ GÜNCELLENDİ
+            // MİNİMUM KONTROLÜ
             if (amountInTrx < MIN_WITHDRAW_TRX) {
-                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Due to high transaction fees, the minimum withdrawal amount has been updated to 510 TRX (effective 10 TRX) to ensure all users receive their payment.`);
+                return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Due to high transaction fees, the minimum withdrawal amount has been updated to 10 TRX to ensure all users receive their payment.`);
             }
 
             if (amountInTrx > MAX_WITHDRAW_TRX) {
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Maximum withdrawal is ${MAX_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
             
-            // YENİ: İŞLEM ÜCRETİNİ EKLİYORUZ (Bakiyeden düşülecek toplam miktar)
+            // İŞLEM ÜCRETİNİ EKLİYORUZ (Bakiyeden düşülecek toplam miktar)
             const totalTrxToDeduct = amountInTrx + TRANSACTION_FEE_TRX; 
             const withdrawUsdAmount = totalTrxToDeduct * currentTronPriceUsd;
 
@@ -531,7 +531,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 
                 const usdBalance = userData.balance_usd || 0.0;
                 
-                // YENİ KONTROL: Bakiyeden düşülecek toplam USD miktarını kontrol edin
+                // KONTROL: Bakiyeden düşülecek toplam USD miktarını kontrol edin
                 if (withdrawUsdAmount > usdBalance) {
                     const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
