@@ -362,7 +362,8 @@
                 }
 
                 const balanceUsd = userData.balance_usd || 0.0;
-                const balanceTrx = balanceUsd / currentTronPriceUsd;
+                // Ensure price is loaded before calculating TRX
+                const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
                 const dailyWatched = userData.daily_ads_watched || 0;
 
                 // Update UI
@@ -384,6 +385,7 @@
         
         // --- AD VIEW LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
+             // Add event listener for the ad button
              document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
         });
         
@@ -399,6 +401,7 @@
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
 
+                document.getElementById('watch-ad-btn').disabled = true; // Disable button while processing
                 document.getElementById('loading-modal').style.display = 'flex';
                 document.getElementById('loading-modal').querySelector('p').textContent = 'Loading Ad...';
 
@@ -423,6 +426,7 @@
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
+                    document.getElementById('watch-ad-btn').disabled = false; // Re-enable button
                     document.getElementById('loading-modal').style.display = 'none';
                   });
             });
@@ -493,6 +497,7 @@
             const receiveTrx = document.getElementById('receive-trx-amount');
             amountInput.addEventListener('input', () => {
                 const usd = parseFloat(amountInput.value);
+                // Only calculate if price is loaded
                 if (isNaN(usd) || usd <= 0 || currentTronPriceUsd === 0) {
                     receiveTrx.textContent = '0.0000';
                 } else {
@@ -521,6 +526,7 @@
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX} TRX.`);
             }
 
+            document.getElementById('withdraw-submit-btn').disabled = true; // Disable button while processing
             document.getElementById('loading-modal').style.display = 'flex';
             document.getElementById('loading-modal').querySelector('p').textContent = 'Submitting Request...';
 
@@ -530,6 +536,7 @@
                 
                 if (withdrawUsdAmount > usdBalance) {
                     document.getElementById('loading-modal').style.display = 'none';
+                    document.getElementById('withdraw-submit-btn').disabled = false;
                     return window.Telegram.WebApp.showAlert("Withdrawal failed: Insufficient balance.");
                 }
 
@@ -556,6 +563,7 @@
                     window.Telegram.WebApp.showAlert("An error occurred during withdrawal submission.");
                 }).finally(() => {
                     document.getElementById('loading-modal').style.display = 'none';
+                    document.getElementById('withdraw-submit-btn').disabled = false; // Re-enable button
                 });
             });
         }
@@ -571,6 +579,7 @@
                 let userCount = 0;
 
                 snapshot.forEach(userSnapshot => {
+                    // Verinin doğru çekildiğinden emin olmak için
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
                 });
@@ -579,32 +588,46 @@
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
             });
 
-            // 2. Load Withdrawal Requests (Ordered by oldest pending first)
-            const requestsQuery = query(ref(database, 'withdrawal_requests'), orderByChild('status'));
-            onValue(requestsQuery, (snapshot) => {
+            // 2. Load Withdrawal Requests (Ordered by status and then time)
+            // Çekim talepleri için sadece 'Pending' durumunda olanları listele
+            const requestsRef = ref(database, 'withdrawal_requests');
+            onValue(requestsRef, (snapshot) => {
                 const ul = document.getElementById('withdrawal-list');
                 ul.innerHTML = ''; 
                 let pendingCount = 0;
 
+                // Talepleri tarihe göre sıralamak için bir dizi oluştur
+                const pendingRequests = [];
+
                 snapshot.forEach(requestSnapshot => {
                     const request = requestSnapshot.val();
                     const requestId = requestSnapshot.key;
-
+                    
                     if (request.status === 'Pending') {
+                        pendingRequests.push({ ...request, requestId });
+                    }
+                });
+
+                // Talepleri en eskisinden en yenisine doğru (en düşük timestamp'ten en yükseğe) sırala.
+                // Firebase serverTimestamp() kullanıldığı için, daha düşük (eski) timestamp'ler öne gelir.
+                pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
+
+
+                if (pendingRequests.length === 0) {
+                    ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
+                } else {
+                    pendingRequests.forEach(request => {
                         pendingCount++;
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <p><strong>User:</strong> ${request.username} (TG ID: ${request.telegram_id})</p>
                             <p><strong>Address:</strong> <code>${request.tron_address}</code></p>
                             <p><strong>Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
-                            <button onclick="processWithdrawal('${requestId}', 'Completed')" class="approve-btn"><i class="fas fa-check"></i> Approve</button>
-                            <button onclick="processWithdrawal('${requestId}', 'Rejected')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
+                            <button onclick="processWithdrawal('${request.requestId}', 'Completed')" class="approve-btn"><i class="fas fa-check"></i> Approve</button>
+                            <button onclick="processWithdrawal('${request.requestId}', 'Rejected')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
                         `;
                         ul.appendChild(li);
-                    }
-                });
-                if (pendingCount === 0) {
-                    ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
+                    });
                 }
             });
         }
@@ -654,6 +677,17 @@
             
             await fetchTronPrice();
             setupUserListener();
+            
+            // FIX: Setup Bottom Navigation Click Handlers (Eksik olan kısım burasıydı)
+            const navButtons = document.querySelectorAll('.bottom-nav .nav-btn');
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    window.showSection(pageId); 
+                });
+            });
+
+            // Initial Page Load
             showSection('menu-page'); 
         };
 
