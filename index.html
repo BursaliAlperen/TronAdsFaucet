@@ -132,8 +132,6 @@
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
-                    <div class="stat-display"><span>Total Ads Watched (Lifetime):</span> <strong id="admin-total-ads">0</strong></div>
-                    <div class="stat-display"><span>Total Approved Payments (USD):</span> <strong id="admin-approved-payments">$0.00</strong></div>
                 </div>
                 
                 <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
@@ -175,7 +173,7 @@
             <div id="friends-page" class="page">
                 <h2><i class="fas fa-user-friends"></i> Referral System</h2>
                 <div class="card">
-                    <p style="font-weight:700; color:var(--primary-color);">Referral Bonus: Get **$0.02** worth of TRX for every successful friend!</p>
+                    <p style="font-weight:700; color:var(--primary-color);">Referral Bonus: Get **$0.005** worth of TRX for every successful friend!</p>
                     
                     <h3 style="font-size:1.2rem; margin-top:15px; margin-bottom:5px;">Your Referral Link (Share this!)</h3>
                     <div class="input-group">
@@ -200,7 +198,7 @@
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
                 </div>
-                <p style="font-weight:700;">Minimum withdrawal: **1.00 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
+                <p style="font-weight:700;">Minimum withdrawal: **0.01 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
                     <div class="form-group">
                         <label for="tron-address"><i class="fas fa-truck-moving"></i> TRON Wallet Address:</label>
@@ -208,7 +206,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amount-trx"><i class="fas fa-coins"></i> Amount (TRX):</label>
-                        <input type="number" id="amount-trx" step="0.01" placeholder="e.g., 1.50" required>
+                        <input type="number" id="amount-trx" step="0.001" placeholder="e.g., 0.019" required>
                     </div>
                     <p class="withdraw-note">This equals: <strong id="withdraw-usd-amount">$0.00</strong> USD</p>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn" style="margin-top:15px;">
@@ -251,8 +249,9 @@
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
-        const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 1.00; 
+        // REFERRAL BONUS GÜNCELLENDİ
+        const REFERRAL_BONUS_USD = 0.005; 
+        const MIN_WITHDRAW_TRX = 0.01; 
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
@@ -331,7 +330,6 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
-                        lifetime_ads_watched: 0, 
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
@@ -371,7 +369,6 @@
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
-                const lifetimeAds = userData.lifetime_ads_watched || 0; 
 
                 if (adsWatched >= AD_LIMIT) {
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
@@ -390,7 +387,6 @@
                     rtdbUpdate(userRef, { // RTDB Update
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
-                        lifetime_ads_watched: lifetimeAds + 1, 
                         last_ad_viewed: serverTimestamp()
                     });
                     
@@ -398,7 +394,6 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    // Reklamın gösterilemediği veya kullanıcının reklamı kapattığı durum.
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again, or check your Ad Blockers/VPNs. (Ad network issue: " + (e?.message || "Unknown") + ")");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
@@ -416,12 +411,13 @@
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
 
+            // REFERRAL BONUS METNİ GÜNCELLENDİ
             const shareText = 
 `💰 TRON ADS FAUCET - FREE TRX! 🚀
 
 I'm earning free TRX every day just by watching short ads! You can earn up to $0.30 - $3.00 USD daily with minimal effort.
 
-🔥 **REFERRAL BONUS:** Join using my link and start earning. When you invite friends, you get a bonus $0.02 worth of TRX for each successful referral!
+🔥 **REFERRAL BONUS:** Join using my link and start earning. When you invite friends, you get a bonus $${REFERRAL_BONUS_USD} worth of TRX for each successful referral!
 
 ✅ **MINIMUM WITHDRAWAL:** Only ${MIN_WITHDRAW_TRX.toFixed(2)} TRX. Fast & Easy!
 
@@ -472,6 +468,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
                     }).then(() => {
+                        // Bu kısım REFERRAL_BONUS_USD sabitini kullandığı için otomatik güncellenmiştir.
                         window.Telegram.WebApp.showAlert(`Referral code applied successfully! Your referrer received $${REFERRAL_BONUS_USD} in TRX.`);
                         document.getElementById('enter-referrer-code').value = '';
                     });
@@ -576,27 +573,22 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
-            // 1. Load System Stats (RTDB) & Total Ads (RTDB)
+            // 1. Load System Stats (RTDB)
             const usersRef = rtdbRef(rtdb, 'users');
             rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
-                let totalAds = 0; 
-                
+
                 snapshot.forEach(userSnapshot => {
-                    const userData = userSnapshot.val();
-                    totalBalance += userData.balance_usd || 0.0;
+                    totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
-                    // BU NOKTADA TÜM KULLANICILARIN VERİSİ TOPLANIYOR. İŞLEM DOĞRU.
-                    totalAds += userData.lifetime_ads_watched || 0; 
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
-                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); 
             });
 
-            // 2. Load Withdrawal Requests (FIRESTORE) - Pending
+            // 2. Load Withdrawal Requests (FIRESTORE)
             const requestsColRef = collection(firestore, 'withdrawal_requests');
             // Firestore Query (sadece Pending olanları getirir)
             const q = query(requestsColRef, where("status", "==", "Pending"));
@@ -635,24 +627,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                         ul.appendChild(li);
                     });
                 }
-            });
-            
-            // 3. Load Approved Payments (FIRESTORE)
-            const requestsColRefForApproved = collection(firestore, 'withdrawal_requests');
-            // Firestore Query (sadece Completed olanları getirir)
-            const approvedQ = query(requestsColRefForApproved, where("status", "==", "Completed"));
-            
-            // onSnapshot (Firestore Listener)
-            onSnapshot(approvedQ, (querySnapshot) => {
-                let totalApprovedUsd = 0.0;
-
-                querySnapshot.forEach(docSnapshot => {
-                    const request = docSnapshot.data();
-                    totalApprovedUsd += parseFloat(request.amount_usd) || 0.0;
-                });
-
-                // UI Güncelleme
-                document.getElementById('admin-approved-payments').textContent = `$${totalApprovedUsd.toFixed(2)}`;
             });
         }
 
