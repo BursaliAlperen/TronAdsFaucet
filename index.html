@@ -232,7 +232,7 @@
         import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
         // --- CONFIGURATION ---
-        // YENİ FIREBASE CONFIG BURAYA ENTEGRE EDİLDİ
+        // YENİ FIREBASE CONFIG
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAYJqf6Y090mN4fjQAR9m7hNil7hjn0HMg",
             authDomain: "tronadsfaucet-fd451.firebaseapp.com",
@@ -247,7 +247,7 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti
+        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti (0.01 TRX ve üzeri)
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
         // --- GLOBAL STATE ---
@@ -405,13 +405,32 @@
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
 
-            const shareText = `Earnings of $0.30 to $3 per day!\nTron Coin Ads Faucet\nUse it to Make Money (Referral Link: ${telegramLink})`;
+            // YENİ, DAHA DETAYLI VE İLGİ ÇEKİCİ İNGİLİZCE METİN
+            const shareText = 
+`💰 TRON ADS FAUCET - FREE TRX! 🚀
+
+I'm earning free TRX every day just by watching short ads! You can earn up to $0.30 - $3.00 USD daily with minimal effort.
+
+🔥 **REFERRAL BONUS:** Join using my link and start earning. When you invite friends, you get a bonus $0.02 worth of TRX for each successful referral!
+
+✅ **MINIMUM WITHDRAWAL:** Only 0.01 TRX. Fast & Easy!
+
+Join now and grab your free crypto reward:
+🔗 ${telegramLink}
+
+See you inside! #Tron #TRX #Crypto #FreeMoney`;
             
             if (navigator.share) {
-                navigator.share({ title: 'Tron Ads Faucet', text: shareText });
+                // Mobil cihazlarda Telegram, WhatsApp gibi uygulamaları açar
+                navigator.share({ 
+                    title: 'Tron Ads Faucet - Free TRX!', 
+                    text: shareText 
+                });
             } else {
+                // WebApp/Masaüstü Kullanıcıları için panoya kopyalama
                 navigator.clipboard.writeText(shareText).then(() => {
-                    window.Telegram.WebApp.showAlert("Promotional text copied to clipboard!");
+                    window.Telegram.WebApp.showAlert("Promotional text copied to clipboard! Share it with your friends!");
+                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                 });
             }
         }
@@ -469,6 +488,7 @@
             }
             
             if (amountInTrx < MIN_WITHDRAW_TRX) {
+                // 0.01 TRX ve üzeri kontrolü
                 return window.Telegram.WebApp.showAlert(`Withdrawal failed: Minimum withdrawal is ${MIN_WITHDRAW_TRX.toFixed(2)} TRX.`);
             }
             
@@ -514,13 +534,14 @@
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
-            // 1. Load System Stats
+            // 1. Load System Stats (Total User Balance dahil)
             const usersRef = ref(database, 'users');
             onValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
 
                 snapshot.forEach(userSnapshot => {
+                    // TÜM KULLANICILARIN USD BAKİYESİNİ TOPLA
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
                 });
