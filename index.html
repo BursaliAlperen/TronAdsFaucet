@@ -232,21 +232,22 @@
         import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
         // --- CONFIGURATION ---
+        // YENİ FIREBASE CONFIG BURAYA ENTEGRE EDİLDİ
         const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCGGHZROaP3RkFs-a293uTFaWn521y3BeM",
-            authDomain: "tronadsfaucet.firebaseapp.com",
-            databaseURL: "https://tronadsfaucet-default-rtdb.firebaseio.com",
-            projectId: "tronadsfaucet",
-            storageBucket: "tronadsfaucet.firebasestorage.app",
-            messagingSenderId: "26180984735",
-            appId: "1:26180984735:web:e498a635c4f61bd0a167aa",
-            measurementId: "G-WG3ETVHC78"
+            apiKey: "AIzaSyAYJqf6Y090mN4fjQAR9m7hNil7hjn0HMg",
+            authDomain: "tronadsfaucet-fd451.firebaseapp.com",
+            databaseURL: "https://tronadsfaucet-fd451-default-rtdb.firebaseio.com",
+            projectId: "tronadsfaucet-fd451",
+            storageBucket: "tronadsfaucet-fd451.firebasestorage.app",
+            messagingSenderId: "110511122993",
+            appId: "1:110511122993:web:99099461844e1fbbe10310",
+            measurementId: "G-VZ3Z6SFMXZ"
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877"];
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 0.01; // DÜZELTME: Yeni Minimum Çekim Limiti
+        const MIN_WITHDRAW_TRX = 0.01; // Minimum Çekim Limiti
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
         // --- GLOBAL STATE ---
@@ -256,6 +257,7 @@
 
         // --- FIREBASE INITIALIZATION ---
         const app = initializeApp(FIREBASE_CONFIG);
+        // getAnalytics(app); // Analytics kullanılmadığı için kapatıldı
         const database = getDatabase(app);
 
         // --- UTILITY FUNCTIONS ---
@@ -508,7 +510,7 @@
             });
         }
 
-        // --- ADMIN PANEL LOGIC (Kullanıcı Sayısı Düzeltildi) ---
+        // --- ADMIN PANEL LOGIC ---
         function loadAdminPanel() {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
 
@@ -523,7 +525,6 @@
                     userCount++;
                 });
                 
-                // DÜZELTME: Kullanıcı sayısının doğru güncellendiğinden emin olunuyor
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
             });
