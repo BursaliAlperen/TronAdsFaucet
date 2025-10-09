@@ -161,7 +161,6 @@
                 </div>
 
                 <div class="card" style="padding: 10px; margin-bottom: 20px;">
-                    <p style="text-align:center; color:var(--subtle-text); font-size:0.9rem; margin-bottom: 5px;">Sponsorlu Reklamlar</p>
                     <div id="1b094dadbb2393355a88e208d5faa706eb972bed" style="text-align:center;"></div>
                     <div id="48520a9568b1fe05f0e95b682c62971f478f89b2" style="margin-top:10px; text-align:center;"></div>
                 </div>
@@ -372,12 +371,11 @@
             const watchAdBtn = document.getElementById('watch-ad-btn');
             
             // ÖDÜLLÜ REKLAM ENTEGRASYONU - ADEXTRA İÇİN GÜNCELLENDİ
-            // NOT: Adextra'nın ödüllü reklam fonksiyon adını bilmiyoruz. Buradaki 'window.adextra_show_rewarded_ad' bir varsayımdır.
-            // Bu fonksiyonun adını Adextra panelinizden kontrol edin ve aşağıdaki satırı değiştirin.
-            const REWARDED_AD_FUNCTION = window.adextra_show_rewarded_ad;
+            // Adextra'nın ödüllü reklamını tetiklemek için kullanılan fonksiyon (blok ID'si ile ilişkilidir)
+            const REWARDED_AD_FUNCTION = window.adextra_reward_ad_48520a9568b1fe05f0e95b682c62971f478f89b2;
 
             if (typeof REWARDED_AD_FUNCTION !== 'function') {
-                return window.Telegram.WebApp.showAlert("ERROR: The rewarded ad function is not defined. Please check the Adextra integration.");
+                return window.Telegram.WebApp.showAlert("ERROR: The rewarded ad function is not defined. Please check the Adextra integration. (Expected: window.adextra_reward_ad_48520a9568b1fe05f0e95b682c62971f478f89b2)");
             }
 
             const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
@@ -397,7 +395,6 @@
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
                 // ÖDÜLLÜ REKLAM ÇAĞRISI
-                // BU SATIRI ADEXTRA'NIN DOĞRU ÖDÜLLÜ REKLAM FONKSİYONU İLE DEĞİŞTİRİN
                 REWARDED_AD_FUNCTION() 
                   .then(() => {
                     // Kullanıcı reklamı başarıyla izlediğinde bu kısım çalışır
