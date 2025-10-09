@@ -13,20 +13,19 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
 
     <style>
-        /* Google Font Import */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
-
+        /* ... (CSS kodu aynı kaldı) ... */
         /* CSS Variables for Theming (Red & White) */
         :root {
             --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #fefefe; /* Near white */
+            --bg-color-light: #fefefe; 
             --secondary-bg-light: #ffffff;
             --text-color-light: #1c1c1e;
             --subtle-text-light: #6d6d72;
-            --primary-color: #ff3b30; /* Red for primary action */
+            --primary-color: #ff3b30; 
             --border-color-light: #e0e0e0;
             --bg-color-dark: #121212;
             --secondary-bg-dark: #1c1c1e;
@@ -35,7 +34,6 @@
             --border-color-dark: #38383a;
         }
 
-        /* Base Styles */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: var(--font-family);
@@ -44,42 +42,33 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Theme Styles - Using Light Theme only for Red/White */
-        body, #app { 
-            background-color: var(--bg-color-light); 
-            color: var(--text-color-light); 
-        }
+        body, #app { background-color: var(--bg-color-light); color: var(--text-color-light); }
         #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
 
-        /* Profile Header */
         .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color-light); }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
         #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); }
         .user-details h1 { font-size: 1.2rem; font-weight: 700; }
         .verified-icon { font-size: 1rem; margin-left: 5px; color: var(--primary-color); }
         .user-details p { font-size: 0.9rem; font-weight: 600; color: var(--subtle-text-light); }
 
-        /* Main Content & Pages */
         main { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         h2 { font-size: 1.5rem; margin-bottom: 15px; }
         .info-text { margin-bottom: 15px; font-weight: 600; color: var(--subtle-text-light); }
         .tron-faucet-text { font-size: 1.2rem; margin-top: 10px; margin-bottom: 20px; font-weight: 700; color: var(--primary-color); text-align: center; }
 
-        /* Home Page Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; text-align: center; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; color: var(--subtle-text-light); }
         .stat-card p { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
         
-        /* Ad Task Container */
         .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .task-icon { font-size: 3rem; margin-bottom: 15px; color: var(--primary-color); }
         .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
         .task-container p { font-size: 0.9rem; margin-bottom: 20px; color: var(--subtle-text-light); }
 
-        /* Referral Section (Manual System) */
         .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
         .referral-section h3 { text-align: center; margin-bottom: 15px; font-size: 1.2rem; }
         .ref-group { margin-bottom: 20px; }
@@ -96,7 +85,6 @@
             color: var(--text-color-light);
             outline: none;
         }
-        #referral-code:read-only { cursor: default; }
         .ref-btn { 
             padding: 10px 15px; 
             border: none; 
@@ -108,7 +96,6 @@
             white-space: nowrap;
         }
 
-        /* Action Button */
         .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; background-color: var(--primary-color); }
         .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
@@ -116,7 +103,6 @@
         .action-btn.loading .btn-loader { display: block; position: absolute; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Form Styles */
         #withdraw-form .form-group { margin-bottom: 15px; }
         #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
         #withdraw-form input { 
@@ -125,18 +111,15 @@
         }
         input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15); }
         
-        /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid var(--border-color-light); z-index: 1000; background-color: var(--secondary-bg-light); }
         .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; color: var(--subtle-text-light); }
         .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
         .nav-btn.active { font-weight: 700; color: var(--primary-color); }
 
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
         .modal-content { padding: 30px; border-radius: 15px; text-align: center; background-color: var(--secondary-bg-light); }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid var(--primary-color); width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         
-        /* Admin Panel Styles */
         #admin-panel { padding: 20px; border-radius: 12px; background-color: #fff8f8; border: 2px solid var(--primary-color); margin-top: 20px; }
         #admin-panel h2 { color: var(--primary-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 15px; }
         .admin-stat { margin-bottom: 10px; padding: 10px; border-bottom: 1px dashed #ccc; }
@@ -237,7 +220,7 @@
                 <form id="withdraw-form">
                     <div class="form-group">
                         <label for="withdraw-method">Method: <strong>TRON (TRX)</strong></label>
-                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="account-number">TRON (TRX) Wallet Address:</label>
                         <input type="text" id="account-number" placeholder="T..." required>
@@ -299,38 +282,10 @@
             // Initialize Firebase
             const firebaseApp = firebase.initializeApp(firebaseConfig);
             const database = firebaseApp.database();
-            // firebase.analytics(); // Analytics initialized, but further use requires more setup
+            const auth = firebaseApp.auth(); 
+            // firebase.analytics(); 
 
-            // --- DOM Elements ---
-            const userPhotoElem = document.getElementById('user-photo');
-            const userNameElem = document.getElementById('user-name');
-            const userPointsElem = document.getElementById('user-points');
-            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-            const referralCountElem = document.getElementById('referral-count');
-            const watchAdBtn = document.getElementById('watch-ad-btn');
-            const withdrawForm = document.getElementById('withdraw-form');
-            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-            const referralCodeElem = document.getElementById('referral-code');
-            const copyRefCodeBtn = document.getElementById('copy-ref-code-btn');
-            const shareRefBtn = document.getElementById('share-ref-btn');
-            const enterRefCodeElem = document.getElementById('enter-referral-code');
-            const submitRefCodeBtn = document.getElementById('submit-ref-code-btn');
-            const refStatusMsgElem = document.getElementById('ref-status-message');
-            const loadingModal = document.getElementById('loading-modal');
-            const amountUsdInput = document.getElementById('amount-usd');
-            const amountTrxDisplay = document.getElementById('amount-trx-display');
-            const currentTrxPriceElem = document.getElementById('current-trx-price');
-            const maxWithdrawUsdElem = document.getElementById('max-withdraw-usd');
-            const minWithdrawTrxElem = document.getElementById('min-withdraw-trx');
-            const minWithdrawUsdElem = document.getElementById('min-withdraw-usd');
-            const adminPanel = document.getElementById('admin-panel');
-            const adminTotalUsersElem = document.getElementById('admin-total-users');
-            const adminTotalBalanceElem = document.getElementById('admin-total-balance');
-            const adminTrxPriceElem = document.getElementById('admin-trx-price');
-            const adminPendingWithdrawalsElem = document.getElementById('admin-pending-withdrawals');
-            const withdrawalRequestsList = document.getElementById('withdrawal-requests-list');
-
-            // --- State Management (Now Firebase-backed) ---
+            // --- State Management ---
             let userState = {
                 points: 0,
                 dailyAdWatchCount: 0,
@@ -342,30 +297,33 @@
             };
             let trxPriceUSD = 0;
 
-            // --- Firebase Interaction Functions (Real Logic) ---
+            // --- Firebase Interaction Functions ---
 
-            const createNewUser = async (userId, firstName, lastName) => {
+            const createNewUser = async (userId, userDetails) => {
                 const newUser = {
                     points: 0.0,
                     dailyAdWatchCount: 0,
                     lastAdWatchDate: null,
                     referrals: 0,
-                    referralCode: userId.toString().slice(-6), // Simple unique code
+                    referralCode: userId.toString().slice(-6), 
                     referredBy: null,
-                    firstName: firstName,
-                    lastName: lastName,
-                    username: tg.initDataUnsafe.user.username || 'N/A',
+                    firstName: userDetails.first_name || '',
+                    lastName: userDetails.last_name || '',
+                    username: userDetails.username || 'N/A',
                     lastSeen: firebase.database.ServerValue.TIMESTAMP
                 };
+                // Telegram ID'yi key olarak kullan
                 await database.ref(`users/${userId}`).set(newUser);
                 return newUser;
             };
 
-            const loadUserState = async (userId) => {
+            const loadUserState = async (userId, userDetails) => {
                 const snapshot = await database.ref(`users/${userId}`).once('value');
                 const userData = snapshot.val();
+                
                 if (userData) {
                     userState = { ...userState, ...userData, userId };
+                    
                     // Reset daily count if it's a new day
                     const today = new Date().toISOString().slice(0, 10);
                     if (userState.lastAdWatchDate !== today) {
@@ -375,20 +333,14 @@
                         await database.ref(`users/${userId}/lastAdWatchDate`).set(today);
                     }
                 } else {
-                    const user = tg.initDataUnsafe.user;
-                    const newUserState = await createNewUser(userId, user.first_name, user.last_name);
+                    const newUserState = await createNewUser(userId, userDetails);
                     userState = { ...userState, ...newUserState, userId };
                 }
             };
             
             const loadConfig = async () => {
                 const snapshot = await database.ref('config/trxPriceUSD').once('value');
-                trxPriceUSD = snapshot.val() || 0.1; // Default if not set
-                
-                // Set initial price if not exists (for simulation/first run)
-                if (snapshot.val() === null) {
-                     await database.ref('config/trxPriceUSD').set(trxPriceUSD);
-                }
+                trxPriceUSD = snapshot.val() || 0.1; 
             };
 
             // --- Core Functions ---
@@ -396,7 +348,7 @@
             const initApp = async () => {
                 tg.ready();
                 tg.expand();
-                document.body.className = `light-theme`; // Force light theme for red/white
+                document.body.className = `light-theme`; 
 
                 const user = tg.initDataUnsafe.user;
                 if (!user || !user.id) {
@@ -404,16 +356,41 @@
                     return;
                 }
                 
-                userState.userId = user.id;
+                const userId = user.id.toString();
 
-                await loadConfig();
-                await loadUserState(user.id);
+                // KRİTİK ADIM: Telegram ID'yi Firebase Auth'a özel token olarak geçmek yerine,
+                // sadece anonim giriş yaparak auth != null kuralını karşılıyor ve 
+                // Telegram ID'yi veri yolu anahtarı olarak kullanıyoruz.
+                try {
+                    await auth.signInAnonymously();
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                    tg.showAlert("Authentication error. Please check Firebase Auth settings.", () => tg.close());
+                    return;
+                }
+                
+                // Telegram ID'yi state'e kaydet
+                userState.userId = userId;
 
-                if (user.id.toString() === ADMIN_TELEGRAM_ID) {
-                    await loadAdminData();
-                    document.querySelector(`[data-page="home-page"]`).click(); // Re-trigger to ensure Home is visible
-                    // Keep the Admin panel visible in the Home page
-                    adminPanel.style.display = 'block';
+                try {
+                    // Firebase'e sadece Telegram ID'yi kullanarak eriş
+                    await loadConfig();
+                    await loadUserState(userId, user); 
+                } catch (error) {
+                    console.error("Firebase Load Data Error:", error);
+                    tg.showAlert("An error occurred while loading user data. Please check your Firebase rules and connection.", () => tg.close());
+                    return;
+                }
+
+                if (userId === ADMIN_TELEGRAM_ID) {
+                    try {
+                        await loadAdminData();
+                        document.querySelector(`[data-page="home-page"]`).click();
+                        adminPanel.style.display = 'block';
+                    } catch (error) {
+                        console.error("Firebase Admin Load Error:", error);
+                        tg.showAlert("An error occurred while loading admin data.", () => tg.close());
+                    }
                 } else {
                     adminPanel.style.display = 'none';
                 }
@@ -434,15 +411,17 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals;
 
-                // Referral page updates
                 referralCodeElem.value = userState.referralCode || 'N/A';
                 if (userState.referredBy) {
                     enterRefCodeElem.disabled = true;
                     submitRefCodeBtn.disabled = true;
                     refStatusMsgElem.textContent = 'You have already been referred.';
+                } else {
+                    enterRefCodeElem.disabled = false;
+                    submitRefCodeBtn.disabled = false;
+                    refStatusMsgElem.textContent = '';
                 }
 
-                // Withdraw page updates
                 maxWithdrawUsdElem.textContent = parseFloat(userState.points).toFixed(2);
                 currentTrxPriceElem.textContent = parseFloat(trxPriceUSD).toFixed(4);
                 
@@ -474,31 +453,31 @@
                     tg.showAlert(`You have reached your daily ad watch limit of ${DAILY_AD_LIMIT} ads.`); 
                     return;
                 }
+                watchAdBtn.disabled = true;
                 loadingModal.style.display = 'flex';
                 
-                // Adexora Ad Integration
                 window.showAdexora()
                 .then(async () => {
-                    // Success logic
                     userState.points = parseFloat(userState.points) + POINTS_PER_AD;
                     userState.dailyAdWatchCount++;
                     
-                    // Update Firebase
                     const updates = {};
+                    // Telegram ID'yi key olarak kullan
                     updates[`/users/${userState.userId}/points`] = userState.points;
                     updates[`/users/${userState.userId}/dailyAdWatchCount`] = userState.dailyAdWatchCount;
                     updates[`/users/${userState.userId}/lastAdWatchDate`] = new Date().toISOString().slice(0, 10);
+                    
                     await database.ref().update(updates);
 
                     updateUI();
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert(`Success! You've earned $${POINTS_PER_AD.toFixed(3)}.`);
                 }).catch((e) => {
-                    // Error logic
                     console.error("Adexora Error:", e);
                     tg.showAlert("Ad could not be loaded or was skipped. Please try again later.");
                 }).finally(() => {
                     loadingModal.style.display = 'none';
+                    watchAdBtn.disabled = false;
                 });
             };
 
@@ -507,14 +486,16 @@
                     tg.showAlert('You have already entered a referral code.');
                     return;
                 }
+                submitRefCodeBtn.disabled = true;
 
                 const code = enterRefCodeElem.value.trim();
                 if (!code || code === userState.referralCode) {
                     tg.showAlert("Please enter a valid code that is not your own.");
+                    submitRefCodeBtn.disabled = false;
                     return;
                 }
                 
-                // Search for the referrer by code
+                // Referans kodunu ara
                 const usersRef = database.ref('users');
                 const snapshot = await usersRef.orderByChild('referralCode').equalTo(code).once('value');
                 
@@ -522,11 +503,11 @@
                 if (referrerData) {
                     const referrerId = Object.keys(referrerData)[0];
                     
-                    // Update current user
+                    // Mevcut kullanıcıyı güncelle (Telegram ID'si kullanılarak)
                     await database.ref(`users/${userState.userId}/referredBy`).set(referrerId);
                     userState.referredBy = referrerId;
 
-                    // Update referrer's count
+                    // Referans veren kullanıcının sayısını artır (Referrer'ın Telegram ID'si kullanılarak)
                     await database.ref(`users/${referrerId}/referrals`).transaction((currentCount) => {
                         return (currentCount || 0) + 1;
                     });
@@ -535,14 +516,14 @@
                     refStatusMsgElem.textContent = `Success! You are now referred by ${code}.`;
                     tg.showAlert(`Success! You are now referred. The referrer received a bonus.`);
                     
-                    // Reload state to reflect changes
-                    await loadUserState(userState.userId);
+                    await loadUserState(userState.userId, tg.initDataUnsafe.user);
                     updateUI();
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
                     refStatusMsgElem.textContent = 'Error: Invalid referral code.';
                     tg.showAlert("Invalid referral code.");
                 }
+                submitRefCodeBtn.disabled = false;
             };
             
             const handleWithdraw = async (e) => {
@@ -579,10 +560,10 @@
                 };
                 
                 // Save withdrawal request to Firebase
-                const newWithdrawalKey = database.ref('withdrawals').push().key;
-                await database.ref(`withdrawals/${newWithdrawalKey}`).set(withdrawalData);
+                const newWithdrawalRef = database.ref('withdrawals').push();
+                await newWithdrawalRef.set(withdrawalData);
 
-                // Send notification to Admin via Telegram Bot API
+                // Send notification to Admin via Telegram Bot API (Aynı kaldı)
                 const message = `<b>🚨 NEW WITHDRAWAL REQUEST 🚨</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Amount USD:</b> $${withdrawalData.amountUSD}\n<b>Amount TRX:</b> ${withdrawalData.amountTRX} TRX\n<b>TRON Address:</b> <code>${walletAddress}</code>\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
                 
                 const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -599,7 +580,6 @@
                     amountTrxDisplay.value = '0.00 TRX';
 
                 } catch (error) {
-                    // Rollback points on bot API failure
                     const rollbackPoints = userState.points + amountUSD;
                     await database.ref(`users/${userState.userId}/points`).set(rollbackPoints);
                     userState.points = rollbackPoints;
@@ -607,7 +587,6 @@
                     
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("Failed to notify admin. Points have been returned. Please try again or contact support.");
-                    // Mark request as failed in Firebase if needed, but for simplicity, we focus on user's balance
                 } finally {
                     withdrawSubmitBtn.classList.remove('loading');
                     withdrawSubmitBtn.disabled = false;
@@ -630,7 +609,6 @@
                     buttons: [{id: 'share', type: 'default', text: 'Share via Telegram'}, {type: 'cancel'}]
                 }, (buttonId) => {
                     if (buttonId === 'share') {
-                        // Using a simple share URL since TWA has limitations on custom share
                         const encodedText = encodeURIComponent(shareText);
                         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/TronAdsFaucetBot')}&text=${encodedText}`);
                     }
@@ -654,6 +632,8 @@
             // --- Admin Panel Functions ---
 
             const loadAdminData = async () => {
+                // Admin ID eşleştiği için tüm verileri okuyabilir (yeni kural)
+
                 // Total Users
                 const usersSnapshot = await database.ref('users').once('value');
                 const users = usersSnapshot.val();
@@ -670,7 +650,7 @@
                 adminTotalBalanceElem.textContent = `$${totalPoints.toFixed(2)}`;
                 adminTrxPriceElem.textContent = `$${trxPriceUSD.toFixed(4)}`;
 
-                // Withdrawal Requests
+                // Withdrawal Requests (Real-time listener)
                 const withdrawalsRef = database.ref('withdrawals').orderByChild('status').equalTo('Pending');
                 withdrawalsRef.on('value', (snapshot) => {
                     const requests = snapshot.val();
@@ -689,7 +669,7 @@
                                 <p><strong>Address:</strong> <code>${req.address}</code></p>
                                 <p><strong>Time:</strong> ${new Date(req.timestamp).toLocaleTimeString()}</p>
                             `;
-                            withdrawalRequestsList.prepend(item); // Show newest first
+                            withdrawalRequestsList.prepend(item); 
                         });
                     } else {
                          withdrawalRequestsList.innerHTML = '<p style="text-align: center; color: var(--subtle-text-light);">No pending requests.</p>';
