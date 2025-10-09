@@ -11,8 +11,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script async src="https://partner.adextra.io/jt/1b094dadbb2393355a88e208d5faa706eb972bed.js"></script>
-    <script async src="https://partner.adextra.io/jt/48520a9568b1fe05f0e95b682c62971f478f89b2.js"></script>
+    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+
     <style>
         /* CSS Variables for Theming - RED & WHITE */
         :root {
@@ -160,10 +160,6 @@
                     <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
                 </div>
 
-                <div class="card" style="padding: 10px; margin-bottom: 20px;">
-                    <div id="1b094dadbb2393355a88e208d5faa706eb972bed" style="text-align:center;"></div>
-                    <div id="48520a9568b1fe05f0e95b682c62971f478f89b2" style="margin-top:10px; text-align:center;"></div>
-                </div>
                 <div class="menu-grid" style="margin-top: 15px;">
                     <div onclick="showSection('friends-page')" class="menu-tile">
                         <i class="fas fa-users"></i>
@@ -256,7 +252,7 @@
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 2.5; // GÜNCELLENDİ
+        const MIN_WITHDRAW_TRX = 2.5; 
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
@@ -369,21 +365,12 @@
         
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
-            
-            // ÖDÜLLÜ REKLAM ENTEGRASYONU - ADEXTRA İÇİN GÜNCELLENDİ
-            // Adextra'nın ödüllü reklamını tetiklemek için kullanılan fonksiyon (blok ID'si ile ilişkilidir)
-            const REWARDED_AD_FUNCTION = window.adextra_reward_ad_48520a9568b1fe05f0e95b682c62971f478f89b2;
-
-            if (typeof REWARDED_AD_FUNCTION !== 'function') {
-                return window.Telegram.WebApp.showAlert("ERROR: The rewarded ad function is not defined. Please check the Adextra integration. (Expected: window.adextra_reward_ad_48520a9568b1fe05f0e95b682c62971f478f89b2)");
-            }
-
             const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
             
             rtdbGet(userRef).then((snapshot) => { // RTDB Get
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
-                let totalAdsWatched = userData.total_ads_watched || 0; 
+                let totalAdsWatched = userData.total_ads_watched || 0; // YENİ: Toplam sayaç
                 const currentBalance = userData.balance_usd || 0.0;
 
                 if (adsWatched >= AD_LIMIT) {
@@ -394,18 +381,18 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                // ÖDÜLLÜ REKLAM ÇAĞRISI
-                REWARDED_AD_FUNCTION() 
+                // window.showAdexora() çağrısı ile reklam gösterilir.
+                window.showAdexora()
                   .then(() => {
-                    // Kullanıcı reklamı başarıyla izlediğinde bu kısım çalışır
+                    // ✅ Reklam başarıyla gösterildi, ödül veriliyor
                     adsWatched++;
-                    totalAdsWatched++; 
+                    totalAdsWatched++; // YENİ: Toplamı da artır
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
                     rtdbUpdate(userRef, { // RTDB Update
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
-                        total_ads_watched: totalAdsWatched, 
+                        total_ads_watched: totalAdsWatched, // YENİ: Toplamı kaydet
                         last_ad_viewed: serverTimestamp()
                     });
                     
@@ -413,10 +400,12 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
+                    // ❌ Reklam gösterilemedi/atlandı, hata mesajı
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
+                    // Butonu eski haline getir
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
                     watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
@@ -718,7 +707,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         
         // --- EVENT LISTENERS SETUP ---
         function setupEventListeners() {
-            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd); 
+            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
             document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
             
