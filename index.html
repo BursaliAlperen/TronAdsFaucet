@@ -15,18 +15,39 @@
 
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     <script type="text/javascript">
-        let adexiumWidget = null; // Widget'ı global yapalım ki manuel çağrılabilsin
+        let adexiumWidget = null; 
 
         document.addEventListener('DOMContentLoaded', () => {
             // Widget'ı in-app interstitial formatında başlat
             adexiumWidget = new AdexiumWidget({wid: '6b5e9a45-f619-4aa1-a024-4598a4022e4a', adFormat: 'interstitial'});
-            // autoMode kaldırıldı, çünkü reklamları manuel çağırıyoruz.
             
-            // handleWatchAd içindeki window.showAdexora() çağrısını, Adexium'un manuel reklam gösterme fonksiyonuna bağlar.
+            // HANGING FIX: adexiumWidget.showAd() çağrısını, reklamın kapanış olayını dinleyen bir Promise içine alıyoruz.
             window.showAdexora = () => {
-                 // Adexium'un manuel reklam gösterme fonksiyonunu çağırır.
-                 // Bu fonksiyonun, reklam başarıyla bittiğinde Promise'i çözeceği varsayılır.
-                 return adexiumWidget.showAd(); 
+                 return new Promise((resolve, reject) => {
+                     // Adexium'un manuel reklam gösterme fonksiyonunu callback'ler ile çağır
+                     try {
+                         adexiumWidget.showAd({
+                             onAdClose: (isSuccessful) => { 
+                                 // isSuccessful true ise (reklam başarıyla kapandıysa) Promise'i çöz.
+                                 if (isSuccessful) {
+                                     resolve();
+                                 } else {
+                                     // Kullanıcı reklamı atlattıysa veya başarıyla izlenmediyse reddet.
+                                     reject('Ad closed unsuccessfully or skipped.');
+                                 }
+                             },
+                             onAdError: (error) => {
+                                 // Reklam yüklenirken veya gösterilirken hata oluşursa reddet.
+                                 console.error('Adexium Error:', error);
+                                 reject('Adexium Error: Could not display ad.');
+                             },
+                         });
+                     } catch (e) {
+                         // showAd çağrısı sırasında bir hata oluşursa (örneğin widget hazır değilse)
+                         console.error('Adexium showAd call failed:', e);
+                         reject('Adexium showAd call failed: ' + e.message);
+                     }
+                 });
             };
         });
     </script>
@@ -733,7 +754,7 @@
             });
         }
         
-        // GÜNCELLENMİŞ FONKSİYON: Sadece 2 reklam izlenince tek ödül verme
+        // GÜNCELLENMİŞ FONKSİYON: Sadece 2 reklam izlenince tek ödül verme ve Asenkron Hata Çözümü
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
@@ -741,7 +762,7 @@
             // Tek bir reklamı izleme işlemini yöneten yardımcı fonksiyon
             const watchSingleAd = (adNumber) => {
                 watchAdBtn.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad ${adNumber}...`;
-                // Bu, Adexium'u (window.showAdexora'ya bağlı) çağırır ve reklam başarıyla gösterilirse Promise'i çözer.
+                // window.showAdexora artık Adexium'un callback'lerini dinleyen bir Promise döndürüyor.
                 return window.showAdexora(); 
             };
 
@@ -794,12 +815,16 @@
                         // HATA: Reklamlardan biri kesildi veya başarısız oldu. HİÇBİR ÖDÜL VERİLMEZ.
                         console.error('Ad sequence failed or interrupted:', e);
                         
-                        if (typeof e === 'string' && e.includes('Ad Limit Reached')) {
-                             // Limit hatası zaten showAlert ile gösterilmiş olmalı
-                        } else {
+                        if (typeof e === 'string' && e.includes('Ad closed unsuccessfully or skipped')) {
                             window.Telegram.WebApp.showAlert("Ad viewing failed. You must watch both ads completely to receive the reward.");
-                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                        } else if (typeof e === 'string' && e.includes('Adexium Error')) {
+                             window.Telegram.WebApp.showAlert("Ad loading failed. Please try again in a few moments.");
+                        } else {
+                            // Diğer bilinmeyen hatalar
+                            window.Telegram.WebApp.showAlert("An error occurred during ad viewing. Please try again.");
                         }
+                        
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                     })
                     .finally(() => {
                         watchAdBtn.disabled = false;
