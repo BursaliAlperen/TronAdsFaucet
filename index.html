@@ -88,11 +88,16 @@
         #admin-panel li button { margin-top: 10px; margin-right: 5px; padding: 8px 12px; border-radius: 5px; font-weight: 700; cursor: pointer; }
         #admin-panel .approve-btn { background-color: #4CAF50; color: white; border: none; }
         #admin-panel .reject-btn { background-color: #f44336; color: white; border: none; }
+        #admin-panel .orange-btn { background-color: #ff9800; color: white; border: none; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; background-color: var(--card-bg); border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); z-index: 1000; }
         .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.75rem; transition: color 0.2s; flex-grow: 1; color: var(--subtle-text); }
         .nav-btn i { font-size: 1.6rem; margin-bottom: 3px; }
         .nav-btn.active { font-weight: 700; color: var(--primary-color); }
+
+        .user-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
+        .stat-item { background: #f5f5f5; padding: 8px; border-radius: 5px; text-align: center; }
+        .stat-value { font-weight: 800; color: var(--primary-color); font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -114,23 +119,33 @@
             
             <div id="admin-panel" class="page">
                 <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+                
                 <div class="card">
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
                     <div class="stat-display"><span>Total User Balance (USD):</span> <strong id="admin-total-balance">$0.00</strong></div>
                     <div class="stat-display"><span>Total Ads Watched (System):</span> <strong id="admin-total-ads">0</strong></div>
+                    <div class="stat-display"><span>Total Referrals:</span> <strong id="admin-total-referrals">0</strong></div>
                 </div>
                 
                 <div class="card">
-                    <h3>Ban Management</h3>
+                    <h3>User IP Management</h3>
                     <div class="input-group">
-                        <input type="text" id="ban-ip-input" placeholder="IP address (ex: 192.168.1.1)">
-                        <button onclick="manualBanIP()"><i class="fas fa-ban"></i> Ban IP</button>
+                        <input type="text" id="user-ip-input" placeholder="User IP to ban">
+                        <button onclick="banUserIP()"><i class="fas fa-ban"></i> Ban User IP</button>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="unban-ip-input" placeholder="IP address">
-                        <button onclick="manualUnbanIP()"><i class="fas fa-check"></i> Unban IP</button>
+                    <div style="margin-top: 10px;">
+                        <button onclick="loadAllUsersWithIPs()" class="action-btn" style="padding: 10px;">
+                            <i class="fas fa-sync-alt"></i> Refresh Users with IPs
+                        </button>
                     </div>
+                </div>
+
+                <div class="card">
+                    <h3>All Users with IPs</h3>
+                    <ul id="users-ip-list">
+                        <p style="color:var(--subtle-text);">Click refresh to load users...</p>
+                    </ul>
                 </div>
 
                 <div class="card">
@@ -414,33 +429,145 @@
             });
         }
 
-        window.manualBanIP = async () => {
-            const ip = document.getElementById('ban-ip-input').value.trim();
-            if (!ip) return window.Telegram.WebApp.showAlert("Please enter an IP address.");
+        // Kullanıcı IP'sini kaydet
+        async function saveUserIP() {
+            if (!userUid) return;
+            
+            const userIP = await getUserIP();
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
+            
+            rtdbGet(userRef).then((snapshot) => {
+                const userData = snapshot.val() || {};
+                rtdbUpdate(userRef, {
+                    last_ip: userIP,
+                    ip_updated_at: serverTimestamp()
+                });
+            });
+        }
+
+        // Tüm kullanıcıları IP'leriyle birlikte göster
+        function loadAllUsersWithIPs() {
+            const usersRef = rtdbRef(rtdb, 'users');
+            const ul = document.getElementById('users-ip-list');
+            ul.innerHTML = '<p style="color:var(--subtle-text);">Loading users...</p>';
+            
+            rtdbOnValue(usersRef, (snapshot) => {
+                ul.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    ul.innerHTML = '<p style="color:green;">No users found.</p>';
+                    return;
+                }
+                
+                const users = [];
+                snapshot.forEach(userSnapshot => {
+                    const userData = userSnapshot.val();
+                    users.push({
+                        uid: userSnapshot.key,
+                        telegram_id: userData.telegram_id,
+                        username: userData.username,
+                        balance_usd: userData.balance_usd || 0,
+                        total_ads_watched: userData.total_ads_watched || 0,
+                        referral_count: userData.referral_count || 0,
+                        last_ip: userData.last_ip || 'Not recorded',
+                        created_at: userData.created_at
+                    });
+                });
+                
+                // Bakiyeye göre sırala (yüksek bakiye üstte)
+                users.sort((a, b) => b.balance_usd - a.balance_usd);
+                
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.style.padding = '10px';
+                    li.style.marginBottom = '8px';
+                    li.style.border = '1px solid #ddd';
+                    li.style.borderRadius = '5px';
+                    li.style.backgroundColor = '#f9f9f9';
+                    
+                    li.innerHTML = `
+                        <p><strong>User:</strong> ${user.username} (ID: ${user.telegram_id})</p>
+                        <p><strong>IP:</strong> <code>${user.last_ip}</code></p>
+                        <div class="user-stats-grid">
+                            <div class="stat-item">
+                                <div>Balance</div>
+                                <div class="stat-value">$${user.balance_usd.toFixed(4)}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div>Referrals</div>
+                                <div class="stat-value">${user.referral_count}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div>Total Ads</div>
+                                <div class="stat-value">${user.total_ads_watched}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div>Status</div>
+                                <div class="stat-value" style="color: ${user.balance_usd > 10 ? '#4CAF50' : '#ff9800'};">${user.balance_usd > 10 ? 'Active' : 'New'}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="banSpecificIP('${user.last_ip}', '${user.telegram_id}')" class="reject-btn" style="padding: 5px 8px; font-size: 0.8rem;">
+                                <i class="fas fa-ban"></i> Ban IP
+                            </button>
+                            <button onclick="viewUserDetails('${user.uid}')" class="approve-btn" style="padding: 5px 8px; font-size: 0.8rem; margin-left: 5px;">
+                                <i class="fas fa-info"></i> Details
+                            </button>
+                        </div>
+                    `;
+                    ul.appendChild(li);
+                });
+            });
+        }
+
+        // Belirli bir IP'yi banla
+        window.banSpecificIP = (ip, telegramId = 'Unknown') => {
+            if (!ip || ip === 'Not recorded') {
+                return window.Telegram.WebApp.showAlert("No IP address to ban.");
+            }
             
             const banRef = rtdbRef(rtdb, 'banned_ips/' + ip.replace(/\./g, '_'));
-            await rtdbSet(banRef, {
+            rtdbSet(banRef, {
                 ip: ip,
                 banned_at: serverTimestamp(),
                 banned_by: telegramId,
-                reason: "Manual ban by admin"
+                reason: "Manual ban by admin",
+                banned_user: telegramId
+            }).then(() => {
+                window.Telegram.WebApp.showAlert(`IP ${ip} banned successfully.`);
+                loadBannedIPs();
             });
-            
-            window.Telegram.WebApp.showAlert(`IP ${ip} banned successfully.`);
-            document.getElementById('ban-ip-input').value = '';
-            loadBannedIPs();
         };
 
-        window.manualUnbanIP = async () => {
-            const ip = document.getElementById('unban-ip-input').value.trim();
+        // Kullanıcı IP'sini input'tan banla
+        window.banUserIP = () => {
+            const ip = document.getElementById('user-ip-input').value.trim();
             if (!ip) return window.Telegram.WebApp.showAlert("Please enter an IP address.");
             
-            const banRef = rtdbRef(rtdb, 'banned_ips/' + ip.replace(/\./g, '_'));
-            await rtdbSet(banRef, null);
-            
-            window.Telegram.WebApp.showAlert(`IP ${ip} unbanned successfully.`);
-            document.getElementById('unban-ip-input').value = '';
-            loadBannedIPs();
+            banSpecificIP(ip, 'Manual Input');
+            document.getElementById('user-ip-input').value = '';
+        };
+
+        // Kullanıcı detaylarını göster
+        window.viewUserDetails = (userId) => {
+            const userRef = rtdbRef(rtdb, 'users/' + userId);
+            rtdbGet(userRef).then((snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    let details = `📊 User Details:\n\n`;
+                    details += `👤 Username: ${userData.username}\n`;
+                    details += `🆔 Telegram ID: ${userData.telegram_id}\n`;
+                    details += `💰 Balance: $${userData.balance_usd?.toFixed(4) || '0'}\n`;
+                    details += `📈 Total Ads: ${userData.total_ads_watched || '0'}\n`;
+                    details += `📅 Daily Ads: ${userData.daily_ads_watched || '0'}\n`;
+                    details += `👥 Referrals: ${userData.referral_count || '0'}\n`;
+                    details += `🌐 Last IP: ${userData.last_ip || 'Not recorded'}\n`;
+                    details += `🤝 Referred by: ${userData.referred_by || 'None'}\n`;
+                    details += `🕒 Created: ${userData.created_at ? new Date(userData.created_at).toLocaleString() : 'Unknown'}`;
+                    
+                    window.Telegram.WebApp.showAlert(details);
+                }
+            });
         };
 
         function loadBannedIPs() {
@@ -461,6 +588,7 @@
                         <p><strong>IP:</strong> ${banData.ip}</p>
                         <p><strong>Reason:</strong> ${banData.reason}</p>
                         <p><strong>Banned by:</strong> ${banData.banned_by}</p>
+                        <p><strong>User:</strong> ${banData.banned_user || 'Unknown'}</p>
                         <p><strong>Date:</strong> ${new Date(banData.banned_at).toLocaleString()}</p>
                         <button onclick="manualUnbanIPByKey('${ipSnapshot.key}')" class="reject-btn">Unban</button>
                     `;
@@ -506,6 +634,7 @@
                         referred_by: null,
                         daily_ads_watched: 0,
                         total_ads_watched: 0,
+                        referral_count: 0, // Referans sayacı eklendi
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp()
                     };
@@ -629,11 +758,15 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     
                     const rData = rSnapshot.val();
                     const newReferrerBalance = (rData.balance_usd || 0.0) + REFERRAL_BONUS_USD;
+                    const newReferralCount = (rData.referral_count || 0) + 1;
                     
+                    // Referrer'a bonus ve referans sayısını güncelle
                     rtdbUpdate(referrerRef, {
-                        balance_usd: newReferrerBalance
+                        balance_usd: newReferrerBalance,
+                        referral_count: newReferralCount
                     });
 
+                    // Kullanıcının referred_by alanını güncelle
                     rtdbUpdate(userRef, {
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
@@ -730,34 +863,38 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         }
 
         function loadAdminPanel() {
-            console.log("Admin panel loading...");
+            console.log("Admin panel loading...", telegramId);
             
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) {
                 console.log("Not admin:", telegramId);
                 return;
             }
 
-            // 1. Load System Stats (RTDB)
+            // 1. Load System Stats (RTDB) - REFERANS SAYISI EKLENDİ
             const usersRef = rtdbRef(rtdb, 'users');
             rtdbOnValue(usersRef, (snapshot) => {
+                console.log("RTDB Users data:", snapshot.exists(), snapshot.val());
+                
                 let totalBalance = 0.0;
                 let userCount = 0;
                 let totalAds = 0;
+                let totalReferrals = 0; // Toplam referans sayısı
 
                 snapshot.forEach(userSnapshot => {
                     const userData = userSnapshot.val();
                     totalBalance += userData.balance_usd || 0.0;
                     userCount++;
                     totalAds += userData.total_ads_watched || 0;
+                    totalReferrals += userData.referral_count || 0; // Her kullanıcının referans sayısını topla
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
                 document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString();
-                console.log("Stats loaded:", userCount, totalBalance, totalAds);
+                document.getElementById('admin-total-referrals').textContent = totalReferrals.toLocaleString(); // Referans sayısını göster
             });
 
-            // 2. Load Pending Withdrawal Requests (FIRESTORE)
+            // 2. Load Pending Withdrawal Requests (FIRESTORE) - IP BİLGİSİ EKLENDİ
             const requestsColRef = collection(firestore, 'withdrawal_requests');
             const q = query(requestsColRef, where("status", "==", "Pending"));
             
@@ -779,11 +916,18 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
                     const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
                     const userSnapshot = await rtdbGet(userRef);
-                    const userData = userSnapshot.val() || { balance_usd: 0.0, total_ads_watched: 0 };
+                    const userData = userSnapshot.val() || { 
+                        balance_usd: 0.0, 
+                        total_ads_watched: 0,
+                        referral_count: 0,
+                        last_ip: 'Not recorded'
+                    };
                     return {
                         ...request,
                         current_balance_usd: userData.balance_usd || 0.0,
-                        user_total_ads: userData.total_ads_watched || 0
+                        user_total_ads: userData.total_ads_watched || 0,
+                        user_referral_count: userData.referral_count || 0,
+                        user_ip: userData.last_ip || 'Not recorded'
                     };
                 });
                 
@@ -800,14 +944,37 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                         
                         li.innerHTML = `
                             <p><strong>User:</strong> ${request.username} (TG ID: ${request.telegram_id})</p>
-                            <p><strong>Total Ads Watched:</strong> ${request.user_total_ads.toLocaleString()}</p>
-                            <p><strong>Address:</strong> <code>${request.tron_address}</code></p>
-                            <p><strong>Request Amount:</strong> ${request.amount_trx} TRX <strong>($${request.amount_usd})</strong></p>
-                            <p><strong>User's Balance (Current):</strong> 
-                                <strong style="color: ${remainingBalance >= 0 ? 'green' : 'red'};">$${request.current_balance_usd.toFixed(4)}</strong>
-                            </p>
-                            <button onclick="processWithdrawal('${request.requestId}', 'Completed')" class="approve-btn"><i class="fas fa-check"></i> Approve</button>
-                            <button onclick="processWithdrawal('${request.requestId}', 'Rejected', '${request.user_id}', '${request.amount_usd}')" class="reject-btn"><i class="fas fa-times"></i> Reject</button>
+                            <p><strong>IP Address:</strong> <code>${request.user_ip}</code></p>
+                            <div class="user-stats-grid">
+                                <div class="stat-item">
+                                    <div>Total Ads</div>
+                                    <div class="stat-value">${request.user_total_ads}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Referrals</div>
+                                    <div class="stat-value">${request.user_referral_count}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Balance</div>
+                                    <div class="stat-value">$${request.current_balance_usd.toFixed(4)}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Request</div>
+                                    <div class="stat-value">${request.amount_trx} TRX</div>
+                                </div>
+                            </div>
+                            <p><strong>TRON Address:</strong> <code>${request.tron_address}</code></p>
+                            <div style="margin-top: 10px;">
+                                <button onclick="processWithdrawal('${request.requestId}', 'Completed')" class="approve-btn">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button onclick="processWithdrawal('${request.requestId}', 'Rejected', '${request.user_id}', '${request.amount_usd}')" class="reject-btn">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                                <button onclick="banSpecificIP('${request.user_ip}', '${request.telegram_id}')" class="orange-btn">
+                                    <i class="fas fa-ban"></i> Ban IP
+                                </button>
+                            </div>
                         `;
                         ul.appendChild(li);
                     });
@@ -888,6 +1055,9 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             
             telegramId = user.id.toString();
             userUid = getUidFromTelegramId(telegramId);
+            
+            // Kullanıcı IP'sini kaydet
+            await saveUserIP();
             
             const referralInput = document.getElementById('referral-code-input');
             if (referralInput) {
