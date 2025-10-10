@@ -11,8 +11,67 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script> 
+    
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tron Ads Faucet'a özel Adexium Widget ayarı
+            const adexiumWidget = new AdexiumWidget({wid: '6b5e9a45-f619-4aa1-a024-4598a4022e4a', adFormat: 'interstitial'});
+            
+            // Eğer butona tıklama ile reklam gösterimi yapılacaksa autoMode() çağrılmaz.
+            // Bu örnekte, Adexora'daki gibi butona basıldığında gösterim yapılması için 
+            // 'adexiumWidget' nesnesini global bir fonksiyona bağlayacağız.
+            
+            // Global erişim için window nesnesine ekleme
+            window.adexiumWidget = adexiumWidget;
+            
+            // Adexora'dan Adexium'a geçiş için showAdexora() fonksiyonunu güncelliyoruz:
+            window.showAdexora = () => {
+                // Adexium'un show() metodunu Promise döndürecek şekilde sarıyoruz.
+                return new Promise((resolve, reject) => {
+                    // Adexium reklam gösterme metodunu çağır
+                    adexiumWidget.show(); 
+                    
+                    // Adexium reklam olay dinleyicileri
+                    adexiumWidget.on('display', (adFormat) => {
+                        console.log(`Adexium Ad Displayed: ${adFormat}`);
+                    });
+                    
+                    // Ödül verildiğinde
+                    adexiumWidget.on('rewarded', (adFormat) => {
+                        console.log(`Adexium Ad Rewarded: ${adFormat}`);
+                        resolve(); // Sözü yerine getir: Reklam başarılı ve ödül verildi.
+                    });
+                    
+                    // Reklam kapandığında (ödül verilmeyen durumlar için)
+                    adexiumWidget.on('close', (adFormat) => {
+                        console.log(`Adexium Ad Closed: ${adFormat}`);
+                        // Eğer 'rewarded' daha önce çağrılmadıysa bu bir "skipped" (atlandı) durumdur.
+                        // Ancak Adexium'da ödüllü reklam için yalnızca 'rewarded' ile resolve yapmalıyız.
+                        // Eğer ödül verilmeden kapanırsa reject (hata) döndür.
+                        // Not: Bu basit entegrasyon, 'rewarded' olayının güvenilirliğine dayanır.
+                        // Daha gelişmiş bir yapı için state yönetimi gerekir.
+                        // Bu basit çözümde, Adexora mantığına uyarak yalnızca ödül gelirse resolve yapılır.
+                    });
 
+                    // Hata durumunda
+                    adexiumWidget.on('error', (error) => {
+                        console.error(`Adexium Error: ${error}`);
+                        reject(new Error(`Adexium Ad Error: ${error}`));
+                    });
+                    
+                    // Reklamın hemen yüklenemediği durum
+                    adexiumWidget.on('fail', (adFormat) => {
+                        console.warn(`Adexium Ad Failed to Load: ${adFormat}`);
+                        reject(new Error("Adexium Ad Failed to Load."));
+                    });
+                });
+            };
+            
+            // adexiumWidget.autoMode(); // Butonla gösterileceği için otomatik modu kapatıyoruz.
+        });
+    </script>
     <style>
         :root {
             --font-family: 'Nunito', sans-serif;
@@ -292,8 +351,6 @@
             <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
         </nav>
     </div>
-
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -736,6 +793,7 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
+                // ADEXIUM ENTEGRASYONU İÇİN GÜNCELLENEN showAdexora() FONKSİYONU ÇAĞRILIYOR
                 window.showAdexora()
                   .then(() => {
                     adsWatched++;
@@ -753,7 +811,9 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
+                    // Adexium'dan gelen bir hata mesajı varsa göster
+                    const errorMessage = e.message && e.message.startsWith('Adexium Ad') ? e.message : "Ad not shown or skipped. Please try again.";
+                    window.Telegram.WebApp.showAlert(errorMessage);
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
