@@ -14,21 +14,19 @@
     <script src="https://adexora.com/cdn/ads.js?id=494"></script>
 
     <style>
-        /* CSS Variables for Theming - RED & WHITE */
         :root {
             --font-family: 'Nunito', sans-serif;
-            --bg-color: #f0f2f5; /* Light background for body */
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
             --text-color: #1c1c1e;
             --subtle-text: #888;
-            --primary-color: #D32F2F; /* Deep Red */
+            --primary-color: #D32F2F;
             --primary-color-hover: #B71C1C;
             --border-color: #e0e0e0;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             --radius: 12px;
         }
 
-        /* Base Styles */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: var(--font-family);
@@ -40,33 +38,26 @@
 
         #app { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
 
-        /* Header */
         .header { padding: 20px; display: flex; align-items: center; justify-content: space-between; background-color: var(--primary-color); color: white; border-radius: 0 0 var(--radius) var(--radius); box-shadow: var(--shadow); }
         .header h1 { font-size: 1.4rem; font-weight: 800; }
         .header-stats { text-align: right; font-size: 0.9rem; }
         .header-stats p strong { display: block; font-size: 1.1rem; }
 
-        /* Main Content & Pages */
         main { padding: 15px; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         h2 { font-size: 1.6rem; margin-bottom: 20px; color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
         
-        /* Card Styles */
         .card { padding: 20px; border-radius: var(--radius); background-color: var(--card-bg); box-shadow: var(--shadow); margin-bottom: 20px; transition: transform 0.2s; }
         .card:hover { transform: translateY(-2px); }
         
-        /* Action Button (Primary Red) */
         .action-btn { width: 100%; padding: 15px; font-size: 1.1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; display: flex; justify-content: center; align-items: center; background-color: var(--primary-color); }
         .action-btn:active { transform: scale(0.98); }
         .action-btn:hover { background-color: var(--primary-color-hover); }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        /* Loading/Processing State */
         .action-btn.loading { background-color: #FF5722; cursor: wait; pointer-events: none; }
 
-
-        /* Menu Page - Balance */
         .balance-card { text-align: center; border: 2px solid var(--primary-color); background-color: #FFF3F3; }
         .balance-card .usd-value { font-size: 2.5rem; font-weight: 800; color: var(--primary-color); line-height: 1.2; }
         .balance-card .trx-value { font-size: 1.2rem; color: var(--subtle-text); margin-top: 5px; }
@@ -77,22 +68,18 @@
         .menu-tile span { font-size: 1rem; font-weight: 600; display: block; }
         .menu-tile:hover { background-color: #FFFAFA; }
 
-        /* Form Elements (Shared) */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.95rem; color: var(--text-color); }
         input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; font-family: inherit; font-size: 1rem; border: 1px solid var(--border-color); transition: border-color 0.2s; }
         input[type="text"]:focus, input[type="number"]:focus { border-color: var(--primary-color); outline: none; }
         
-        /* Referral & Copy */
         .input-group { display: flex; margin-bottom: 15px; }
         .input-group input { flex-grow: 1; border-radius: 8px 0 0 8px; border-right: none; background-color: var(--bg-color); }
         .input-group button { padding: 10px 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 0 8px 8px 0; cursor: pointer; transition: background-color 0.2s; }
         .input-group button:hover { background-color: var(--primary-color-hover); }
 
-        /* Withdrawal Details */
         .withdraw-note { font-size: 0.9rem; color: var(--subtle-text); margin-top: 10px; }
         
-        /* Admin Panel */
         #admin-panel .stat-display { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-weight: 600; }
         #admin-panel h3 { margin-top: 20px; color: var(--primary-color); }
         #admin-panel ul { list-style: none; padding: 0; }
@@ -102,8 +89,6 @@
         #admin-panel .approve-btn { background-color: #4CAF50; color: white; border: none; }
         #admin-panel .reject-btn { background-color: #f44336; color: white; border: none; }
 
-
-        /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; background-color: var(--card-bg); border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); z-index: 1000; }
         .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.75rem; transition: color 0.2s; flex-grow: 1; color: var(--subtle-text); }
         .nav-btn i { font-size: 1.6rem; margin-bottom: 3px; }
@@ -136,6 +121,25 @@
                     <div class="stat-display"><span>Total Ads Watched (System):</span> <strong id="admin-total-ads">0</strong></div>
                 </div>
                 
+                <div class="card">
+                    <h3>Ban Management</h3>
+                    <div class="input-group">
+                        <input type="text" id="ban-ip-input" placeholder="IP address (ex: 192.168.1.1)">
+                        <button onclick="manualBanIP()"><i class="fas fa-ban"></i> Ban IP</button>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="unban-ip-input" placeholder="IP address">
+                        <button onclick="manualUnbanIP()"><i class="fas fa-check"></i> Unban IP</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Banned IPs</h3>
+                    <ul id="banned-ips-list">
+                        <p style="color:var(--subtle-text);">Loading banned IPs...</p>
+                    </ul>
+                </div>
+                
                 <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
                 <ul id="withdrawal-list">
                     <p style="color:var(--subtle-text);">Loading requests...</p>
@@ -157,7 +161,7 @@
                     <button id="watch-ad-btn" class="action-btn">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 150</p>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
                 </div>
 
                 <div class="menu-grid" style="margin-top: 15px;">
@@ -222,22 +226,16 @@
             <button class="nav-btn active" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
             <button class="nav-btn" data-page="friends-page"><i class="fas fa-users"></i><span>Friends</span></button>
             <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-            </nav>
+        </nav>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        
-        // --- REALTIME DATABASE IMPORTS (Transaction eklendi) ---
-        import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp, runTransaction as rtdbRunTransaction } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-        
-        // --- FIRESTORE IMPORTS (Çekim Talepleri) ---
+        import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         import { getFirestore, collection, addDoc, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-
-        // --- CONFIGURATION ---
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAYJqf6Y090mN4fjQAR9m7hNil7hjn0HMg",
             authDomain: "tronadsfaucet-fd451.firebaseapp.com",
@@ -249,40 +247,30 @@
             measurementId: "G-VZ3Z6SFMXZ"
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
-        const AD_LIMIT = 150; // GÜNCELLENMİŞ REKLAM LİMİTİ
+        const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
-        const MIN_WITHDRAW_TRX = 2.5; 
+        const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
-        // --- GLOBAL STATE ---
+        const SECURITY_CONFIG = {
+            MAX_BALANCE_INCREASE_PER_MINUTE: 0.10,
+            MAX_ADS_PER_MINUTE: 5,
+            SUSPICIOUS_ACTIVITY_LIMIT: 3,
+            CHECK_INTERVAL: 60000
+        };
+
         let currentTronPriceUsd = 0.0; 
         let userUid = null;
         let telegramId = null;
 
-        // --- FIREBASE INITIALIZATION ---
         const app = initializeApp(FIREBASE_CONFIG);
-        const rtdb = getDatabase(app); // Realtime Database
-        const firestore = getFirestore(app); // Cloud Firestore
+        const rtdb = getDatabase(app);
+        const firestore = getFirestore(app);
 
-        // --- UTILITY FUNCTIONS ---
         const getUidFromTelegramId = (id) => `tg_user_${id}`;
         
-        // Gece yarısı kontrolü (Günlük limit sıfırlama için)
-        const isPastMidnight = (lastTimestamp) => {
-            if (!lastTimestamp) return true;
-            
-            const lastDate = new Date(lastTimestamp);
-            const today = new Date();
-            
-            lastDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-            
-            return lastDate < today;
-        };
-        
-        // Navigation Handler
         window.showSection = (sectionId) => {
             document.querySelectorAll('.page').forEach(section => {
                 section.classList.remove('active');
@@ -292,10 +280,12 @@
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.nav-btn[data-page="${sectionId}"]`)?.classList.add('active');
 
-            if (sectionId === 'admin-panel') loadAdminPanel();
+            if (sectionId === 'admin-panel') {
+                loadAdminPanel();
+                loadBannedIPs();
+            }
         }
 
-        // Copy to Clipboard
         window.copyToClipboard = (elementId) => {
             const copyText = document.getElementById(elementId);
             const code = copyText.value;
@@ -309,7 +299,182 @@
             });
         }
         
-        // --- DATA FETCHING & UI UPDATES ---
+        async function getUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'unknown';
+            }
+        }
+
+        async function checkIPBan() {
+            const userIP = await getUserIP();
+            const bannedIPRef = rtdbRef(rtdb, 'banned_ips/' + userIP.replace(/\./g, '_'));
+            
+            const snapshot = await rtdbGet(bannedIPRef);
+            if (snapshot.exists()) {
+                window.Telegram.WebApp.showAlert("Your account has been suspended for security reasons. Please contact support.");
+                window.Telegram.WebApp.close();
+                return true;
+            }
+            return false;
+        }
+
+        async function autoBanIP(ip, reason, userUid, telegramId) {
+            const banRef = rtdbRef(rtdb, 'banned_ips/' + ip.replace(/\./g, '_'));
+            const activityRef = rtdbRef(rtdb, 'suspicious_activity/' + userUid + '/' + Date.now());
+            
+            const banData = {
+                ip: ip,
+                user_id: userUid,
+                telegram_id: telegramId,
+                reason: reason,
+                banned_at: serverTimestamp(),
+                banned_by: 'AUTO_SYSTEM'
+            };
+            
+            const activityData = {
+                ip: ip,
+                user_id: userUid,
+                telegram_id: telegramId,
+                reason: reason,
+                detected_at: serverTimestamp(),
+                action_taken: 'AUTO_BANNED'
+            };
+            
+            await Promise.all([
+                rtdbSet(banRef, banData),
+                rtdbSet(activityRef, activityData)
+            ]);
+            
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
+            await rtdbUpdate(userRef, {
+                balance_usd: 0,
+                daily_ads_watched: 0,
+                total_ads_watched: 0,
+                is_banned: true,
+                ban_reason: reason
+            });
+        }
+
+        function detectSuspiciousActivity(userData, previousData) {
+            const suspiciousFlags = [];
+            
+            if (!previousData) return suspiciousFlags;
+            
+            const balanceIncrease = userData.balance_usd - (previousData.balance_usd || 0);
+            if (balanceIncrease > SECURITY_CONFIG.MAX_BALANCE_INCREASE_PER_MINUTE) {
+                suspiciousFlags.push(`Abnormal balance increase: $${balanceIncrease}`);
+            }
+            
+            const adsIncrease = userData.daily_ads_watched - (previousData.daily_ads_watched || 0);
+            if (adsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
+                suspiciousFlags.push(`Abnormal ad speed: ${adsIncrease} ads/minute`);
+            }
+            
+            if (userData.balance_usd < 0) {
+                suspiciousFlags.push(`Negative balance: $${userData.balance_usd}`);
+            }
+            
+            return suspiciousFlags;
+        }
+
+        function setupSecurityMonitor() {
+            if (!userUid) return;
+            
+            let previousUserData = null;
+            
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
+            rtdbOnValue(userRef, async (snapshot) => {
+                const currentData = snapshot.val();
+                if (!currentData || !previousUserData) {
+                    previousUserData = currentData;
+                    return;
+                }
+                
+                const suspiciousActivities = detectSuspiciousActivity(currentData, previousUserData);
+                
+                if (suspiciousActivities.length > 0) {
+                    const userIP = await getUserIP();
+                    const reason = suspiciousActivities.join(' | ');
+                    
+                    const suspicionCount = (currentData.suspicion_count || 0) + 1;
+                    await rtdbUpdate(userRef, { suspicion_count: suspicionCount });
+                    
+                    if (suspicionCount >= SECURITY_CONFIG.SUSPICIOUS_ACTIVITY_LIMIT) {
+                        await autoBanIP(userIP, `Multiple cheat detection: ${reason}`, userUid, telegramId);
+                        window.Telegram.WebApp.showAlert("Security violation detected. Your account has been suspended.");
+                        window.Telegram.WebApp.close();
+                    }
+                }
+                
+                previousUserData = currentData;
+            });
+        }
+
+        window.manualBanIP = async () => {
+            const ip = document.getElementById('ban-ip-input').value.trim();
+            if (!ip) return window.Telegram.WebApp.showAlert("Please enter an IP address.");
+            
+            const banRef = rtdbRef(rtdb, 'banned_ips/' + ip.replace(/\./g, '_'));
+            await rtdbSet(banRef, {
+                ip: ip,
+                banned_at: serverTimestamp(),
+                banned_by: telegramId,
+                reason: "Manual ban by admin"
+            });
+            
+            window.Telegram.WebApp.showAlert(`IP ${ip} banned successfully.`);
+            document.getElementById('ban-ip-input').value = '';
+            loadBannedIPs();
+        };
+
+        window.manualUnbanIP = async () => {
+            const ip = document.getElementById('unban-ip-input').value.trim();
+            if (!ip) return window.Telegram.WebApp.showAlert("Please enter an IP address.");
+            
+            const banRef = rtdbRef(rtdb, 'banned_ips/' + ip.replace(/\./g, '_'));
+            await rtdbSet(banRef, null);
+            
+            window.Telegram.WebApp.showAlert(`IP ${ip} unbanned successfully.`);
+            document.getElementById('unban-ip-input').value = '';
+            loadBannedIPs();
+        };
+
+        function loadBannedIPs() {
+            const bannedRef = rtdbRef(rtdb, 'banned_ips');
+            rtdbOnValue(bannedRef, (snapshot) => {
+                const ul = document.getElementById('banned-ips-list');
+                ul.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    ul.innerHTML = '<p style="color:green;">No banned IPs.</p>';
+                    return;
+                }
+                
+                snapshot.forEach(ipSnapshot => {
+                    const banData = ipSnapshot.val();
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <p><strong>IP:</strong> ${banData.ip}</p>
+                        <p><strong>Reason:</strong> ${banData.reason}</p>
+                        <p><strong>Banned by:</strong> ${banData.banned_by}</p>
+                        <p><strong>Date:</strong> ${new Date(banData.banned_at).toLocaleString()}</p>
+                        <button onclick="manualUnbanIPByKey('${ipSnapshot.key}')" class="reject-btn">Unban</button>
+                    `;
+                    ul.appendChild(li);
+                });
+            });
+        }
+
+        window.manualUnbanIPByKey = async (ipKey) => {
+            const banRef = rtdbRef(rtdb, 'banned_ips/' + ipKey);
+            await rtdbSet(banRef, null);
+            window.Telegram.WebApp.showAlert("IP unbanned successfully.");
+            loadBannedIPs();
+        };
         
         async function fetchTronPrice() {
             try {
@@ -318,14 +483,14 @@
                 currentTronPriceUsd = data.tron.usd;
                 document.getElementById('current-trx-price').textContent = currentTronPriceUsd.toFixed(4);
             } catch (error) {
-                currentTronPriceUsd = 0.03389; // Fallback value
+                currentTronPriceUsd = 0.03389;
                 document.getElementById('current-trx-price').textContent = `F: ${currentTronPriceUsd.toFixed(4)}`;
             }
         }
         
-        // Real-time listener for user data (RTDB)
         function setupUserListener() {
             if (!userUid) return;
+            
             const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             
             rtdbOnValue(userRef, (snapshot) => {
@@ -333,7 +498,6 @@
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
-                    // Initialize New User
                     const newUser = {
                         telegram_id: telegramId,
                         username: userTgData?.username || `user_${telegramId}`,
@@ -341,40 +505,22 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
-                        total_ads_watched: 0, 
+                        total_ads_watched: 0,
                         referral_code: telegramId.toString(), 
-                        last_ad_viewed: 0, 
                         created_at: serverTimestamp()
                     };
                     rtdbSet(userRef, newUser);
                     userData = newUser;
                 }
 
-                // GÜNLÜK LİMİT SIFIRLAMA KONTROLÜ
-                const lastAdTimestamp = userData.last_ad_viewed || 0;
-                let adsWatched = userData.daily_ads_watched || 0;
-                let updateNeeded = false;
-                
-                if (isPastMidnight(lastAdTimestamp)) {
-                    if (adsWatched > 0) {
-                        adsWatched = 0; 
-                        updateNeeded = true;
-                    }
-                }
-                
-                if (updateNeeded) {
-                    rtdbUpdate(userRef, { daily_ads_watched: 0 });
-                }
-                // GÜNLÜK LİMİT SIFIRLAMA SONU
-
                 const balanceUsd = userData.balance_usd || 0.0;
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
-                
-                // Update UI
+                const dailyWatched = userData.daily_ads_watched || 0;
+
                 document.getElementById('menu-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
-                document.getElementById('daily-ads-watched').textContent = adsWatched; 
+                document.getElementById('daily-ads-watched').textContent = dailyWatched;
                 
                 document.getElementById('referral-code-input').value = userData.referral_code;
 
@@ -383,29 +529,17 @@
                     document.getElementById('enter-referrer-code').placeholder = `Already referred by: ${userData.referred_by}`;
                     document.querySelector('#friends-page .input-group button').disabled = true;
                 }
-            }, (error) => {
-                // console.error("User Data Listener Error:", error);
             });
         }
         
-        // --- AD VIEW LOGIC (RTDB) ---
-        
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
             
-            rtdbGet(userRef).then((snapshot) => { 
+            rtdbGet(userRef).then((snapshot) => {
                 const userData = snapshot.val();
-                
-                // Reklam izlemeden önce tekrar limit sıfırlama kontrolü
                 let adsWatched = userData.daily_ads_watched || 0;
-                const lastAdTimestamp = userData.last_ad_viewed || 0;
-                
-                if (isPastMidnight(lastAdTimestamp)) {
-                    adsWatched = 0; 
-                }
-
-                let totalAdsWatched = userData.total_ads_watched || 0; 
+                let totalAdsWatched = userData.total_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
 
                 if (adsWatched >= AD_LIMIT) {
@@ -416,33 +550,27 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                // Reklamı Gösterme Kodu
                 window.showAdexora()
                   .then(() => {
-                    // ✅ Başarılı Ödül Mantığı
                     adsWatched++;
-                    totalAdsWatched++; 
+                    totalAdsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
-                    // RTDB Update: Bakiye, günlük/toplam sayaç ve son izleme zamanı güncellenir.
-                    // DİKKAT: Burada güvenlik kurallarınızın bakiye artışını sadece $0.001 ile sınırlaması ZORUNLUDUR.
-                    rtdbUpdate(userRef, { 
+                    rtdbUpdate(userRef, {
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
-                        total_ads_watched: totalAdsWatched, 
-                        last_ad_viewed: serverTimestamp() 
+                        total_ads_watched: totalAdsWatched,
+                        last_ad_viewed: serverTimestamp()
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    // ❌ Hata Yönetimi
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
-                    // Butonu eski haline getir
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
                     watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
@@ -450,8 +578,6 @@
             });
         }
 
-        // --- REFERRAL LOGIC (RTDB) ---
-        
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
@@ -485,30 +611,30 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
         window.applyReferralCode = () => {
             const referrerCode = document.getElementById('enter-referrer-code').value.trim();
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
 
             if (!referrerCode) return window.Telegram.WebApp.showAlert("Please enter a referral code.");
             if (referrerCode === telegramId) return window.Telegram.WebApp.showAlert("You cannot refer yourself.");
 
-            rtdbGet(userRef).then((snapshot) => { 
+            rtdbGet(userRef).then((snapshot) => {
                 if (snapshot.val()?.referred_by) {
                     return window.Telegram.WebApp.showAlert("You have already used a referral code.");
                 }
                 
                 const referrerUid = getUidFromTelegramId(referrerCode); 
-                const referrerRef = rtdbRef(rtdb, 'users/' + referrerUid); 
+                const referrerRef = rtdbRef(rtdb, 'users/' + referrerUid);
 
-                rtdbGet(referrerRef).then(rSnapshot => { 
+                rtdbGet(referrerRef).then(rSnapshot => {
                     if (!rSnapshot.exists()) return window.Telegram.WebApp.showAlert("Invalid referral code. User not found.");
                     
                     const rData = rSnapshot.val();
                     const newReferrerBalance = (rData.balance_usd || 0.0) + REFERRAL_BONUS_USD;
                     
-                    rtdbUpdate(referrerRef, { 
+                    rtdbUpdate(referrerRef, {
                         balance_usd: newReferrerBalance
                     });
 
-                    rtdbUpdate(userRef, { 
+                    rtdbUpdate(userRef, {
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
                     }).then(() => {
@@ -519,8 +645,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (RTDB Transaction + Firestore Request Creation) ---
-        
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
             const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
@@ -529,7 +653,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Withdrawal failed: User session not loaded. Please restart the bot.");
             }
 
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
+            const userRef = rtdbRef(rtdb, 'users/' + userUid);
             const tronAddress = document.getElementById('tron-address').value.trim();
             const amountInTrx = parseFloat(document.getElementById('amount-trx').value);
             
@@ -552,114 +676,92 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
             withdrawSubmitBtn.disabled = true;
 
-            // Flags for transaction result handling
-            let sufficientBalance = false;
-            let trxBalance = 0;
-            const requestsCollection = collection(firestore, "withdrawal_requests");
-            
-            // 1. RTDB'de Bakiye Kontrolü ve Düşürme (ATOMIC TRANSACTION - Race Condition Koruması)
-            rtdbRunTransaction(userRef, (currentData) => {
-                if (currentData === null) {
-                    return currentData; 
+            rtdbGet(userRef).then(snapshot => {
+                const userData = snapshot.val();
+                
+                if (!userData) {
+                    throw new Error("User data is missing on Firebase.");
                 }
                 
-                const usdBalance = currentData.balance_usd || 0.0;
-
-                // Bakiyeyi kontrol et
+                const usdBalance = userData.balance_usd || 0.0;
+                
                 if (withdrawUsdAmount > usdBalance) {
-                    // Yetersiz bakiye durumunda, işlemi durdur (Abort)
-                    trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
-                    sufficientBalance = false;
-                    return; 
-                }
-
-                // Yeterli bakiye: Atomik güncelleme yap
-                sufficientBalance = true;
-                const newUsdBalance = usdBalance - withdrawUsdAmount;
-                currentData.balance_usd = newUsdBalance;
-                currentData.last_withdrawal = serverTimestamp();
-                
-                return currentData; // Yeni veriyi commit et (Başarılı)
-
-            }).then(result => {
-                if (!result.committed && !sufficientBalance) {
-                    // İşlem bakiye yetersizliğinden durduruldu.
+                    const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
                     withdrawSubmitBtn.disabled = false;
-                    return Promise.reject({
-                        message: `Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`,
-                        code: 'insufficient-funds'
-                    });
+                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`);
                 }
 
-                if (!result.committed) {
-                    // Başka bir sebepten (eşzamanlılık çakışması vb.) durduruldu.
-                    return Promise.reject({
-                        message: "Concurrency error. Please try withdrawing again.",
-                        code: 'concurrency-error'
-                    });
-                }
+                const newUsdBalance = usdBalance - withdrawUsdAmount;
+
+                const requestsCollection = collection(firestore, "withdrawal_requests");
                 
-                // Transaction BAŞARILI: Bakiye atomik olarak düşürüldü.
-                
-                // 2. FIRESTORE'a Çekim Talebi Ekleme
                 return addDoc(requestsCollection, {
                     user_id: userUid,
                     telegram_id: telegramId,
-                    username: result.snapshot.val().username, 
+                    username: userData.username,
                     tron_address: tronAddress,
                     amount_usd: withdrawUsdAmount.toFixed(4),
                     amount_trx: amountInTrx.toFixed(4),
                     status: "Pending", 
                     timestamp: serverTimestamp()
+                }).then(() => {
+                    return rtdbUpdate(userRef, { balance_usd: newUsdBalance });
                 });
                 
             }).then(() => {
-                // Başarı mesajı göster
                 window.Telegram.WebApp.showAlert(`Withdrawal request for ${amountInTrx.toFixed(4)} TRX submitted successfully. Your request is now pending admin approval.`);
                 document.getElementById('amount-trx').value = '';
                 document.getElementById('withdraw-usd-amount').textContent = '$0.00';
             }).catch(e => {
-                // Hata yakalama
                 let errorMessage = "An error occurred during withdrawal. Please try again later.";
-                if (e.code === 'insufficient-funds' || e.code === 'concurrency-error') {
-                    errorMessage = `Withdrawal failed: ${e.message}`;
-                } else if (e.message && e.message.includes("User data is missing")) {
+                
+                if (e.message && e.message.includes("User data is missing")) {
                     errorMessage = "User data could not be initialized. Please restart the bot and try again.";
+                } else if (e.code && e.code.includes("permission-denied")) {
+                    errorMessage = "Withdrawal failed: Database permission denied. Please check your Firebase Rules.";
+                } else if (e.message && e.message.includes("Failed to fetch")) {
+                    errorMessage = "Network error: Failed to connect to Firebase. Check your internet.";
                 }
                 
-                window.Telegram.WebApp.showAlert(errorMessage);
+                window.Telegram.WebApp.showAlert(`Withdrawal failed: ${errorMessage}`);
             }).finally(() => {
                 withdrawSubmitBtn.disabled = false;
             });
         }
 
-        // --- ADMIN PANEL LOGIC (RTDB Stats + Firestore Requests) ---
         function loadAdminPanel() {
-            if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
+            console.log("Admin panel loading...");
+            
+            if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) {
+                console.log("Not admin:", telegramId);
+                return;
+            }
 
             // 1. Load System Stats (RTDB)
             const usersRef = rtdbRef(rtdb, 'users');
             rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
-                let totalAds = 0; 
+                let totalAds = 0;
 
                 snapshot.forEach(userSnapshot => {
-                    totalBalance += userSnapshot.val().balance_usd || 0.0;
+                    const userData = userSnapshot.val();
+                    totalBalance += userData.balance_usd || 0.0;
                     userCount++;
-                    totalAds += userSnapshot.val().total_ads_watched || 0; 
+                    totalAds += userData.total_ads_watched || 0;
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
-                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); 
+                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString();
+                console.log("Stats loaded:", userCount, totalBalance, totalAds);
             });
 
             // 2. Load Pending Withdrawal Requests (FIRESTORE)
             const requestsColRef = collection(firestore, 'withdrawal_requests');
             const q = query(requestsColRef, where("status", "==", "Pending"));
             
-            onSnapshot(q, async (querySnapshot) => { 
+            onSnapshot(q, async (querySnapshot) => {
                 const ul = document.getElementById('withdrawal-list');
                 ul.innerHTML = '<p style="color:var(--subtle-text);">Loading requests...</p>'; 
                 
@@ -667,8 +769,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
                 querySnapshot.forEach(docSnapshot => {
                     const request = docSnapshot.data();
-                    const requestId = docSnapshot.id; 
-                    
+                    const requestId = docSnapshot.id;
                     const timestamp = request.timestamp?.seconds * 1000 || 0; 
                     pendingRequests.push({ ...request, requestId, timestamp });
                 });
@@ -678,24 +779,23 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
                     const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
                     const userSnapshot = await rtdbGet(userRef);
-                    const userData = userSnapshot.val() || { balance_usd: 0.0, total_ads_watched: 0 }; 
+                    const userData = userSnapshot.val() || { balance_usd: 0.0, total_ads_watched: 0 };
                     return {
                         ...request,
                         current_balance_usd: userData.balance_usd || 0.0,
-                        user_total_ads: userData.total_ads_watched || 0 
+                        user_total_ads: userData.total_ads_watched || 0
                     };
                 });
                 
                 const requestsWithUserData = await Promise.all(requestsWithUserDataPromises);
                 
-                ul.innerHTML = ''; 
+                ul.innerHTML = '';
 
                 if (requestsWithUserData.length === 0) {
                     ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
                 } else {
                     requestsWithUserData.forEach(request => {
                         const li = document.createElement('li');
-                        
                         const remainingBalance = (request.current_balance_usd - parseFloat(request.amount_usd));
                         
                         li.innerHTML = `
@@ -718,10 +818,8 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         window.processWithdrawal = (requestId, status, userIdToRefund, amountUsdToRefund) => {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
             
-            // Firestore Document Ref
             const requestDocRef = doc(firestore, 'withdrawal_requests', requestId);
             
-            // 1. Update Firestore Status
             updateDoc(requestDocRef, {
                 status: status,
                 processed_by_admin: telegramId,
@@ -730,7 +828,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 window.Telegram.WebApp.showAlert(`Request ${requestId} set to ${status}.`);
                 window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                 
-                // 2. Handle Refund if Rejected (RTDB Update)
                 if (status === 'Rejected' && userIdToRefund && amountUsdToRefund) {
                     const refundAmount = parseFloat(amountUsdToRefund);
                     if (isNaN(refundAmount) || refundAmount <= 0) {
@@ -754,13 +851,11 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
         
-        // --- EVENT LISTENERS SETUP ---
         function setupEventListeners() {
             document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
             document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
             
-            // TRX miktarını USD'ye çevirme listener'ı
             document.getElementById('amount-trx').addEventListener('input', () => {
                 const trx = parseFloat(document.getElementById('amount-trx').value);
                 const withdrawUsd = document.getElementById('withdraw-usd-amount');
@@ -771,7 +866,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 }
             });
 
-            // Bottom Navigation Buttons
             const navButtons = document.querySelectorAll('.bottom-nav .nav-btn');
             navButtons.forEach(button => {
                 button.addEventListener('click', () => {
@@ -781,7 +875,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- INITIALIZATION ---
         const initApp = async () => {
             const tg = window.Telegram.WebApp;
             tg.ready();
@@ -802,7 +895,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 referralInput.placeholder = telegramId;
             }
 
-            // Check and handle Admin access
             if (ADMIN_TELEGRAM_IDS.includes(telegramId)) {
                 document.getElementById('admin-indicator').style.display = 'block';
                 const nav = document.querySelector('.bottom-nav');
@@ -816,9 +908,13 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 }
             }
             
+            const isBanned = await checkIPBan();
+            if (isBanned) return;
+            
             await fetchTronPrice();
             setupUserListener();
             setupEventListeners();
+            setupSecurityMonitor();
             
             showSection('menu-page'); 
         };
