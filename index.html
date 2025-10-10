@@ -215,7 +215,7 @@
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
                     <h3>Watch & Earn</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX for watching 2 rewarded ads.</p>
+                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
                     <button id="watch-ad-btn" class="action-btn">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
@@ -312,8 +312,7 @@
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
-        // TEK REKLAM BAŞINA KAZANÇ ($0.001'in yarısı)
-        const EARNINGS_PER_AD_USD = 0.0005; 
+        const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
         const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
@@ -723,38 +722,25 @@
             const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
             
-            // Kazanılacak toplam miktar (2 reklam için: $0.0005 * 2 = $0.001 USD)
-            const EARNINGS_FOR_TWO_ADS_USD = EARNINGS_PER_AD_USD * 2; 
-
             rtdbGet(userRef).then((snapshot) => {
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
                 let totalAdsWatched = userData.total_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
 
-                // Limit kontrolü: İki reklam için yer var mı?
-                if (adsWatched + 2 > AD_LIMIT) {
-                     return window.Telegram.WebApp.showAlert(`You need 2 ad views to earn, but you only have ${AD_LIMIT - adsWatched} views left today.`);
+                if (adsWatched >= AD_LIMIT) {
+                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
 
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
-                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad (1/2)...';
+                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                // 1. Reklamı göster
                 window.showAdexora()
                   .then(() => {
-                      // 2. Reklamı yükle ve göster
-                      watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad (2/2)...';
-                      return window.showAdexora();
-                  })
-                  .then(() => {
-                    // İKİSİ DE BAŞARILI
-                    
-                    // Reklam sayacını 2 artır
-                    adsWatched += 2;
-                    totalAdsWatched += 2; 
-                    const newBalance = currentBalance + EARNINGS_FOR_TWO_ADS_USD;
+                    adsWatched++;
+                    totalAdsWatched++;
+                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
                     rtdbUpdate(userRef, {
                         balance_usd: newBalance,
@@ -764,11 +750,10 @@
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_FOR_TWO_ADS_USD.toFixed(3)} worth of TRX for watching 2 ads.`);
+                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    // HERHANGİ BİR REKLAM BAŞARISIZ OLURSA
-                    window.Telegram.WebApp.showAlert("An error occurred during ad viewing. Please try again. (Make sure to watch both ads entirely)");
+                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
