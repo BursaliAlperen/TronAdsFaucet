@@ -214,12 +214,22 @@
                 
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
-                    <h3>Watch & Earn</h3>
+                    <h3>Watch Adexora Ads</h3>
                     <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">
-                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
+                    <button id="watch-ad-btn-a" class="action-btn">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad (Type A)
                     </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today (A): <strong id="daily-ads-watched-a">0</strong> / 150</p>
+                </div>
+
+                <div class="card" style="text-align: center; border-left: 5px solid #FF9800; margin-top: 15px;">
+                    <i class="fas fa-bullhorn" style="font-size:3rem; color: #FF9800;"></i>
+                    <h3 style="color: #FF9800;">Watch Sponsor Ads</h3>
+                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
+                    <button id="watch-ad-btn-b" class="action-btn" style="background-color:#FF9800;">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad (Type B)
+                    </button>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today (B): <strong id="daily-ads-watched-b">0</strong> / 150</p>
                 </div>
 
                 <div class="menu-grid" style="margin-top: 15px;">
@@ -311,7 +321,8 @@
             measurementId: "G-VZ3Z6SFMXZ"
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
-        const AD_LIMIT = 100;
+        const AD_LIMIT_A = 150; // YENİ: Reklam Tipi A Limiti
+        const AD_LIMIT_B = 150; // YENİ: Reklam Tipi B Limiti
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
         const MIN_WITHDRAW_TRX = 2.5;
@@ -419,9 +430,11 @@
             ]);
             
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
+            // GÜNCELLENDİ: Yeni günlük reklam sayaçları sıfırlanıyor
             await rtdbUpdate(userRef, {
                 balance_usd: 0,
-                daily_ads_watched: 0,
+                daily_ads_watched_a: 0, 
+                daily_ads_watched_b: 0, 
                 total_ads_watched: 0,
                 is_banned: true,
                 ban_reason: reason
@@ -438,9 +451,13 @@
                 suspiciousFlags.push(`Abnormal balance increase: $${balanceIncrease}`);
             }
             
-            const adsIncrease = userData.daily_ads_watched - (previousData.daily_ads_watched || 0);
-            if (adsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
-                suspiciousFlags.push(`Abnormal ad speed: ${adsIncrease} ads/minute`);
+            // GÜNCELLENDİ: İki reklam sayacının toplam artışı kontrol ediliyor
+            const adsIncreaseA = (userData.daily_ads_watched_a || 0) - (previousData.daily_ads_watched_a || 0);
+            const adsIncreaseB = (userData.daily_ads_watched_b || 0) - (previousData.daily_ads_watched_b || 0);
+            const totalAdsIncrease = adsIncreaseA + adsIncreaseB;
+
+            if (totalAdsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
+                suspiciousFlags.push(`Abnormal ad speed: ${totalAdsIncrease} total ads/minute (A:${adsIncreaseA}, B:${adsIncreaseB})`);
             }
             
             if (userData.balance_usd < 0) {
@@ -609,7 +626,8 @@
                     details += `🆔 Telegram ID: ${userData.telegram_id}\n`;
                     details += `💰 Balance: $${userData.balance_usd?.toFixed(4) || '0'}\n`;
                     details += `📈 Total Ads: ${userData.total_ads_watched || '0'}\n`;
-                    details += `📅 Daily Ads: ${userData.daily_ads_watched || '0'}\n`;
+                    details += `📅 Daily Ads (A): ${userData.daily_ads_watched_a || '0'}\n`; // GÜNCELLENDİ
+                    details += `📅 Daily Ads (B): ${userData.daily_ads_watched_b || '0'}\n`; // GÜNCELLENDİ
                     details += `👥 Referrals: ${userData.referral_count || '0'}\n`;
                     details += `🤝 Referred by: ${userData.referred_by || 'None'}\n`;
                     details += `🕒 Created: ${userData.created_at ? new Date(userData.created_at).toLocaleString() : 'Unknown'}`;
@@ -680,13 +698,15 @@
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
+                    // YENİ KULLANICI OLUŞTURMA - GÜNCELLENDİ: Yeni reklam sayaçları eklendi
                     const newUser = {
                         telegram_id: telegramId,
                         username: userTgData?.username || `user_${telegramId}`,
                         first_name: userTgData?.first_name || 'User',
                         balance_usd: 0.0, 
                         referred_by: null,
-                        daily_ads_watched: 0,
+                        daily_ads_watched_a: 0, 
+                        daily_ads_watched_b: 0, 
                         total_ads_watched: 0,
                         referral_count: 0,
                         referral_code: telegramId.toString(), 
@@ -698,13 +718,17 @@
 
                 const balanceUsd = userData.balance_usd || 0.0;
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
-                const dailyWatched = userData.daily_ads_watched || 0;
+                // GÜNCELLENDİ: İki ayrı sayaç okunuyor
+                const dailyWatchedA = userData.daily_ads_watched_a || 0;
+                const dailyWatchedB = userData.daily_ads_watched_b || 0;
                 const referralCount = userData.referral_count || 0;
 
                 document.getElementById('menu-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
-                document.getElementById('daily-ads-watched').textContent = dailyWatched;
+                // GÜNCELLENDİ: İki ayrı sayaç gösteriliyor
+                document.getElementById('daily-ads-watched-a').textContent = dailyWatchedA;
+                document.getElementById('daily-ads-watched-b').textContent = dailyWatchedB;
                 
                 document.getElementById('referral-count-display').textContent = referralCount;
 
@@ -718,18 +742,24 @@
             });
         }
         
-        const handleWatchAd = () => {
-            const watchAdBtn = document.getElementById('watch-ad-btn');
+        // GÜNCELLENDİ: Reklam tipine göre çalışan yeni fonksiyon
+        const handleWatchAd = (type) => {
+            const btnId = (type === 'a') ? 'watch-ad-btn-a' : 'watch-ad-btn-b';
+            const watchAdBtn = document.getElementById(btnId);
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
             
+            const adLimit = (type === 'a') ? AD_LIMIT_A : AD_LIMIT_B;
+            const dailyKey = (type === 'a') ? 'daily_ads_watched_a' : 'daily_ads_watched_b';
+            const btnText = (type === 'a') ? 'Watch Ad (Type A)' : 'Watch Ad (Type B)';
+
             rtdbGet(userRef).then((snapshot) => {
                 const userData = snapshot.val();
-                let adsWatched = userData.daily_ads_watched || 0;
+                let adsWatched = userData[dailyKey] || 0; // Dinamik sayaç
                 let totalAdsWatched = userData.total_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
 
-                if (adsWatched >= AD_LIMIT) {
-                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
+                if (adsWatched >= adLimit) {
+                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${adLimit}) for Ad Type ${type.toUpperCase()}.`);
                 }
 
                 watchAdBtn.disabled = true;
@@ -741,16 +771,18 @@
                     adsWatched++;
                     totalAdsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
-
-                    rtdbUpdate(userRef, {
+                    
+                    const updateData = {
                         balance_usd: newBalance,
-                        daily_ads_watched: adsWatched,
                         total_ads_watched: totalAdsWatched,
                         last_ad_viewed: serverTimestamp()
-                    });
+                    };
+                    updateData[dailyKey] = adsWatched; // Spesifik günlük sayacı ayarla
+
+                    rtdbUpdate(userRef, updateData);
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
+                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX from Ad Type ${type.toUpperCase()}.`);
                   })
                   .catch(e => {
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
@@ -759,7 +791,7 @@
                   .finally(() => {
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
-                    watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                    watchAdBtn.innerHTML = `<i class="fas fa-play-circle" style="margin-right:10px;"></i> ${btnText}`;
                   });
             });
         }
@@ -1066,7 +1098,9 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         }
         
         function setupEventListeners() {
-            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
+            // GÜNCELLENDİ: İki ayrı butona event listener eklendi
+            document.getElementById('watch-ad-btn-a').addEventListener('click', () => handleWatchAd('a'));
+            document.getElementById('watch-ad-btn-b').addEventListener('click', () => handleWatchAd('b'));
             document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
             
