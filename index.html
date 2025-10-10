@@ -75,9 +75,12 @@
         input[type="text"]:focus, input[type="number"]:focus { border-color: var(--primary-color); outline: none; }
         
         .input-group { display: flex; margin-bottom: 15px; }
-        .input-group input { flex-grow: 1; border-radius: 8px 0 0 8px; border-right: none; background-color: var(--bg-color); }
+        .input-group input { flex-grow: 1; padding: 12px; border-radius: 8px 0 0 8px; font-family: inherit; font-size: 1rem; border: 1px solid var(--border-color); border-right: none; background-color: var(--bg-color); }
         .input-group button { padding: 10px 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 0 8px 8px 0; cursor: pointer; transition: background-color 0.2s; }
         .input-group button:hover { background-color: var(--primary-color-hover); }
+        /* Arama kutusu için tam yuvarlak kenarlar */
+        #user-search-input { border-radius: 8px; border-right: 1px solid var(--border-color); }
+        .input-group #user-search-input + button { border-radius: 0 8px 8px 0; }
 
         .withdraw-note { font-size: 0.9rem; color: var(--subtle-text); margin-top: 10px; }
         
@@ -99,6 +102,20 @@
         .user-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
         .stat-item { background: #f5f5f5; padding: 8px; border-radius: 5px; text-align: center; }
         .stat-value { font-weight: 800; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* YENİ CSS: Kaydırılabilir listeler */
+        .scrollable-list {
+            max-height: 300px; /* Maksimum yüksekliği belirle */
+            overflow-y: auto;  /* Dikey kaydırmayı etkinleştir */
+            padding-right: 10px; /* Kaydırma çubuğu için boşluk */
+        }
+        .scrollable-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable-list::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -144,6 +161,10 @@
                 
                 <div class="card">
                     <h3>User Management</h3>
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <input type="text" id="user-search-input" placeholder="Search by Telegram ID or Username">
+                        <button onclick="loadAllUsers(true)" style="border-radius: 8px;"><i class="fas fa-search"></i> Search</button>
+                    </div>
                     <div class="input-group">
                         <input type="text" id="user-uid-input" placeholder="User UID to ban (e.g., tg_user_12345)">
                         <button onclick="manualBanUser(document.getElementById('user-uid-input').value.trim())"><i class="fas fa-ban"></i> Ban User</button>
@@ -156,23 +177,31 @@
                 </div>
 
                 <div class="card">
-                    <h3>All Users List</h3>
-                    <ul id="users-list">
-                        <p style="color:var(--subtle-text);">Click refresh to load users...</p>
-                    </ul>
+                    <h3>All Users List (Scrollable)</h3>
+                    <div id="users-list-scrollable-container" class="scrollable-list">
+                        <ul id="users-list">
+                            <p style="color:var(--subtle-text);">Click refresh to load users...</p>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="card">
-                    <h3>Banned Users</h3>
-                    <ul id="banned-users-list">
-                        <p style="color:var(--subtle-text);">Loading banned users...</p>
-                    </ul>
+                    <h3>Banned Users (Scrollable)</h3>
+                    <div id="banned-users-list-scrollable-container" class="scrollable-list">
+                        <ul id="banned-users-list">
+                            <p style="color:var(--subtle-text);">Loading banned users...</p>
+                        </ul>
+                    </div>
                 </div>
                 
-                <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore)</h3>
-                <ul id="withdrawal-list">
-                    <p style="color:var(--subtle-text);">Loading requests...</p>
-                </ul>
+                <h3 style="margin-top:25px;">Pending Withdrawal Requests (Firestore - Scrollable)</h3>
+                <div class="card" style="margin-top: 10px;">
+                    <div id="withdrawal-list-scrollable-container" class="scrollable-list">
+                        <ul id="withdrawal-list">
+                            <p style="color:var(--subtle-text);">Loading requests...</p>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <div id="menu-page" class="page">
@@ -317,9 +346,7 @@
 
             if (sectionId === 'admin-panel') {
                 loadAdminPanel();
-                // loadBannedIPs yerine loadBannedUsers çağrıldı
                 loadBannedUsers(); 
-                // loadAllUsersWithIPs yerine loadAllUsers çağrıldı
                 loadAllUsers(); 
             }
         }
@@ -337,14 +364,9 @@
             });
         }
         
-        // IP alma fonksiyonu kaldırıldı
-        // async function getUserIP() { ... }
-
-        // GÜNCELLENMİŞ checkUserBan fonksiyonu (IP yerine UID kontrolü)
         async function checkUserBan() {
             if (!userUid) return false;
             
-            // banned_ips yerine banned_users kontrol ediliyor
             const bannedUserRef = rtdbRef(rtdb, 'banned_users/' + userUid); 
             
             const snapshot = await rtdbGet(bannedUserRef);
@@ -371,7 +393,6 @@
             return false;
         }
 
-        // GÜNCELLENMİŞ autoBanUser fonksiyonu (IP kaldırıldı)
         async function autoBanUser(reason, userUid, telegramId) {
             const banRef = rtdbRef(rtdb, 'banned_users/' + userUid);
             const activityRef = rtdbRef(rtdb, 'suspicious_activity/' + userUid + '/' + Date.now());
@@ -451,7 +472,6 @@
                     await rtdbUpdate(userRef, { suspicion_count: suspicionCount });
                     
                     if (suspicionCount >= SECURITY_CONFIG.SUSPICIOUS_ACTIVITY_LIMIT) {
-                        // autoBanUser çağrısı IP olmadan güncellendi
                         await autoBanUser(`Multiple cheat detection: ${reason}`, userUid, telegramId); 
                         window.Telegram.WebApp.showAlert("Security violation detected. Your account has been suspended.");
                         window.Telegram.WebApp.close();
@@ -462,13 +482,12 @@
             });
         }
 
-        // IP kaydetme fonksiyonu kaldırıldı
-        // async function saveUserIP() { ... }
-
-        // GÜNCELLENMİŞ loadAllUsers fonksiyonu (IP kaldırıldı, UID ban eklendi)
+        // GÜNCELLENMİŞ loadAllUsers fonksiyonu (Arama/Filtreleme eklendi)
         function loadAllUsers() {
             const usersRef = rtdbRef(rtdb, 'users');
             const ul = document.getElementById('users-list');
+            const searchTerm = document.getElementById('user-search-input').value.trim().toLowerCase(); 
+
             ul.innerHTML = '<p style="color:var(--subtle-text);">Loading users...</p>';
             
             rtdbOnValue(usersRef, (snapshot) => {
@@ -485,7 +504,7 @@
                     users.push({
                         uid: userSnapshot.key,
                         telegram_id: userData.telegram_id,
-                        username: userData.username,
+                        username: userData.username || 'N/A',
                         balance_usd: userData.balance_usd || 0,
                         total_ads_watched: userData.total_ads_watched || 0,
                         referral_count: userData.referral_count || 0,
@@ -496,50 +515,64 @@
                 // Bakiyeye göre sırala (yüksek bakiye üstte)
                 users.sort((a, b) => b.balance_usd - a.balance_usd);
                 
+                let filteredCount = 0;
+
                 users.forEach(user => {
-                    const li = document.createElement('li');
-                    li.style.padding = '10px';
-                    li.style.marginBottom = '8px';
-                    li.style.border = '1px solid #ddd';
-                    li.style.borderRadius = '5px';
-                    li.style.backgroundColor = '#f9f9f9';
+                    // FİLTRELEME MANTIĞI
+                    const matchesSearch = searchTerm === '' || 
+                                          user.telegram_id.includes(searchTerm) || 
+                                          user.username.toLowerCase().includes(searchTerm) ||
+                                          user.uid.toLowerCase().includes(searchTerm);
                     
-                    li.innerHTML = `
-                        <p><strong>User:</strong> ${user.username} (ID: ${user.telegram_id})</p>
-                        <p><strong>UID:</strong> <code>${user.uid}</code></p>
-                        <div class="user-stats-grid">
-                            <div class="stat-item">
-                                <div>Balance</div>
-                                <div class="stat-value">$${user.balance_usd.toFixed(4)}</div>
+                    if (matchesSearch) {
+                        const li = document.createElement('li');
+                        li.style.padding = '10px';
+                        li.style.marginBottom = '8px';
+                        li.style.border = '1px solid #ddd';
+                        li.style.borderRadius = '5px';
+                        li.style.backgroundColor = '#f9f9f9';
+                        
+                        li.innerHTML = `
+                            <p><strong>User:</strong> ${user.username} (ID: ${user.telegram_id})</p>
+                            <p><strong>UID:</strong> <code>${user.uid}</code></p>
+                            <div class="user-stats-grid">
+                                <div class="stat-item">
+                                    <div>Balance</div>
+                                    <div class="stat-value">$${user.balance_usd.toFixed(4)}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Referrals</div>
+                                    <div class="stat-value">${user.referral_count}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Total Ads</div>
+                                    <div class="stat-value">${user.total_ads_watched}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div>Status</div>
+                                    <div class="stat-value" style="color: ${user.balance_usd > 10 ? '#4CAF50' : '#ff9800'};">${user.balance_usd > 10 ? 'Active' : 'New'}</div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <div>Referrals</div>
-                                <div class="stat-value">${user.referral_count}</div>
+                            <div style="margin-top: 8px;">
+                                <button onclick="manualBanUser('${user.uid}', '${user.telegram_id}')" class="reject-btn" style="padding: 5px 8px; font-size: 0.8rem;">
+                                    <i class="fas fa-ban"></i> Ban User
+                                </button>
+                                <button onclick="viewUserDetails('${user.uid}')" class="approve-btn" style="padding: 5px 8px; font-size: 0.8rem; margin-left: 5px;">
+                                    <i class="fas fa-info"></i> Details
+                                </button>
                             </div>
-                            <div class="stat-item">
-                                <div>Total Ads</div>
-                                <div class="stat-value">${user.total_ads_watched}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div>Status</div>
-                                <div class="stat-value" style="color: ${user.balance_usd > 10 ? '#4CAF50' : '#ff9800'};">${user.balance_usd > 10 ? 'Active' : 'New'}</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 8px;">
-                            <button onclick="manualBanUser('${user.uid}', '${user.telegram_id}')" class="reject-btn" style="padding: 5px 8px; font-size: 0.8rem;">
-                                <i class="fas fa-ban"></i> Ban User
-                            </button>
-                            <button onclick="viewUserDetails('${user.uid}')" class="approve-btn" style="padding: 5px 8px; font-size: 0.8rem; margin-left: 5px;">
-                                <i class="fas fa-info"></i> Details
-                            </button>
-                        </div>
-                    `;
-                    ul.appendChild(li);
+                        `;
+                        ul.appendChild(li);
+                        filteredCount++;
+                    }
                 });
+
+                if (filteredCount === 0) {
+                    ul.innerHTML = '<p style="color:var(--primary-color);">No users found matching the criteria.</p>';
+                }
             });
         }
 
-        // YENİ manualBanUser fonksiyonu
         window.manualBanUser = (uid, telegramId = 'Unknown') => {
             if (!uid || !uid.startsWith('tg_user_')) {
                 return window.Telegram.WebApp.showAlert("Invalid User UID format. Example: tg_user_12345");
@@ -558,7 +591,6 @@
             });
         };
 
-        // Kullanıcı UID'si ile banlama (Admin Panel Input için)
         window.banUserByInput = () => {
             const uid = document.getElementById('user-uid-input').value.trim();
             if (!uid) return window.Telegram.WebApp.showAlert("Please enter a User UID.");
@@ -567,7 +599,6 @@
             document.getElementById('user-uid-input').value = '';
         };
 
-        // GÜNCELLENMİŞ viewUserDetails (IP kaldırıldı)
         window.viewUserDetails = (userId) => {
             const userRef = rtdbRef(rtdb, 'users/' + userId);
             rtdbGet(userRef).then((snapshot) => {
@@ -588,7 +619,6 @@
             });
         };
 
-        // YENİ loadBannedUsers fonksiyonu (banned_ips yerine banned_users)
         function loadBannedUsers() {
             const bannedRef = rtdbRef(rtdb, 'banned_users');
             const ul = document.getElementById('banned-users-list');
@@ -621,7 +651,6 @@
             });
         }
 
-        // YENİ manualUnbanUserByKey fonksiyonu
         window.manualUnbanUserByKey = async (userKey) => {
             const banRef = rtdbRef(rtdb, 'banned_users/' + userKey);
             await rtdbSet(banRef, null);
@@ -788,13 +817,11 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     const newReferrerBalance = (rData.balance_usd || 0.0) + REFERRAL_BONUS_USD;
                     const newReferralCount = (rData.referral_count || 0) + 1;
                     
-                    // Referrer'a bonus ve referans sayısını güncelle
                     rtdbUpdate(referrerRef, {
                         balance_usd: newReferrerBalance,
                         referral_count: newReferralCount
                     });
 
-                    // Kullanıcının referred_by alanını güncelle
                     rtdbUpdate(userRef, {
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
@@ -1052,6 +1079,10 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     withdrawUsd.textContent = `$${(trx * currentTronPriceUsd).toFixed(4)}`;
                 }
             });
+            // Arama kutusuna anlık filtreleme (Opsiyonel: Performans için buraya debounce eklenebilir)
+            document.getElementById('user-search-input').addEventListener('input', () => {
+                 loadAllUsers();
+            });
 
             const navButtons = document.querySelectorAll('.bottom-nav .nav-btn');
             navButtons.forEach(button => {
@@ -1076,9 +1107,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             telegramId = user.id.toString();
             userUid = getUidFromTelegramId(telegramId);
             
-            // IP kaydetme fonksiyonu kaldırıldığı için çağrı silindi.
-            // await saveUserIP(); 
-            
             const referralInput = document.getElementById('referral-code-input');
             if (referralInput) {
                 referralInput.value = telegramId;
@@ -1098,7 +1126,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 }
             }
             
-            // checkIPBan yerine checkUserBan çağrıldı
             const isBanned = await checkUserBan();
             if (isBanned) {
                 return;
