@@ -11,8 +11,25 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        let adexiumWidget = null; // Widget'ı global yapalım ki manuel çağrılabilsin
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Widget'ı in-app interstitial formatında başlat
+            adexiumWidget = new AdexiumWidget({wid: '6b5e9a45-f619-4aa1-a024-4598a4022e4a', adFormat: 'interstitial'});
+            // autoMode kaldırıldı, çünkü reklamları manuel çağırıyoruz.
+            
+            // handleWatchAd içindeki window.showAdexora() çağrısını, Adexium'un manuel reklam gösterme fonksiyonuna bağlar.
+            window.showAdexora = () => {
+                 // Adexium'un manuel reklam gösterme fonksiyonunu çağırır.
+                 // Bu fonksiyonun, reklam başarıyla bittiğinde Promise'i çözeceği varsayılır.
+                 return adexiumWidget.showAd(); 
+            };
+        });
+    </script>
     <style>
         :root {
             --font-family: 'Nunito', sans-serif;
@@ -214,22 +231,12 @@
                 
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
-                    <h3>Watch Adexora Ads</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
-                    <button id="watch-ad-btn-a" class="action-btn">
-                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad (Type A)
+                    <h3>Watch & Earn</h3>
+                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX for watching 2 rewarded ads.</p>
+                    <button id="watch-ad-btn" class="action-btn">
+                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today (A): <strong id="daily-ads-watched-a">0</strong> / 150</p>
-                </div>
-
-                <div class="card" style="text-align: center; border-left: 5px solid #FF9800; margin-top: 15px;">
-                    <i class="fas fa-bullhorn" style="font-size:3rem; color: #FF9800;"></i>
-                    <h3 style="color: #FF9800;">Watch Sponsor Ads</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
-                    <button id="watch-ad-btn-b" class="action-btn" style="background-color:#FF9800;">
-                        <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad (Type B)
-                    </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today (B): <strong id="daily-ads-watched-b">0</strong> / 150</p>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
                 </div>
 
                 <div class="menu-grid" style="margin-top: 15px;">
@@ -303,8 +310,6 @@
         </nav>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
@@ -321,9 +326,8 @@
             measurementId: "G-VZ3Z6SFMXZ"
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
-        const AD_LIMIT_A = 150; // YENİ: Reklam Tipi A Limiti
-        const AD_LIMIT_B = 150; // YENİ: Reklam Tipi B Limiti
-        const EARNINGS_PER_AD_USD = 0.001;
+        const AD_LIMIT = 100;
+        const EARNINGS_PER_AD_USD = 0.001; // İki reklam izlenirse verilecek toplam ödül
         const REFERRAL_BONUS_USD = 0.02;
         const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
@@ -430,11 +434,9 @@
             ]);
             
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
-            // GÜNCELLENDİ: Yeni günlük reklam sayaçları sıfırlanıyor
             await rtdbUpdate(userRef, {
                 balance_usd: 0,
-                daily_ads_watched_a: 0, 
-                daily_ads_watched_b: 0, 
+                daily_ads_watched: 0,
                 total_ads_watched: 0,
                 is_banned: true,
                 ban_reason: reason
@@ -451,13 +453,9 @@
                 suspiciousFlags.push(`Abnormal balance increase: $${balanceIncrease}`);
             }
             
-            // GÜNCELLENDİ: İki reklam sayacının toplam artışı kontrol ediliyor
-            const adsIncreaseA = (userData.daily_ads_watched_a || 0) - (previousData.daily_ads_watched_a || 0);
-            const adsIncreaseB = (userData.daily_ads_watched_b || 0) - (previousData.daily_ads_watched_b || 0);
-            const totalAdsIncrease = adsIncreaseA + adsIncreaseB;
-
-            if (totalAdsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
-                suspiciousFlags.push(`Abnormal ad speed: ${totalAdsIncrease} total ads/minute (A:${adsIncreaseA}, B:${adsIncreaseB})`);
+            const adsIncrease = userData.daily_ads_watched - (previousData.daily_ads_watched || 0);
+            if (adsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
+                suspiciousFlags.push(`Abnormal ad speed: ${adsIncrease} ads/minute`);
             }
             
             if (userData.balance_usd < 0) {
@@ -626,8 +624,7 @@
                     details += `🆔 Telegram ID: ${userData.telegram_id}\n`;
                     details += `💰 Balance: $${userData.balance_usd?.toFixed(4) || '0'}\n`;
                     details += `📈 Total Ads: ${userData.total_ads_watched || '0'}\n`;
-                    details += `📅 Daily Ads (A): ${userData.daily_ads_watched_a || '0'}\n`; // GÜNCELLENDİ
-                    details += `📅 Daily Ads (B): ${userData.daily_ads_watched_b || '0'}\n`; // GÜNCELLENDİ
+                    details += `📅 Daily Ads: ${userData.daily_ads_watched || '0'}\n`;
                     details += `👥 Referrals: ${userData.referral_count || '0'}\n`;
                     details += `🤝 Referred by: ${userData.referred_by || 'None'}\n`;
                     details += `🕒 Created: ${userData.created_at ? new Date(userData.created_at).toLocaleString() : 'Unknown'}`;
@@ -698,15 +695,13 @@
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
-                    // YENİ KULLANICI OLUŞTURMA - GÜNCELLENDİ: Yeni reklam sayaçları eklendi
                     const newUser = {
                         telegram_id: telegramId,
                         username: userTgData?.username || `user_${telegramId}`,
                         first_name: userTgData?.first_name || 'User',
                         balance_usd: 0.0, 
                         referred_by: null,
-                        daily_ads_watched_a: 0, 
-                        daily_ads_watched_b: 0, 
+                        daily_ads_watched: 0,
                         total_ads_watched: 0,
                         referral_count: 0,
                         referral_code: telegramId.toString(), 
@@ -718,17 +713,13 @@
 
                 const balanceUsd = userData.balance_usd || 0.0;
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
-                // GÜNCELLENDİ: İki ayrı sayaç okunuyor
-                const dailyWatchedA = userData.daily_ads_watched_a || 0;
-                const dailyWatchedB = userData.daily_ads_watched_b || 0;
+                const dailyWatched = userData.daily_ads_watched || 0;
                 const referralCount = userData.referral_count || 0;
 
                 document.getElementById('menu-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
-                // GÜNCELLENDİ: İki ayrı sayaç gösteriliyor
-                document.getElementById('daily-ads-watched-a').textContent = dailyWatchedA;
-                document.getElementById('daily-ads-watched-b').textContent = dailyWatchedB;
+                document.getElementById('daily-ads-watched').textContent = dailyWatched;
                 
                 document.getElementById('referral-count-display').textContent = referralCount;
 
@@ -742,59 +733,81 @@
             });
         }
         
-        // GÜNCELLENDİ: Reklam tipine göre çalışan yeni fonksiyon
-        const handleWatchAd = (type) => {
-            const btnId = (type === 'a') ? 'watch-ad-btn-a' : 'watch-ad-btn-b';
-            const watchAdBtn = document.getElementById(btnId);
+        // GÜNCELLENMİŞ FONKSİYON: Sadece 2 reklam izlenince tek ödül verme
+        const handleWatchAd = () => {
+            const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
             
-            const adLimit = (type === 'a') ? AD_LIMIT_A : AD_LIMIT_B;
-            const dailyKey = (type === 'a') ? 'daily_ads_watched_a' : 'daily_ads_watched_b';
-            const btnText = (type === 'a') ? 'Watch Ad (Type A)' : 'Watch Ad (Type B)';
+            // Tek bir reklamı izleme işlemini yöneten yardımcı fonksiyon
+            const watchSingleAd = (adNumber) => {
+                watchAdBtn.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad ${adNumber}...`;
+                // Bu, Adexium'u (window.showAdexora'ya bağlı) çağırır ve reklam başarıyla gösterilirse Promise'i çözer.
+                return window.showAdexora(); 
+            };
 
+            // Ana işlem akışı: 1. Reklam -> 2. Reklam -> Toplu Ödül Verme
             rtdbGet(userRef).then((snapshot) => {
                 const userData = snapshot.val();
-                let adsWatched = userData[dailyKey] || 0; // Dinamik sayaç
-                let totalAdsWatched = userData.total_ads_watched || 0;
-                const currentBalance = userData.balance_usd || 0.0;
+                let adsWatched = userData.daily_ads_watched || 0;
 
-                if (adsWatched >= adLimit) {
-                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${adLimit}) for Ad Type ${type.toUpperCase()}.`);
+                // İki reklam izlemek için yeterli limit olup olmadığını kontrol et
+                const ADS_TO_WATCH = 2;
+                if (adsWatched + ADS_TO_WATCH > AD_LIMIT) {
+                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
 
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
-                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
+                
+                // 1. REKLAM
+                return watchSingleAd(1)
+                    .then(() => {
+                        // 2. REKLAM (1. reklam başarılı olduktan sonra otomatik olarak tetiklenir)
+                        return watchSingleAd(2);
+                    })
+                    .then(() => {
+                        // BAŞARILI: İKİ REKLAM DA İZLENDİ. SADECE BURADA ÖDÜL VERİLİR.
+                        
+                        // Güncel verileri tekrar kontrol et
+                        return rtdbGet(userRef);
+                    })
+                    .then(finalSnapshot => {
+                        const finalUserData = finalSnapshot.val();
+                        
+                        // Ödül, EARNINGS_PER_AD_USD sabitinden (0.001) alınır. Sayaç 2 artar.
+                        const newAdsWatched = (finalUserData.daily_ads_watched || 0) + ADS_TO_WATCH;
+                        const newTotalAdsWatched = (finalUserData.total_ads_watched || 0) + ADS_TO_WATCH;
+                        const newBalance = (finalUserData.balance_usd || 0.0) + EARNINGS_PER_AD_USD;
 
-                window.showAdexora()
-                  .then(() => {
-                    adsWatched++;
-                    totalAdsWatched++;
-                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
-                    
-                    const updateData = {
-                        balance_usd: newBalance,
-                        total_ads_watched: totalAdsWatched,
-                        last_ad_viewed: serverTimestamp()
-                    };
-                    updateData[dailyKey] = adsWatched; // Spesifik günlük sayacı ayarla
-
-                    rtdbUpdate(userRef, updateData);
-                    
-                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX from Ad Type ${type.toUpperCase()}.`);
-                  })
-                  .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
-                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                  })
-                  .finally(() => {
-                    watchAdBtn.disabled = false;
-                    watchAdBtn.classList.remove('loading');
-                    watchAdBtn.innerHTML = `<i class="fas fa-play-circle" style="margin-right:10px;"></i> ${btnText}`;
-                  });
+                        // Veritabanını güncelle
+                        return rtdbUpdate(userRef, {
+                            balance_usd: newBalance,
+                            daily_ads_watched: newAdsWatched,
+                            total_ads_watched: newTotalAdsWatched,
+                            last_ad_viewed: serverTimestamp()
+                        }).then(() => {
+                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                            window.Telegram.WebApp.showAlert(`Success! You watched 2 ads and earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
+                        });
+                    })
+                    .catch(e => {
+                        // HATA: Reklamlardan biri kesildi veya başarısız oldu. HİÇBİR ÖDÜL VERİLMEZ.
+                        console.error('Ad sequence failed or interrupted:', e);
+                        
+                        if (typeof e === 'string' && e.includes('Ad Limit Reached')) {
+                             // Limit hatası zaten showAlert ile gösterilmiş olmalı
+                        } else {
+                            window.Telegram.WebApp.showAlert("Ad viewing failed. You must watch both ads completely to receive the reward.");
+                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                        }
+                    })
+                    .finally(() => {
+                        watchAdBtn.disabled = false;
+                        watchAdBtn.classList.remove('loading');
+                        watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                    });
             });
-        }
+        };
 
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
@@ -1098,9 +1111,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         }
         
         function setupEventListeners() {
-            // GÜNCELLENDİ: İki ayrı butona event listener eklendi
-            document.getElementById('watch-ad-btn-a').addEventListener('click', () => handleWatchAd('a'));
-            document.getElementById('watch-ad-btn-b').addEventListener('click', () => handleWatchAd('b'));
+            document.getElementById('watch-ad-btn').addEventListener('click', handleWatchAd);
             document.getElementById('share-ref-btn').addEventListener('click', handleShareReferral);
             document.getElementById('withdraw-form').addEventListener('submit', handleWithdrawSubmit);
             
