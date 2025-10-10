@@ -215,11 +215,14 @@
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
                     <h3>Watch & Earn</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p> 
+                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
                     <button id="watch-ad-btn" class="action-btn">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
                     <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
+                    <div id="cooldown-timer" style="font-weight: 700; color: #ff9800; margin-top: 10px; display:none;">
+                        Next 100 ads available in: <span id="timer-display">Loading...</span>
+                    </div>
                 </div>
 
                 <div class="menu-grid" style="margin-top: 15px;">
@@ -318,27 +321,15 @@
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
-        // --- YENİ EKLENEN KONUM BAZLI SABİTLER ---
-        // Konum Bazlı Kazanç Çarpanları
-        const LOCATION_MULTIPLIERS = {
-            "Kuwait": 3.0,
-            "Georgia": 2.0,
-            "Australia": 2.0,
-            // Diğer ülkeler varsayılan olarak 1.0 (veya tanınmayan ülkeler)
-        };
-
-        const DEFAULT_MULTIPLIER = 1.0;
-
-        // Harici IP Konum API URL'si (GeoJS'den ülke adını almak için)
-        const GEOLOCATION_API_URL = "https://get.geojs.io/v1/ip/country.json";
-        // --- YENİ EKLENEN KONUM BAZLI SABİTLER SONU ---
-        
         const SECURITY_CONFIG = {
             MAX_BALANCE_INCREASE_PER_MINUTE: 0.10,
             MAX_ADS_PER_MINUTE: 5,
             SUSPICIOUS_ACTIVITY_LIMIT: 3,
             CHECK_INTERVAL: 60000
         };
+
+        const RESET_TIME_UTC_HOUR = 0; // Midnight UTC
+        const MILLISECONDS_IN_DAY = 24 * 60 * 60 * 1000;
 
         let currentTronPriceUsd = 0.0; 
         let userUid = null;
@@ -358,6 +349,10 @@
             
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.nav-btn[data-page="${sectionId}"]`)?.classList.add('active');
+
+            if (sectionId === 'menu-page') {
+                updateAdCooldown(); 
+            }
 
             if (sectionId === 'admin-panel') {
                 loadAdminPanel();
@@ -627,7 +622,6 @@
                     details += `📅 Daily Ads: ${userData.daily_ads_watched || '0'}\n`;
                     details += `👥 Referrals: ${userData.referral_count || '0'}\n`;
                     details += `🤝 Referred by: ${userData.referred_by || 'None'}\n`;
-                    details += `🌎 Location: ${userData.current_country || 'Unknown'} (x${userData.current_multiplier || DEFAULT_MULTIPLIER})\n`; // Yeni eklenen alan
                     details += `🕒 Created: ${userData.created_at ? new Date(userData.created_at).toLocaleString() : 'Unknown'}`;
                     
                     window.Telegram.WebApp.showAlert(details);
@@ -685,70 +679,77 @@
                 document.getElementById('current-trx-price').textContent = `F: ${currentTronPriceUsd.toFixed(4)}`;
             }
         }
+
+        let adCooldownInterval = null;
         
-        // --- YENİ EKLENEN KONUM TESPİT FONKSİYONLARI ---
-
-        /**
-         * Harici bir API kullanarak kullanıcının mevcut konumunu (ülke) tespit eder.
-         * @returns {string} Ülke Adı (örneğin, 'Turkey', 'Australia'). Başarısız olursa 'UNKNOWN' döner.
-         */
-        async function fetchUserCountry() {
-            try {
-                const response = await fetch(GEOLOCATION_API_URL);
-                const data = await response.json();
-                // GeoJS'den ülke adını alıyoruz
-                const countryName = data.country || 'UNKNOWN';
-                return countryName; 
-            } catch (error) {
-                console.error("Geolocation API error:", error);
-                return 'UNKNOWN';
+        function getNextResetTime() {
+            const now = new Date();
+            const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), RESET_TIME_UTC_HOUR, 0, 0, 0));
+            
+            // If the reset time has already passed today (UTC), set it for tomorrow
+            if (now.getTime() >= todayReset.getTime()) {
+                const tomorrowReset = new Date(todayReset.getTime() + MILLISECONDS_IN_DAY);
+                return tomorrowReset;
             }
+            return todayReset;
         }
 
-        /**
-         * Ülke adına göre kazanç çarpanını hesaplar ve RTDB'ye kaydeder.
-         * Bu sayede çarpan diğer fonksiyonlar tarafından kolayca kullanılabilir.
-         */
-        async function updateUserLocationAndMultiplier(currentData) {
-            if (!userUid) return;
+        function updateAdCooldown() {
+            const watchAdBtn = document.getElementById('watch-ad-btn');
+            const timerDisplay = document.getElementById('timer-display');
+            const cooldownDiv = document.getElementById('cooldown-timer');
             
-            // Yalnızca 1 saatte bir konum kontrolü yapın (API limitleri için)
-            const lastCheck = currentData.last_location_check || 0;
-            const oneHour = 3600000;
-            // Zaten güncel bir çarpan varsa ve 1 saat geçmemişse tekrar kontrol etme
-            if (Date.now() - lastCheck < oneHour && currentData.current_multiplier) {
-                return;
-            }
-
-            const userCountry = await fetchUserCountry(); // Örneğin "Australia" dönecek
-            
-            // Ülke adını büyük/küçük harf duyarsız hale getirerek çarpanı bul
-            const multiplierKey = Object.keys(LOCATION_MULTIPLIERS).find(
-                key => userCountry.toLowerCase().includes(key.toLowerCase())
-            );
-            
-            const multiplier = multiplierKey ? LOCATION_MULTIPLIERS[multiplierKey] : DEFAULT_MULTIPLIER;
-            
-            // RTDB'de kullanıcının mevcut konumunu ve çarpanını güncelle
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
-            rtdbUpdate(userRef, {
-                current_country: userCountry,
-                current_multiplier: multiplier,
-                last_location_check: Date.now() 
-            });
-            
-            console.log(`User country: ${userCountry}, Multiplier: ${multiplier}X`);
-            return multiplier;
-        }
-        // --- YENİ EKLENEN KONUM TESPİT FONKSİYONLARI SONU ---
+            rtdbGet(userRef).then((snapshot) => {
+                const userData = snapshot.val();
+                let adsWatched = userData.daily_ads_watched || 0;
+                
+                if (adsWatched < AD_LIMIT) {
+                    cooldownDiv.style.display = 'none';
+                    watchAdBtn.disabled = false;
+                    clearInterval(adCooldownInterval);
+                    return;
+                }
+                
+                const nextReset = getNextResetTime();
+                
+                cooldownDiv.style.display = 'block';
+                watchAdBtn.disabled = true;
+                watchAdBtn.innerHTML = '<i class="fas fa-clock" style="margin-right:10px;"></i> Limit Reached';
 
+                if (adCooldownInterval) {
+                    clearInterval(adCooldownInterval);
+                }
+                
+                adCooldownInterval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = nextReset.getTime() - now;
+                    
+                    if (distance < 0) {
+                        clearInterval(adCooldownInterval);
+                        timerDisplay.textContent = "Resetting now...";
+                        // Trigger a soft reset check for the user in RTDB to reset daily_ads_watched
+                        rtdbUpdate(userRef, { last_reset_check: serverTimestamp() });
+                        updateAdCooldown(); // Re-check user data after potential reset
+                        return;
+                    }
+                    
+                    const hours = Math.floor((distance % MILLISECONDS_IN_DAY) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    timerDisplay.textContent = `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+                }, 1000);
+
+            });
+        }
         
         function setupUserListener() {
             if (!userUid) return;
             
             const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             
-            rtdbOnValue(userRef, async (snapshot) => { // async eklendi
+            rtdbOnValue(userRef, (snapshot) => {
                 let userData = snapshot.val();
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
@@ -764,28 +765,27 @@
                         referral_count: 0,
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp(),
-                        // Yeni başlangıç değerleri
-                        current_country: 'UNKNOWN',
-                        current_multiplier: DEFAULT_MULTIPLIER
+                        last_reset_check: serverTimestamp() // For initial setup
                     };
                     rtdbSet(userRef, newUser);
                     userData = newUser;
-                    await updateUserLocationAndMultiplier(newUser); // Yeni kullanıcı için konumu kontrol et
                 }
-                
-                // --- YENİ EKLENEN KOD ---
-                // Kullanıcının konumunu ve çarpanını kontrol et ve gerekirse güncelle
-                await updateUserLocationAndMultiplier(userData);
-                
-                // Çarpanı kullanıcı verisinden al
-                const currentMultiplier = userData.current_multiplier || DEFAULT_MULTIPLIER;
-                
-                // Çarpanı arayüze yansıt
-                const earningsPerAdWithMultiplier = (EARNINGS_PER_AD_USD * currentMultiplier).toFixed(3);
-                const earnText = `You earn **$${earningsPerAdWithMultiplier}** worth of TRX per rewarded ad. (x${currentMultiplier.toFixed(1)} Multiplier)`;
-                const cardBody = document.querySelector('#menu-page .card:nth-child(3) p:nth-child(3)');
-                if(cardBody) cardBody.innerHTML = earnText;
-                // --- YENİ EKLENEN KOD SONU ---
+
+                // Daily Ads Reset Logic (Client-side approximation, Firebase Rules or a Cloud Function is better for production)
+                const now = new Date().getTime();
+                const nextResetTime = getNextResetTime().getTime();
+
+                if (now > nextResetTime && (userData.daily_ads_watched || 0) > 0) {
+                     // Check if reset has occurred since the reset time
+                     const lastResetCheckTime = new Date(userData.last_reset_check || 0).getTime();
+                     if (lastResetCheckTime < nextResetTime) {
+                         rtdbUpdate(userRef, {
+                            daily_ads_watched: 0,
+                            last_reset_check: serverTimestamp() 
+                         });
+                         userData.daily_ads_watched = 0; // Update local data for display immediately
+                     }
+                }
 
                 const balanceUsd = userData.balance_usd || 0.0;
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
@@ -806,6 +806,8 @@
                     document.getElementById('enter-referrer-code').placeholder = `Already referred by: ${userData.referred_by}`;
                     document.querySelector('#friends-page .input-group button').disabled = true;
                 }
+
+                updateAdCooldown();
             });
         }
         
@@ -818,13 +820,6 @@
                 let adsWatched = userData.daily_ads_watched || 0;
                 let totalAdsWatched = userData.total_ads_watched || 0;
                 const currentBalance = userData.balance_usd || 0.0;
-                
-                // --- YENİ EKLENEN KOD ---
-                // Kullanıcının mevcut çarpanını veriden al
-                const currentMultiplier = userData.current_multiplier || DEFAULT_MULTIPLIER;
-                // KAZANÇ ÇARPANINI UYGULA
-                const earnings = EARNINGS_PER_AD_USD * currentMultiplier; 
-                // --- YENİ EKLENEN KOD SONU ---
 
                 if (adsWatched >= AD_LIMIT) {
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
@@ -838,7 +833,7 @@
                   .then(() => {
                     adsWatched++;
                     totalAdsWatched++;
-                    const newBalance = currentBalance + earnings; // Çarpanlı kazancı ekle
+                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
                     rtdbUpdate(userRef, {
                         balance_usd: newBalance,
@@ -848,8 +843,7 @@
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    // Kullanıcıya çarpanlı kazancı göster
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${earnings.toFixed(3)} worth of TRX. (x${currentMultiplier.toFixed(1)})`);
+                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
@@ -859,6 +853,7 @@
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
                     watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                    updateAdCooldown(); // Update the cooldown timer after ad watch
                   });
             });
         }
