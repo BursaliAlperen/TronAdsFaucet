@@ -116,11 +116,79 @@
             background-color: var(--primary-color);
             border-radius: 10px;
         }
+
+        /* YENİ CSS: VPN Modal */
+        #vpn-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Initially hidden */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        #vpn-modal-content {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--radius);
+            max-width: 90%;
+            width: 350px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            text-align: center;
+        }
+        #vpn-modal-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        #vpn-modal-content ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+            text-align: left;
+        }
+        #vpn-modal-content li {
+            padding: 8px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-bottom: 1px dotted #f0f0f0;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--subtle-text);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <div id="app">
+        <div id="vpn-modal-overlay">
+            <div id="vpn-modal-content">
+                <button class="close-btn" onclick="document.getElementById('vpn-modal-overlay').style.display='none';">&times;</button>
+                <h3>🎁 Özel Kazanç Fırsatı!</h3>
+                <p style="font-size: 1.1rem; font-weight: 600;">VPN ile bu ülkelerden izle, **daha çok kazan**:</p>
+                <ul>
+                    <li><i class="fas fa-flag"></i> Kuveyt (KW): <strong style="color: green;">3X</strong></li>
+                    <li><i class="fas fa-flag"></i> Avustralya (AU): <strong style="color: green;">2X</strong></li>
+                    <li><i class="fas fa-flag"></i> Gürcistan (GE): <strong style="color: green;">2X</strong></li>
+                </ul>
+                <p style="font-size: 0.9rem; margin-top: 15px; color: var(--subtle-text);">Kazanç çarpanları bu ülkelerin IP'lerinden bağlandığınızda otomatik uygulanır.</p>
+            </div>
+        </div>
+
         <header class="header">
             <div>
                 <h1>TRON Ads Faucet</h1>
@@ -215,7 +283,7 @@
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
                     <h3>Watch & Earn</h3>
-                    <p style="margin-bottom:15px;">You earn **$0.001** worth of TRX per rewarded ad.</p>
+                    <p style="margin-bottom:15px;">You earn **<span id="ad-earning-display">$0.001</span>** worth of TRX per rewarded ad.</p>
                     <button id="watch-ad-btn" class="action-btn">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
@@ -317,6 +385,15 @@
         const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
+        
+        // YENİ: VPN Kazanç Çarpanları
+        const COUNTRY_MULTIPLIERS = {
+            'KW': 3.0, // Kuveyt
+            'AU': 2.0, // Avustralya
+            'GE': 2.0, // Gürcistan
+        };
+        // YENİ: Varsayılan Kullanıcı Ülkesi
+        let currentUserCountryCode = 'UNKNOWN'; 
         
         const SECURITY_CONFIG = {
             MAX_BALANCE_INCREASE_PER_MINUTE: 0.10,
@@ -670,6 +747,27 @@
             }
         }
         
+        // YENİ FONKSİYON: Kullanıcının geçerli kazanç oranını hesaplar
+        function getCurrentEarningRate() {
+            const multiplier = COUNTRY_MULTIPLIERS[currentUserCountryCode] || 1.0;
+            return EARNINGS_PER_AD_USD * multiplier;
+        }
+
+        // YENİ FONKSİYON: Kullanıcının ülke kodunu tespit etmeye çalışır
+        async function fetchUserCountryCode() {
+            // Telegram WebApp verilerinden ülke kodu alınmaya çalışılır (Genellikle boş veya yanlış olabilir)
+            const tgCountry = window.Telegram.WebApp.initDataUnsafe.user?.country_code;
+            if (tgCountry) {
+                console.log("Country from TG: ", tgCountry);
+                return tgCountry.toUpperCase();
+            }
+
+            // Gerçek bir uygulamada, doğru ve güvenli GeoIP tespiti için buraya 
+            // sunucu taraflı bir harici GeoIP API çağrısı eklenmelidir.
+            console.log("External GeoIP service not available. Defaulting to 'UNKNOWN' (1X).");
+            return 'UNKNOWN'; 
+        }
+
         function setupUserListener() {
             if (!userUid) return;
             
@@ -736,11 +834,15 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
+                // YENİ: Çarpanı hesapla
+                const earningRate = getCurrentEarningRate();
+                const multiplier = (earningRate / EARNINGS_PER_AD_USD).toFixed(1);
+
                 window.showAdexora()
                   .then(() => {
                     adsWatched++;
                     totalAdsWatched++;
-                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
+                    const newBalance = currentBalance + earningRate; // Kullanıcı kazanım oranını kullan
 
                     rtdbUpdate(userRef, {
                         balance_usd: newBalance,
@@ -750,7 +852,7 @@
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
+                    window.Telegram.WebApp.showAlert(`Başarılı! ${multiplier}X çarpanıyla $${earningRate.toFixed(4)} worth of TRX kazandınız.`);
                   })
                   .catch(e => {
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
@@ -1107,6 +1209,10 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             telegramId = user.id.toString();
             userUid = getUidFromTelegramId(telegramId);
             
+            // YENİ: Kullanıcının ülke kodunu al
+            currentUserCountryCode = await fetchUserCountryCode();
+            console.log(`Kullanıcı Ülke Kodu: ${currentUserCountryCode}`);
+
             const referralInput = document.getElementById('referral-code-input');
             if (referralInput) {
                 referralInput.value = telegramId;
@@ -1135,6 +1241,17 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             setupUserListener();
             setupEventListeners();
             setupSecurityMonitor();
+
+            // YENİ: Kazanç metnini ülke çarpanına göre güncelle
+            const adEarningDisplay = document.getElementById('ad-earning-display');
+            if (adEarningDisplay) {
+                const currentEarning = getCurrentEarningRate();
+                const currentMultiplier = (currentEarning / EARNINGS_PER_AD_USD).toFixed(1) + 'X';
+                adEarningDisplay.innerHTML = `$${currentEarning.toFixed(4)} (<strong>${currentMultiplier}</strong>)`;
+            }
+            
+            // YENİ: Modal'ı göster
+            document.getElementById('vpn-modal-overlay').style.display = 'flex';
             
             showSection('menu-page'); 
         };
