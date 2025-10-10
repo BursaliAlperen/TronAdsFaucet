@@ -11,46 +11,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
 
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        let adexiumWidget = null; 
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Widget'ı in-app interstitial formatında başlat
-            adexiumWidget = new AdexiumWidget({wid: '6b5e9a45-f619-4aa1-a024-4598a4022e4a', adFormat: 'interstitial'});
-            
-            // HANGING FIX: adexiumWidget.showAd() çağrısını, reklamın kapanış olayını dinleyen bir Promise içine alıyoruz.
-            window.showAdexora = () => {
-                 return new Promise((resolve, reject) => {
-                     // Adexium'un manuel reklam gösterme fonksiyonunu callback'ler ile çağır
-                     try {
-                         adexiumWidget.showAd({
-                             onAdClose: (isSuccessful) => { 
-                                 // isSuccessful true ise (reklam başarıyla kapandıysa) Promise'i çöz.
-                                 if (isSuccessful) {
-                                     resolve();
-                                 } else {
-                                     // Kullanıcı reklamı atlattıysa veya başarıyla izlenmediyse reddet.
-                                     reject('Ad closed unsuccessfully or skipped.');
-                                 }
-                             },
-                             onAdError: (error) => {
-                                 // Reklam yüklenirken veya gösterilirken hata oluşursa reddet.
-                                 console.error('Adexium Error:', error);
-                                 reject('Adexium Error: Could not display ad.');
-                             },
-                         });
-                     } catch (e) {
-                         // showAd çağrısı sırasında bir hata oluşursa (örneğin widget hazır değilse)
-                         console.error('Adexium showAd call failed:', e);
-                         reject('Adexium showAd call failed: ' + e.message);
-                     }
-                 });
-            };
-        });
-    </script>
     <style>
         :root {
             --font-family: 'Nunito', sans-serif;
@@ -331,6 +293,8 @@
         </nav>
     </div>
 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
@@ -348,7 +312,8 @@
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
-        const EARNINGS_PER_AD_USD = 0.001; // İki reklam izlenirse verilecek toplam ödül
+        // TEK REKLAM BAŞINA KAZANÇ ($0.001'in yarısı)
+        const EARNINGS_PER_AD_USD = 0.0005; 
         const REFERRAL_BONUS_USD = 0.02;
         const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
@@ -754,85 +719,65 @@
             });
         }
         
-        // GÜNCELLENMİŞ FONKSİYON: Sadece 2 reklam izlenince tek ödül verme ve Asenkron Hata Çözümü
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
             
-            // Tek bir reklamı izleme işlemini yöneten yardımcı fonksiyon
-            const watchSingleAd = (adNumber) => {
-                watchAdBtn.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad ${adNumber}...`;
-                // window.showAdexora artık Adexium'un callback'lerini dinleyen bir Promise döndürüyor.
-                return window.showAdexora(); 
-            };
+            // Kazanılacak toplam miktar (2 reklam için: $0.0005 * 2 = $0.001 USD)
+            const EARNINGS_FOR_TWO_ADS_USD = EARNINGS_PER_AD_USD * 2; 
 
-            // Ana işlem akışı: 1. Reklam -> 2. Reklam -> Toplu Ödül Verme
             rtdbGet(userRef).then((snapshot) => {
                 const userData = snapshot.val();
                 let adsWatched = userData.daily_ads_watched || 0;
+                let totalAdsWatched = userData.total_ads_watched || 0;
+                const currentBalance = userData.balance_usd || 0.0;
 
-                // İki reklam izlemek için yeterli limit olup olmadığını kontrol et
-                const ADS_TO_WATCH = 2;
-                if (adsWatched + ADS_TO_WATCH > AD_LIMIT) {
-                    return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
+                // Limit kontrolü: İki reklam için yer var mı?
+                if (adsWatched + 2 > AD_LIMIT) {
+                     return window.Telegram.WebApp.showAlert(`You need 2 ad views to earn, but you only have ${AD_LIMIT - adsWatched} views left today.`);
                 }
 
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
-                
-                // 1. REKLAM
-                return watchSingleAd(1)
-                    .then(() => {
-                        // 2. REKLAM (1. reklam başarılı olduktan sonra otomatik olarak tetiklenir)
-                        return watchSingleAd(2);
-                    })
-                    .then(() => {
-                        // BAŞARILI: İKİ REKLAM DA İZLENDİ. SADECE BURADA ÖDÜL VERİLİR.
-                        
-                        // Güncel verileri tekrar kontrol et
-                        return rtdbGet(userRef);
-                    })
-                    .then(finalSnapshot => {
-                        const finalUserData = finalSnapshot.val();
-                        
-                        // Ödül, EARNINGS_PER_AD_USD sabitinden (0.001) alınır. Sayaç 2 artar.
-                        const newAdsWatched = (finalUserData.daily_ads_watched || 0) + ADS_TO_WATCH;
-                        const newTotalAdsWatched = (finalUserData.total_ads_watched || 0) + ADS_TO_WATCH;
-                        const newBalance = (finalUserData.balance_usd || 0.0) + EARNINGS_PER_AD_USD;
+                watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad (1/2)...';
 
-                        // Veritabanını güncelle
-                        return rtdbUpdate(userRef, {
-                            balance_usd: newBalance,
-                            daily_ads_watched: newAdsWatched,
-                            total_ads_watched: newTotalAdsWatched,
-                            last_ad_viewed: serverTimestamp()
-                        }).then(() => {
-                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                            window.Telegram.WebApp.showAlert(`Success! You watched 2 ads and earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
-                        });
-                    })
-                    .catch(e => {
-                        // HATA: Reklamlardan biri kesildi veya başarısız oldu. HİÇBİR ÖDÜL VERİLMEZ.
-                        console.error('Ad sequence failed or interrupted:', e);
-                        
-                        if (typeof e === 'string' && e.includes('Ad closed unsuccessfully or skipped')) {
-                            window.Telegram.WebApp.showAlert("Ad viewing failed. You must watch both ads completely to receive the reward.");
-                        } else if (typeof e === 'string' && e.includes('Adexium Error')) {
-                             window.Telegram.WebApp.showAlert("Ad loading failed. Please try again in a few moments.");
-                        } else {
-                            // Diğer bilinmeyen hatalar
-                            window.Telegram.WebApp.showAlert("An error occurred during ad viewing. Please try again.");
-                        }
-                        
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                    })
-                    .finally(() => {
-                        watchAdBtn.disabled = false;
-                        watchAdBtn.classList.remove('loading');
-                        watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                // 1. Reklamı göster
+                window.showAdexora()
+                  .then(() => {
+                      // 2. Reklamı yükle ve göster
+                      watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad (2/2)...';
+                      return window.showAdexora();
+                  })
+                  .then(() => {
+                    // İKİSİ DE BAŞARILI
+                    
+                    // Reklam sayacını 2 artır
+                    adsWatched += 2;
+                    totalAdsWatched += 2; 
+                    const newBalance = currentBalance + EARNINGS_FOR_TWO_ADS_USD;
+
+                    rtdbUpdate(userRef, {
+                        balance_usd: newBalance,
+                        daily_ads_watched: adsWatched,
+                        total_ads_watched: totalAdsWatched,
+                        last_ad_viewed: serverTimestamp()
                     });
+                    
+                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_FOR_TWO_ADS_USD.toFixed(3)} worth of TRX for watching 2 ads.`);
+                  })
+                  .catch(e => {
+                    // HERHANGİ BİR REKLAM BAŞARISIZ OLURSA
+                    window.Telegram.WebApp.showAlert("An error occurred during ad viewing. Please try again. (Make sure to watch both ads entirely)");
+                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                  })
+                  .finally(() => {
+                    watchAdBtn.disabled = false;
+                    watchAdBtn.classList.remove('loading');
+                    watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
+                  });
             });
-        };
+        }
 
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
