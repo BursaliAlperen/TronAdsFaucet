@@ -157,7 +157,7 @@
                     <button id="watch-ad-btn" class="action-btn">
                         <i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad
                     </button>
-                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 100</p>
+                    <p class="withdraw-note" style="margin-top:10px;">Ads Watched Today: <strong id="daily-ads-watched">0</strong> / 150</p>
                 </div>
 
                 <div class="menu-grid" style="margin-top: 15px;">
@@ -230,8 +230,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         
-        // --- REALTIME DATABASE IMPORTS (Kullanıcı Verileri) ---
-        import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        // --- REALTIME DATABASE IMPORTS (Transaction eklendi) ---
+        import { getDatabase, ref as rtdbRef, get as rtdbGet, set as rtdbSet, update as rtdbUpdate, onValue as rtdbOnValue, serverTimestamp, runTransaction as rtdbRunTransaction } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         
         // --- FIRESTORE IMPORTS (Çekim Talepleri) ---
         import { getFirestore, collection, addDoc, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -249,7 +249,7 @@
             measurementId: "G-VZ3Z6SFMXZ"
         };
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
-        const AD_LIMIT = 100;
+        const AD_LIMIT = 150; // GÜNCELLENMİŞ REKLAM LİMİTİ
         const EARNINGS_PER_AD_USD = 0.001;
         const REFERRAL_BONUS_USD = 0.02;
         const MIN_WITHDRAW_TRX = 2.5; 
@@ -268,6 +268,19 @@
 
         // --- UTILITY FUNCTIONS ---
         const getUidFromTelegramId = (id) => `tg_user_${id}`;
+        
+        // Gece yarısı kontrolü (Günlük limit sıfırlama için)
+        const isPastMidnight = (lastTimestamp) => {
+            if (!lastTimestamp) return true;
+            
+            const lastDate = new Date(lastTimestamp);
+            const today = new Date();
+            
+            lastDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            return lastDate < today;
+        };
         
         // Navigation Handler
         window.showSection = (sectionId) => {
@@ -305,7 +318,6 @@
                 currentTronPriceUsd = data.tron.usd;
                 document.getElementById('current-trx-price').textContent = currentTronPriceUsd.toFixed(4);
             } catch (error) {
-                // console.error("Error fetching Tron price, using fallback:", error); // KALDIRILDI
                 currentTronPriceUsd = 0.03389; // Fallback value
                 document.getElementById('current-trx-price').textContent = `F: ${currentTronPriceUsd.toFixed(4)}`;
             }
@@ -314,16 +326,14 @@
         // Real-time listener for user data (RTDB)
         function setupUserListener() {
             if (!userUid) return;
-            // RTDB Ref kullanıldı
             const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             
-            // rtdbOnValue kullanıldı
             rtdbOnValue(userRef, (snapshot) => {
                 let userData = snapshot.val();
                 const userTgData = window.Telegram.WebApp.initDataUnsafe.user;
                 
                 if (!snapshot.exists()) {
-                    // Initialize New User (RTDB Set kullanıldı)
+                    // Initialize New User
                     const newUser = {
                         telegram_id: telegramId,
                         username: userTgData?.username || `user_${telegramId}`,
@@ -331,23 +341,40 @@
                         balance_usd: 0.0, 
                         referred_by: null,
                         daily_ads_watched: 0,
-                        total_ads_watched: 0, // YENİ: Toplam reklam sayacı
+                        total_ads_watched: 0, 
                         referral_code: telegramId.toString(), 
+                        last_ad_viewed: 0, 
                         created_at: serverTimestamp()
                     };
                     rtdbSet(userRef, newUser);
                     userData = newUser;
                 }
 
+                // GÜNLÜK LİMİT SIFIRLAMA KONTROLÜ
+                const lastAdTimestamp = userData.last_ad_viewed || 0;
+                let adsWatched = userData.daily_ads_watched || 0;
+                let updateNeeded = false;
+                
+                if (isPastMidnight(lastAdTimestamp)) {
+                    if (adsWatched > 0) {
+                        adsWatched = 0; 
+                        updateNeeded = true;
+                    }
+                }
+                
+                if (updateNeeded) {
+                    rtdbUpdate(userRef, { daily_ads_watched: 0 });
+                }
+                // GÜNLÜK LİMİT SIFIRLAMA SONU
+
                 const balanceUsd = userData.balance_usd || 0.0;
                 const balanceTrx = currentTronPriceUsd > 0 ? (balanceUsd / currentTronPriceUsd) : 0; 
-                const dailyWatched = userData.daily_ads_watched || 0;
-
-                // Update UI (TRX & USD)
+                
+                // Update UI
                 document.getElementById('menu-balance-trx').textContent = balanceTrx.toFixed(4);
                 document.getElementById('menu-balance-usd').textContent = balanceUsd.toFixed(2);
                 document.getElementById('withdraw-balance-trx').textContent = balanceTrx.toFixed(4);
-                document.getElementById('daily-ads-watched').textContent = dailyWatched;
+                document.getElementById('daily-ads-watched').textContent = adsWatched; 
                 
                 document.getElementById('referral-code-input').value = userData.referral_code;
 
@@ -357,7 +384,7 @@
                     document.querySelector('#friends-page .input-group button').disabled = true;
                 }
             }, (error) => {
-                // console.error("User Data Listener Error:", error); // KALDIRILDI
+                // console.error("User Data Listener Error:", error);
             });
         }
         
@@ -365,12 +392,20 @@
         
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             
-            rtdbGet(userRef).then((snapshot) => { // RTDB Get
+            rtdbGet(userRef).then((snapshot) => { 
                 const userData = snapshot.val();
+                
+                // Reklam izlemeden önce tekrar limit sıfırlama kontrolü
                 let adsWatched = userData.daily_ads_watched || 0;
-                let totalAdsWatched = userData.total_ads_watched || 0; // YENİ: Toplam sayaç
+                const lastAdTimestamp = userData.last_ad_viewed || 0;
+                
+                if (isPastMidnight(lastAdTimestamp)) {
+                    adsWatched = 0; 
+                }
+
+                let totalAdsWatched = userData.total_ads_watched || 0; 
                 const currentBalance = userData.balance_usd || 0.0;
 
                 if (adsWatched >= AD_LIMIT) {
@@ -381,26 +416,28 @@
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                // window.showAdexora() çağrısı ile reklam gösterilir.
+                // Reklamı Gösterme Kodu
                 window.showAdexora()
                   .then(() => {
-                    // ✅ Reklam başarıyla gösterildi, ödül veriliyor
+                    // ✅ Başarılı Ödül Mantığı
                     adsWatched++;
-                    totalAdsWatched++; // YENİ: Toplamı da artır
+                    totalAdsWatched++; 
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
-                    rtdbUpdate(userRef, { // RTDB Update
+                    // RTDB Update: Bakiye, günlük/toplam sayaç ve son izleme zamanı güncellenir.
+                    // DİKKAT: Burada güvenlik kurallarınızın bakiye artışını sadece $0.001 ile sınırlaması ZORUNLUDUR.
+                    rtdbUpdate(userRef, { 
                         balance_usd: newBalance,
                         daily_ads_watched: adsWatched,
-                        total_ads_watched: totalAdsWatched, // YENİ: Toplamı kaydet
-                        last_ad_viewed: serverTimestamp()
+                        total_ads_watched: totalAdsWatched, 
+                        last_ad_viewed: serverTimestamp() 
                     });
                     
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    // ❌ Reklam gösterilemedi/atlandı, hata mesajı
+                    // ❌ Hata Yönetimi
                     window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
@@ -448,30 +485,30 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
         window.applyReferralCode = () => {
             const referrerCode = document.getElementById('enter-referrer-code').value.trim();
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
 
             if (!referrerCode) return window.Telegram.WebApp.showAlert("Please enter a referral code.");
             if (referrerCode === telegramId) return window.Telegram.WebApp.showAlert("You cannot refer yourself.");
 
-            rtdbGet(userRef).then((snapshot) => { // RTDB Get
+            rtdbGet(userRef).then((snapshot) => { 
                 if (snapshot.val()?.referred_by) {
                     return window.Telegram.WebApp.showAlert("You have already used a referral code.");
                 }
                 
                 const referrerUid = getUidFromTelegramId(referrerCode); 
-                const referrerRef = rtdbRef(rtdb, 'users/' + referrerUid); // RTDB Ref
+                const referrerRef = rtdbRef(rtdb, 'users/' + referrerUid); 
 
-                rtdbGet(referrerRef).then(rSnapshot => { // RTDB Get
+                rtdbGet(referrerRef).then(rSnapshot => { 
                     if (!rSnapshot.exists()) return window.Telegram.WebApp.showAlert("Invalid referral code. User not found.");
                     
                     const rData = rSnapshot.val();
                     const newReferrerBalance = (rData.balance_usd || 0.0) + REFERRAL_BONUS_USD;
                     
-                    rtdbUpdate(referrerRef, { // RTDB Update
+                    rtdbUpdate(referrerRef, { 
                         balance_usd: newReferrerBalance
                     });
 
-                    rtdbUpdate(userRef, { // RTDB Update
+                    rtdbUpdate(userRef, { 
                         referred_by: referrerCode,
                         referral_applied_at: serverTimestamp() 
                     }).then(() => {
@@ -482,7 +519,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
 
-        // --- WITHDRAWAL LOGIC (RTDB Balance Update + Firestore Request Creation) ---
+        // --- WITHDRAWAL LOGIC (RTDB Transaction + Firestore Request Creation) ---
         
         const handleWithdrawSubmit = (e) => {
             e.preventDefault();
@@ -492,7 +529,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 return window.Telegram.WebApp.showAlert("Withdrawal failed: User session not loaded. Please restart the bot.");
             }
 
-            const userRef = rtdbRef(rtdb, 'users/' + userUid); // RTDB Ref
+            const userRef = rtdbRef(rtdb, 'users/' + userUid); 
             const tronAddress = document.getElementById('tron-address').value.trim();
             const amountInTrx = parseFloat(document.getElementById('amount-trx').value);
             
@@ -515,39 +552,65 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
             withdrawSubmitBtn.disabled = true;
 
-            // 1. RTDB'den Bakiye Kontrolü (rtdbGet)
-            rtdbGet(userRef).then(snapshot => {
-                const userData = snapshot.val();
-                
-                if (!userData) {
-                    throw new Error("User data is missing on Firebase.");
+            // Flags for transaction result handling
+            let sufficientBalance = false;
+            let trxBalance = 0;
+            const requestsCollection = collection(firestore, "withdrawal_requests");
+            
+            // 1. RTDB'de Bakiye Kontrolü ve Düşürme (ATOMIC TRANSACTION - Race Condition Koruması)
+            rtdbRunTransaction(userRef, (currentData) => {
+                if (currentData === null) {
+                    return currentData; 
                 }
                 
-                const usdBalance = userData.balance_usd || 0.0;
-                
+                const usdBalance = currentData.balance_usd || 0.0;
+
+                // Bakiyeyi kontrol et
                 if (withdrawUsdAmount > usdBalance) {
-                    const trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
-                    withdrawSubmitBtn.disabled = false;
-                    return window.Telegram.WebApp.showAlert(`Withdrawal failed: Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`);
+                    // Yetersiz bakiye durumunda, işlemi durdur (Abort)
+                    trxBalance = currentTronPriceUsd > 0 ? (usdBalance / currentTronPriceUsd) : 0; 
+                    sufficientBalance = false;
+                    return; 
                 }
 
+                // Yeterli bakiye: Atomik güncelleme yap
+                sufficientBalance = true;
                 const newUsdBalance = usdBalance - withdrawUsdAmount;
-
-                // 2. FIRESTORE'a Çekim Talebi Ekleme (addDoc)
-                const requestsCollection = collection(firestore, "withdrawal_requests");
+                currentData.balance_usd = newUsdBalance;
+                currentData.last_withdrawal = serverTimestamp();
                 
+                return currentData; // Yeni veriyi commit et (Başarılı)
+
+            }).then(result => {
+                if (!result.committed && !sufficientBalance) {
+                    // İşlem bakiye yetersizliğinden durduruldu.
+                    withdrawSubmitBtn.disabled = false;
+                    return Promise.reject({
+                        message: `Insufficient balance. Available TRX: ${trxBalance.toFixed(4)}`,
+                        code: 'insufficient-funds'
+                    });
+                }
+
+                if (!result.committed) {
+                    // Başka bir sebepten (eşzamanlılık çakışması vb.) durduruldu.
+                    return Promise.reject({
+                        message: "Concurrency error. Please try withdrawing again.",
+                        code: 'concurrency-error'
+                    });
+                }
+                
+                // Transaction BAŞARILI: Bakiye atomik olarak düşürüldü.
+                
+                // 2. FIRESTORE'a Çekim Talebi Ekleme
                 return addDoc(requestsCollection, {
                     user_id: userUid,
                     telegram_id: telegramId,
-                    username: userData.username,
+                    username: result.snapshot.val().username, 
                     tron_address: tronAddress,
                     amount_usd: withdrawUsdAmount.toFixed(4),
                     amount_trx: amountInTrx.toFixed(4),
                     status: "Pending", 
                     timestamp: serverTimestamp()
-                }).then(() => {
-                    // 3. RTDB'de Bakiye Düşürme (rtdbUpdate)
-                    return rtdbUpdate(userRef, { balance_usd: newUsdBalance });
                 });
                 
             }).then(() => {
@@ -556,20 +619,15 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 document.getElementById('amount-trx').value = '';
                 document.getElementById('withdraw-usd-amount').textContent = '$0.00';
             }).catch(e => {
-                // console.error("Withdrawal Error:", e); // KALDIRILDI
-                
+                // Hata yakalama
                 let errorMessage = "An error occurred during withdrawal. Please try again later.";
-                
-                if (e.message && e.message.includes("User data is missing")) {
+                if (e.code === 'insufficient-funds' || e.code === 'concurrency-error') {
+                    errorMessage = `Withdrawal failed: ${e.message}`;
+                } else if (e.message && e.message.includes("User data is missing")) {
                     errorMessage = "User data could not be initialized. Please restart the bot and try again.";
-                } else if (e.code && e.code.includes("permission-denied")) {
-                    // Firebase Firestore veya RTDB izin hatası
-                    errorMessage = "Withdrawal failed: Database permission denied. Please check your Firebase Rules.";
-                } else if (e.message && e.message.includes("Failed to fetch")) {
-                    errorMessage = "Network error: Failed to connect to Firebase. Check your internet.";
                 }
                 
-                window.Telegram.WebApp.showAlert(`Withdrawal failed: ${errorMessage}`);
+                window.Telegram.WebApp.showAlert(errorMessage);
             }).finally(() => {
                 withdrawSubmitBtn.disabled = false;
             });
@@ -584,26 +642,24 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             rtdbOnValue(usersRef, (snapshot) => {
                 let totalBalance = 0.0;
                 let userCount = 0;
-                let totalAds = 0; // YENİ: Toplam reklam sayacı
+                let totalAds = 0; 
 
                 snapshot.forEach(userSnapshot => {
                     totalBalance += userSnapshot.val().balance_usd || 0.0;
                     userCount++;
-                    totalAds += userSnapshot.val().total_ads_watched || 0; // YENİ: Toplam reklam sayısını topla
+                    totalAds += userSnapshot.val().total_ads_watched || 0; 
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
-                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); // YENİ: Toplam reklam sayısını göster
+                document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString(); 
             });
 
             // 2. Load Pending Withdrawal Requests (FIRESTORE)
             const requestsColRef = collection(firestore, 'withdrawal_requests');
-            // Firestore Query (sadece Pending olanları getirir)
             const q = query(requestsColRef, where("status", "==", "Pending"));
             
-            // onSnapshot (Firestore Listener)
-            onSnapshot(q, async (querySnapshot) => { // Async yapıldı
+            onSnapshot(q, async (querySnapshot) => { 
                 const ul = document.getElementById('withdrawal-list');
                 ul.innerHTML = '<p style="color:var(--subtle-text);">Loading requests...</p>'; 
                 
@@ -611,33 +667,28 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
 
                 querySnapshot.forEach(docSnapshot => {
                     const request = docSnapshot.data();
-                    const requestId = docSnapshot.id; // Firestore Document ID
+                    const requestId = docSnapshot.id; 
                     
-                    // Firestore Timestamp'i milisaniyeye çevirme
                     const timestamp = request.timestamp?.seconds * 1000 || 0; 
                     pendingRequests.push({ ...request, requestId, timestamp });
                 });
 
                 pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
 
-                // --- ASYNC RTDB'den Kullanıcı Bakiyesini ve Reklam Sayısını Çekme ---
                 const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
-                    // user_id'yi kullanarak RTDB'den anlık bakiyeyi ve toplam reklam sayısını çek
                     const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
                     const userSnapshot = await rtdbGet(userRef);
-                    // YENİ: total_ads_watched varsayılan değeri eklendi
                     const userData = userSnapshot.val() || { balance_usd: 0.0, total_ads_watched: 0 }; 
                     return {
                         ...request,
                         current_balance_usd: userData.balance_usd || 0.0,
-                        user_total_ads: userData.total_ads_watched || 0 // YENİ: Toplam reklam sayısını kaydet
+                        user_total_ads: userData.total_ads_watched || 0 
                     };
                 });
                 
                 const requestsWithUserData = await Promise.all(requestsWithUserDataPromises);
-                // --- ASYNC Veri Çekme Bitti ---
                 
-                ul.innerHTML = ''; // 'Loading' mesajını temizle
+                ul.innerHTML = ''; 
 
                 if (requestsWithUserData.length === 0) {
                     ul.innerHTML = '<p style="color:green; font-weight:700;">No pending withdrawal requests.</p>';
@@ -645,7 +696,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     requestsWithUserData.forEach(request => {
                         const li = document.createElement('li');
                         
-                        // Bakiyenin çekim tutarından sonra ne kadar kalacağını hesapla
                         const remainingBalance = (request.current_balance_usd - parseFloat(request.amount_usd));
                         
                         li.innerHTML = `
@@ -700,7 +750,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 }
                 
             }).catch(e => {
-                // console.error("Firestore Update Error:", e); // KALDIRILDI
                 window.Telegram.WebApp.showAlert(`Admin action failed: ${e.message}`);
             });
         }
