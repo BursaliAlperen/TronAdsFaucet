@@ -44,6 +44,7 @@
         .header-stats p strong { display: block; font-size: 1.1rem; }
 
         main { padding: 15px; }
+        /* DÜZELTME: Tüm .page'ler başlangıçta gizlenir. */
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -173,7 +174,7 @@
                 </ul>
             </div>
 
-            <div id="menu-page" class="page active">
+            <div id="menu-page" class="page">
                 <h2><i class="fas fa-home"></i> Home & Earning</h2>
                 <div class="card balance-card">
                     <p style="font-size:1.1rem; color:var(--subtle-text);">Your Current Balance (TRX)</p>
@@ -250,7 +251,7 @@
         </main>
 
         <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-btn" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
             <button class="nav-btn" data-page="friends-page"><i class="fas fa-users"></i><span>Friends</span></button>
             <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
         </nav>
@@ -442,7 +443,7 @@
                     return;
                 }
                 
-                const suspiciousActivities = detectSuspiciousActivity(currentData, previousUserData);
+                const suspiciousActivities = detectSuspiciousActivity(currentData, previousData);
                 
                 if (suspiciousActivities.length > 0) {
                     const userIP = await getUserIP();
@@ -911,20 +912,20 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                 let totalBalance = 0.0;
                 let userCount = 0;
                 let totalAds = 0;
-                let totalReferrals = 0; // Toplam referans sayısı
+                let totalReferrals = 0; 
 
                 snapshot.forEach(userSnapshot => {
                     const userData = userSnapshot.val();
                     totalBalance += userData.balance_usd || 0.0;
                     userCount++;
                     totalAds += userData.total_ads_watched || 0;
-                    totalReferrals += userData.referral_count || 0; // Her kullanıcının referans sayısını topla
+                    totalReferrals += userData.referral_count || 0; 
                 });
                 
                 document.getElementById('admin-user-count').textContent = userCount;
                 document.getElementById('admin-total-balance').textContent = `$${totalBalance.toFixed(2)}`;
                 document.getElementById('admin-total-ads').textContent = totalAds.toLocaleString();
-                document.getElementById('admin-total-referrals').textContent = totalReferrals.toLocaleString(); // Referans sayısını göster
+                document.getElementById('admin-total-referrals').textContent = totalReferrals.toLocaleString(); 
             });
 
             // 2. Load Pending Withdrawal Requests (FIRESTORE) - IP BİLGİSİ EKLENDİ
@@ -1114,7 +1115,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             // Ban kontrolü yapılır. Eğer yasaklıysa diğer başlatma işlemleri durdurulur.
             const isBanned = await checkIPBan();
             if (isBanned) {
-                // checkIPBan zaten ekranı gösterdiği ve nav'ı gizlediği için burada sadece return yapılır.
+                // checkIPBan zaten ekranı gösterdiği için burada return ile uygulamanın geri kalanını durdurur.
                 return;
             }
             
@@ -1123,6 +1124,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             setupEventListeners();
             setupSecurityMonitor();
             
+            // Banlı değilse, menü sayfasını göster.
             showSection('menu-page'); 
         };
 
