@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Tron Ads Faucet</title>
     
+    <meta name='admaven-placement' content='Bqja7qHY5'>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -124,10 +126,24 @@
             margin: 0 auto;
             max-width: 500px;
             background-color: var(--bg-color);
+            text-align: center; /* Banner'ın ortalanmasını sağlar */
         }
-        #frame iframe {
-            min-height: 90px; /* Entegre edilen reklam için minimum yükseklik */
+        /* AdMaven Reklam Alanı için genel stil */
+        .admaven-banner-wrapper {
+            width: 100%;
+            height: 100px; /* Minimum bir yükseklik belirlenmeli */
+            margin: 15px 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e8e8e8; /* Reklam yüklenirken görülecek arka plan */
+            border-radius: 8px;
         }
+        .admaven-banner-wrapper:empty {
+            min-height: 90px;
+        }
+        /* Daha önceki A-Ads kodu kaldırıldı. Şimdi AdMaven kodu ile değiştirildi. */
     </style>
 </head>
 <body>
@@ -146,9 +162,14 @@
         </header>
 
         <div class="ad-container">
-            <div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
-                <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                    style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto; min-height: 90px;'></iframe>
+            <div class="admaven-banner-wrapper" id="admaven-top-banner">
+                <script type="text/javascript">
+                    var admaven_banner_id = "Bqja7qHY5";
+                    var admaven_banner_type = "banner";
+                    var admaven_banner_size = "Adaptive";
+                    var admaven_banner_placeholder = "admaven-top-banner";
+                </script>
+                <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-top-banner"></script>
             </div>
         </div>
         <main id="main-content">
@@ -243,6 +264,17 @@
                     </div>
                 </div>
 
+                <div class="ad-container" style="padding: 0 0 10px 0;">
+                    <div class="admaven-banner-wrapper" id="admaven-mid-banner">
+                        <script type="text/javascript">
+                            var admaven_banner_id = "Bqja7qHY5";
+                            var admaven_banner_type = "banner";
+                            var admaven_banner_size = "Adaptive";
+                            var admaven_banner_placeholder = "admaven-mid-banner";
+                        </script>
+                        <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-mid-banner"></script>
+                    </div>
+                </div>
                 <div class="menu-grid" style="margin-top: 15px;">
                     <div onclick="showSection('friends-page')" class="menu-tile">
                         <i class="fas fa-users"></i>
@@ -305,7 +337,19 @@
                     </button>
                 </form>
             </div>
-        </main>
+
+            <div class="ad-container" style="padding: 10px 0 0 0; margin-bottom: 20px;">
+                <div class="admaven-banner-wrapper" id="admaven-bottom-banner">
+                    <script type="text/javascript">
+                        var admaven_banner_id = "Bqja7qHY5";
+                        var admaven_banner_type = "banner";
+                        var admaven_banner_size = "Adaptive";
+                        var admaven_banner_placeholder = "admaven-bottom-banner";
+                    </script>
+                    <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-bottom-banner"></script>
+                </div>
+            </div>
+            </main>
 
         <nav class="bottom-nav">
             <button class="nav-btn" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
@@ -669,8 +713,7 @@
                     li.style.border = '1px solid #ffaaaa';
 
                     li.innerHTML = `
-                        <p><strong>Telegram ID:</strong> ${banData.telegram_id || 'Unknown'}</p>
-                        <p><strong>UID:</strong> ${banData.user_id}</p>
+                        <p><strong>Telegram ID:</strong> ${banData.telegram_id || 'Unknown'} (UID: ${banData.user_id})</p>
                         <p><strong>Reason:</strong> ${banData.reason}</p>
                         <p><strong>Banned by:</strong> ${banData.banned_by}</p>
                         <p><strong>Date:</strong> ${new Date(banData.banned_at).toLocaleString()}</p>
