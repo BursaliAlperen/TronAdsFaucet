@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Tron Ads Faucet</title>
     
-    <meta name='admaven-placement' content='Bqja7qHY5'>
+    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,30 +120,6 @@
             background-color: var(--primary-color);
             border-radius: 10px;
         }
-        /* YENİ CSS: Reklam yerleşimi için düzenlemeler */
-        .ad-container {
-            padding: 10px 15px; /* Ana içeriğin padding'ine uyum sağlamak için */
-            margin: 0 auto;
-            max-width: 500px;
-            background-color: var(--bg-color);
-            text-align: center; /* Banner'ın ortalanmasını sağlar */
-        }
-        /* AdMaven Reklam Alanı için genel stil */
-        .admaven-banner-wrapper {
-            width: 100%;
-            height: 100px; /* Minimum bir yükseklik belirlenmeli */
-            margin: 15px 0;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #e8e8e8; /* Reklam yüklenirken görülecek arka plan */
-            border-radius: 8px;
-        }
-        .admaven-banner-wrapper:empty {
-            min-height: 90px;
-        }
-        /* Daha önceki A-Ads kodu kaldırıldı. Şimdi AdMaven kodu ile değiştirildi. */
     </style>
 </head>
 <body>
@@ -161,17 +137,6 @@
             </div>
         </header>
 
-        <div class="ad-container">
-            <div class="admaven-banner-wrapper" id="admaven-top-banner">
-                <script type="text/javascript">
-                    var admaven_banner_id = "Bqja7qHY5";
-                    var admaven_banner_type = "banner";
-                    var admaven_banner_size = "Adaptive";
-                    var admaven_banner_placeholder = "admaven-top-banner";
-                </script>
-                <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-top-banner"></script>
-            </div>
-        </div>
         <main id="main-content">
             
             <div id="banned-screen" class="page" style="text-align: center; padding: 40px; background-color: #ffebeb; border: 3px solid #D32F2F; margin-top: 20px;">
@@ -251,6 +216,13 @@
                     <div class="trx-value">≈ $<span id="menu-balance-usd">0.00</span></div>
                 </div>
                 
+                <div class="card" style="margin-bottom: 20px; padding: 10px; text-align: center;">
+                    <script type="text/javascript">
+                        aclib.runBanner({
+                            zoneId: '10506110',
+                        });
+                    </script>
+                </div>
                 <div class="card" style="text-align: center; border-left: 5px solid var(--primary-color);">
                     <i class="fas fa-video" style="font-size:3rem; color: var(--primary-color);"></i>
                     <h3>Watch & Earn</h3>
@@ -263,17 +235,13 @@
                         Next 100 ads available in: <span id="timer-display">Loading...</span>
                     </div>
                 </div>
-
-                <div class="ad-container" style="padding: 0 0 10px 0;">
-                    <div class="admaven-banner-wrapper" id="admaven-mid-banner">
-                        <script type="text/javascript">
-                            var admaven_banner_id = "Bqja7qHY5";
-                            var admaven_banner_type = "banner";
-                            var admaven_banner_size = "Adaptive";
-                            var admaven_banner_placeholder = "admaven-mid-banner";
-                        </script>
-                        <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-mid-banner"></script>
-                    </div>
+                
+                <div class="card" style="margin-bottom: 20px; padding: 10px; text-align: center;">
+                    <script type="text/javascript">
+                        aclib.runBanner({
+                            zoneId: '10506102',
+                        });
+                    </script>
                 </div>
                 <div class="menu-grid" style="margin-top: 15px;">
                     <div onclick="showSection('friends-page')" class="menu-tile">
@@ -295,6 +263,13 @@
                     <div style="font-size:2.5rem; font-weight:800; color:#4CAF50; line-height:1.2;" id="referral-count-display">0</div>
                 </div>
                 
+                <div class="card" style="margin-bottom: 20px; padding: 10px; text-align: center;">
+                    <script type="text/javascript">
+                        aclib.runBanner({
+                            zoneId: '10506102',
+                        });
+                    </script>
+                </div>
                 <div class="card">
                     <p style="font-weight:700; color:var(--primary-color);">Referral Bonus: Get **$0.005** worth of TRX for every successful friend!</p>
                     
@@ -313,13 +288,29 @@
                         <button onclick="applyReferralCode()"><i class="fas fa-arrow-right"></i> Apply</button>
                     </div>
                 </div>
-            </div>
+                
+                <div class="card" style="margin-bottom: 20px; padding: 10px; text-align: center;">
+                    <script type="text/javascript">
+                        aclib.runBanner({
+                            zoneId: '10506110',
+                        });
+                    </script>
+                </div>
+                </div>
             
             <div id="withdraw-page" class="page">
                 <h2><i class="fas fa-money-check-alt"></i> Withdraw TRX</h2>
                 <div class="card balance-card" style="margin-bottom: 20px;">
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
+                </div>
+                
+                <div class="card" style="margin-bottom: 20px; padding: 10px; text-align: center;">
+                    <script type="text/javascript">
+                        aclib.runBanner({
+                            zoneId: '10506102',
+                        });
+                    </script>
                 </div>
                 <p style="font-weight:700;">Minimum withdrawal: **2.50 TRX**.<br>Maximum withdrawal: **10.00 TRX**.</p>
                 <form id="withdraw-form" style="margin-top:15px;">
@@ -337,19 +328,7 @@
                     </button>
                 </form>
             </div>
-
-            <div class="ad-container" style="padding: 10px 0 0 0; margin-bottom: 20px;">
-                <div class="admaven-banner-wrapper" id="admaven-bottom-banner">
-                    <script type="text/javascript">
-                        var admaven_banner_id = "Bqja7qHY5";
-                        var admaven_banner_type = "banner";
-                        var admaven_banner_size = "Adaptive";
-                        var admaven_banner_placeholder = "admaven-bottom-banner";
-                    </script>
-                    <script type="text/javascript" src="//get.admavenmedia.com/js/js.php?ad=Bqja7qHY5&type=banner&size=Adaptive&placeholder=admaven-bottom-banner"></script>
-                </div>
-            </div>
-            </main>
+        </main>
 
         <nav class="bottom-nav">
             <button class="nav-btn" data-page="menu-page"><i class="fas fa-home"></i><span>Home</span></button>
@@ -713,7 +692,8 @@
                     li.style.border = '1px solid #ffaaaa';
 
                     li.innerHTML = `
-                        <p><strong>Telegram ID:</strong> ${banData.telegram_id || 'Unknown'} (UID: ${banData.user_id})</p>
+                        <p><strong>Telegram ID:</strong> ${banData.telegram_id || 'Unknown'}</p>
+                        <p><strong>UID:</strong> ${banData.user_id}</p>
                         <p><strong>Reason:</strong> ${banData.reason}</p>
                         <p><strong>Banned by:</strong> ${banData.banned_by}</p>
                         <p><strong>Date:</strong> ${new Date(banData.banned_at).toLocaleString()}</p>
@@ -1118,7 +1098,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     pendingRequests.push({ ...request, requestId, timestamp });
                 });
 
-                pendingRequests.sort((a, b) => b.timestamp - a.timestamp);
+                pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
 
                 const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
                     const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
