@@ -13,8 +13,10 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
-
+    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="379159"></script>
+    
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    
     <style>
         :root {
             --font-family: 'Nunito', sans-serif;
@@ -867,13 +869,19 @@
                 if (adsWatched >= AD_LIMIT) {
                     return window.Telegram.WebApp.showAlert(`You have reached the daily ad viewing limit (${AD_LIMIT}).`);
                 }
+                
+                if (!window.tmaShow) {
+                    return window.Telegram.WebApp.showAlert("Ad engine not ready. Please refresh the app.");
+                }
 
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
 
-                window.showAdexora()
+                // YENİ TMA (onclckvd) REKLAM ÇAĞIRMA
+                window.tmaShow?.()
                   .then(() => {
+                    // Başarılı: Reklam oynatıldı
                     adsWatched++;
                     totalAdsWatched++;
                     const newBalance = currentBalance + EARNINGS_PER_AD_USD;
@@ -889,14 +897,15 @@
                     window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
                   })
                   .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
+                    // Hata: Reklam gösterilemedi veya kullanıcı tarafından atlandı
+                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again. Error: " + e);
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
                     watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
-                    updateAdCooldown(); // Update the cooldown timer after ad watch
+                    updateAdCooldown(); 
                   });
             });
         }
@@ -1295,6 +1304,17 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             
             showSection('menu-page'); 
         };
+
+        // YENİ TMA (onclckvd.com) ÖDÜLLÜ VİDEO REKLAM BAŞLATMA
+        // **ÖNEMLİ:** Lütfen 'YOUR_TMA_SPOT_ID' kısmını kendi TMA Spot ID'niz ile DEĞİŞTİRİN.
+        const TMA_SPOT_ID = 'YOUR_TMA_SPOT_ID'; 
+        
+        window.initCdTma?.({ id: TMA_SPOT_ID })
+            .then(show => {
+                window.tmaShow = show; // show fonksiyonunu global olarak tmaShow adıyla kaydet
+                console.log('TMA Rewarded Ad initialized successfully.');
+            })
+            .catch(e => console.error('TMA Initialization Error:', e));
 
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
