@@ -118,6 +118,16 @@
             background-color: var(--primary-color);
             border-radius: 10px;
         }
+        /* YENİ CSS: Reklam yerleşimi için düzenlemeler */
+        .ad-container {
+            padding: 10px 15px; /* Ana içeriğin padding'ine uyum sağlamak için */
+            margin: 0 auto;
+            max-width: 500px;
+            background-color: var(--bg-color);
+        }
+        #frame iframe {
+            min-height: 90px; /* Entegre edilen reklam için minimum yükseklik */
+        }
     </style>
 </head>
 <body>
@@ -135,6 +145,12 @@
             </div>
         </header>
 
+        <div class="ad-container">
+            <div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
+                <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
+                    style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto; min-height: 90px;'></iframe>
+            </div>
+        </div>
         <main id="main-content">
             
             <div id="banned-screen" class="page" style="text-align: center; padding: 40px; background-color: #ffebeb; border: 3px solid #D32F2F; margin-top: 20px;">
@@ -152,6 +168,7 @@
             
             <div id="admin-panel" class="page">
                 <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+                
                 <div class="card">
                     <h3>System Stats (RTDB)</h3>
                     <div class="stat-display"><span>Total Users:</span> <strong id="admin-user-count">0</strong></div>
@@ -207,27 +224,6 @@
 
             <div id="menu-page" class="page">
                 <h2><i class="fas fa-home"></i> Home & Earning</h2>
-                <div class="ad-block-4-banners" style="margin: 20px 0; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 10px; background-color: var(--card-bg);">
-                    <h4 style="text-align: center; color: var(--primary-color); margin-bottom: 10px;">Advertisement Slots</h4>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                    </div>
-                </div>
                 <div class="card balance-card">
                     <p style="font-size:1.1rem; color:var(--subtle-text);">Your Current Balance (TRX)</p>
                     <div class="usd-value"><span id="menu-balance-trx">0.0000</span> TRX</div>
@@ -261,27 +257,7 @@
 
             <div id="friends-page" class="page">
                 <h2><i class="fas fa-user-friends"></i> Referral System</h2>
-                <div class="ad-block-4-banners" style="margin: 20px 0; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 10px; background-color: var(--card-bg);">
-                    <h4 style="text-align: center; color: var(--primary-color); margin-bottom: 10px;">Advertisement Slots</h4>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                    </div>
-                </div>
+                
                 <div class="card" style="text-align:center; border: 2px solid #5cb85c; background-color: #e6ffe6;">
                     <p style="font-size:1rem; color:#3c763d;">Total Referred Friends:</p>
                     <div style="font-size:2.5rem; font-weight:800; color:#4CAF50; line-height:1.2;" id="referral-count-display">0</div>
@@ -309,27 +285,6 @@
             
             <div id="withdraw-page" class="page">
                 <h2><i class="fas fa-money-check-alt"></i> Withdraw TRX</h2>
-                <div class="ad-block-4-banners" style="margin: 20px 0; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 10px; background-color: var(--card-bg);">
-                    <h4 style="text-align: center; color: var(--primary-color); margin-bottom: 10px;">Advertisement Slots</h4>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                        <div class="ad-item">
-                            <iframe data-aa='2413299' src='//acceptable.a-ads.com/2413299/?size=Adaptive'
-                                style='border:0; padding:0; width:100%; height:70px; overflow:hidden; display: block;'></iframe>
-                        </div>
-                    </div>
-                </div>
                 <div class="card balance-card" style="margin-bottom: 20px;">
                     <p style="font-size:0.9rem; color:var(--subtle-text);">Available TRX:</p>
                     <div class="usd-value" style="font-size:2rem;"><span id="withdraw-balance-trx">0.0000</span> TRX</div>
@@ -1120,7 +1075,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     pendingRequests.push({ ...request, requestId, timestamp });
                 });
 
-                pendingRequests.sort((a, b) => a.timestamp - b.timestamp);
+                pendingRequests.sort((a, b) => b.timestamp - a.timestamp);
 
                 const requestsWithUserDataPromises = pendingRequests.map(async (request) => {
                     const userRef = rtdbRef(rtdb, 'users/' + request.user_id);
