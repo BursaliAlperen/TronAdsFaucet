@@ -11,7 +11,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
-    <script src="https://adexora.com/cdn/ads.js?id=494"></script>
+    <script src='//libtl.com/sdk.js' data-zone='10016797' data-sdk='show_10016797'></script>
 
     <style>
         :root {
@@ -318,15 +318,14 @@
         const ADMIN_TELEGRAM_IDS = ["7904032877", "8392479231"]; 
         const AD_LIMIT = 100;
         const EARNINGS_PER_AD_USD = 0.001;
-        // KULLANICI İSTEĞİNE GÖRE REFERRAL BONUS GÜNCELLENDİ
         const REFERRAL_BONUS_USD = 0.005; 
         const MIN_WITHDRAW_TRX = 2.5;
         const MAX_WITHDRAW_TRX = 10.00; 
         const BOT_USERNAME = "TronAdsFaucetBot"; 
         
+        // GÜNCEL GÜVENLİK YAPILANDIRMASI: Sadece bakiye artışı limiti aktif.
         const SECURITY_CONFIG = {
             MAX_BALANCE_INCREASE_PER_MINUTE: 0.10,
-            MAX_ADS_PER_MINUTE: 5,
             SUSPICIOUS_ACTIVITY_LIMIT: 3,
             CHECK_INTERVAL: 60000
         };
@@ -441,20 +440,33 @@
             });
         }
 
+        // GÜNCELLEME: Yalnızca bakiye artışı ve iade istisnası kontrolü.
         function detectSuspiciousActivity(userData, previousData) {
             const suspiciousFlags = [];
             
             if (!previousData) return suspiciousFlags;
             
             const balanceIncrease = userData.balance_usd - (previousData.balance_usd || 0);
+
+            // İADE (REFUND) İSTİSNA KONTROLÜ
+            const lastRefund = previousData.last_refund_amount || 0;
+            let isRefundException = false;
+            
+            if (lastRefund > 0 && Math.abs(balanceIncrease - lastRefund) < 0.0001) {
+                isRefundException = true;
+                // İSTİSNA KULLANILDI: Refund bilgisini sıfırla ki sonraki artışlarda hile olmasın.
+                rtdbUpdate(rtdbRef(rtdb, 'users/' + userUid), { last_refund_amount: 0 });
+            }
+
+            // ANORMAL BAKİYE ARTIŞI KURALI: (Ana Ban Sebebi)
             if (balanceIncrease > SECURITY_CONFIG.MAX_BALANCE_INCREASE_PER_MINUTE) {
-                suspiciousFlags.push(`Abnormal balance increase: $${balanceIncrease}`);
+                if (!isRefundException) {
+                     // Reddetme iadesi değilse ve limit aşıldıysa ban bayrağı ekle.
+                     suspiciousFlags.push(`Abnormal balance increase: $${balanceIncrease.toFixed(4)} (Max allowed per minute: $${SECURITY_CONFIG.MAX_BALANCE_INCREASE_PER_MINUTE.toFixed(4)})`);
+                }
             }
             
-            const adsIncrease = userData.daily_ads_watched - (previousData.daily_ads_watched || 0);
-            if (adsIncrease > SECURITY_CONFIG.MAX_ADS_PER_MINUTE) {
-                suspiciousFlags.push(`Abnormal ad speed: ${adsIncrease} ads/minute`);
-            }
+            // REKLAM HIZI KONTROLÜ KALDIRILDI
             
             if (userData.balance_usd < 0) {
                 suspiciousFlags.push(`Negative balance: $${userData.balance_usd}`);
@@ -495,7 +507,6 @@
             });
         }
 
-        // GÜNCELLENMİŞ loadAllUsers fonksiyonu (Arama/Filtreleme eklendi)
         function loadAllUsers() {
             const usersRef = rtdbRef(rtdb, 'users');
             const ul = document.getElementById('users-list');
@@ -519,20 +530,18 @@
                         telegram_id: userData.telegram_id,
                         username: userData.username || 'N/A',
                         balance_usd: userData.balance_usd || 0,
-                        daily_ads_watched: userData.daily_ads_watched || 0, // Günlük reklam izleme bilgisini çek
+                        daily_ads_watched: userData.daily_ads_watched || 0,
                         total_ads_watched: userData.total_ads_watched || 0,
                         referral_count: userData.referral_count || 0,
                         created_at: userData.created_at
                     });
                 });
                 
-                // Bakiyeye göre sırala (yüksek bakiye üstte)
                 users.sort((a, b) => b.balance_usd - a.balance_usd);
                 
                 let filteredCount = 0;
 
                 users.forEach(user => {
-                    // FİLTRELEME MANTIĞI
                     const matchesSearch = searchTerm === '' || 
                                           user.telegram_id.includes(searchTerm) || 
                                           user.username.toLowerCase().includes(searchTerm) ||
@@ -690,7 +699,6 @@
             const now = new Date();
             const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), RESET_TIME_UTC_HOUR, 0, 0, 0));
             
-            // If the reset time has already passed today (UTC), set it for tomorrow
             if (now.getTime() >= todayReset.getTime()) {
                 const tomorrowReset = new Date(todayReset.getTime() + MILLISECONDS_IN_DAY);
                 return tomorrowReset;
@@ -732,9 +740,8 @@
                     if (distance < 0) {
                         clearInterval(adCooldownInterval);
                         timerDisplay.textContent = "Resetting now...";
-                        // Trigger a soft reset check for the user in RTDB to reset daily_ads_watched
                         rtdbUpdate(userRef, { last_reset_check: serverTimestamp() });
-                        updateAdCooldown(); // Re-check user data after potential reset
+                        updateAdCooldown(); 
                         return;
                     }
                     
@@ -769,25 +776,23 @@
                         referral_count: 0,
                         referral_code: telegramId.toString(), 
                         created_at: serverTimestamp(),
-                        last_reset_check: serverTimestamp() // For initial setup
+                        last_reset_check: serverTimestamp()
                     };
                     rtdbSet(userRef, newUser);
                     userData = newUser;
                 }
 
-                // Daily Ads Reset Logic (Client-side approximation, Firebase Rules or a Cloud Function is better for production)
                 const now = new Date().getTime();
                 const nextResetTime = getNextResetTime().getTime();
 
                 if (now > nextResetTime && (userData.daily_ads_watched || 0) > 0) {
-                     // Check if reset has occurred since the reset time
                      const lastResetCheckTime = new Date(userData.last_reset_check || 0).getTime();
                      if (lastResetCheckTime < nextResetTime) {
                          rtdbUpdate(userRef, {
                             daily_ads_watched: 0,
                             last_reset_check: serverTimestamp() 
                          });
-                         userData.daily_ads_watched = 0; // Update local data for display immediately
+                         userData.daily_ads_watched = 0; 
                      }
                 }
 
@@ -815,6 +820,7 @@
             });
         }
         
+        // YENİ REKLAM SAĞLAYICISINA GÖRE GÜNCELLENMİŞ handleWatchAd FONKSİYONU
         const handleWatchAd = () => {
             const watchAdBtn = document.getElementById('watch-ad-btn');
             const userRef = rtdbRef(rtdb, 'users/' + userUid);
@@ -832,32 +838,54 @@
                 watchAdBtn.disabled = true;
                 watchAdBtn.classList.add('loading');
                 watchAdBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Loading Ad...';
+                
+                // YENİ REKLAM KODU ÇAĞIRIMI:
+                const showPromise = new Promise((resolve) => {
+                    if (window.show_10016797) {
+                        window.show_10016797.show((status) => {
+                            // Reklam başarıyla gösterildiğinde (veya ödül verildiğinde) resolve çağrılır.
+                            if (status === 'rewarded' || status === 'completed') { 
+                                resolve(true);
+                            } else {
+                                resolve(false); // Başarısız veya atlandı
+                            }
+                        });
+                    } else {
+                        // Eğer SDK yüklenmediyse bile ilerle
+                        resolve(false); 
+                    }
+                });
 
-                window.showAdexora()
-                  .then(() => {
-                    adsWatched++;
-                    totalAdsWatched++;
-                    const newBalance = currentBalance + EARNINGS_PER_AD_USD;
+                showPromise
+                  .then((wasSuccessful) => {
+                    if (wasSuccessful) {
+                        adsWatched++;
+                        totalAdsWatched++;
+                        const newBalance = currentBalance + EARNINGS_PER_AD_USD;
 
-                    rtdbUpdate(userRef, {
-                        balance_usd: newBalance,
-                        daily_ads_watched: adsWatched,
-                        total_ads_watched: totalAdsWatched,
-                        last_ad_viewed: serverTimestamp()
-                    });
-                    
-                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
+                        rtdbUpdate(userRef, {
+                            balance_usd: newBalance,
+                            daily_ads_watched: adsWatched,
+                            total_ads_watched: totalAdsWatched,
+                            last_ad_viewed: serverTimestamp()
+                        });
+                        
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                        window.Telegram.WebApp.showAlert(`Success! You earned $${EARNINGS_PER_AD_USD.toFixed(3)} worth of TRX.`);
+                    } else {
+                        window.Telegram.WebApp.showAlert("Ad not shown or skipped/Failed to load. Please try again.");
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                    }
                   })
                   .catch(e => {
-                    window.Telegram.WebApp.showAlert("Ad not shown or skipped. Please try again.");
+                    window.Telegram.WebApp.showAlert("An error occurred while displaying the ad.");
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
                   })
                   .finally(() => {
                     watchAdBtn.disabled = false;
                     watchAdBtn.classList.remove('loading');
                     watchAdBtn.innerHTML = '<i class="fas fa-play-circle" style="margin-right:10px;"></i> Watch Ad';
-                    updateAdCooldown(); // Update the cooldown timer after ad watch
+                    updateAdCooldown();
                   });
             });
         }
@@ -865,7 +893,6 @@
         const handleShareReferral = () => {
             const userCode = document.getElementById('referral-code-input').value;
             const telegramLink = `https://t.me/${BOT_USERNAME}?start=${userCode}`;
-            // REFERRAL BONUS GÜNCELLENDİ
             const shareText = 
 `💰 TRON ADS FAUCET - FREE TRX! 🚀
 
@@ -1073,7 +1100,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     return {
                         ...request,
                         current_balance_usd: userData.balance_usd || 0.0,
-                        user_daily_ads: userData.daily_ads_watched || 0, // Günlük reklam bilgisi
+                        user_daily_ads: userData.daily_ads_watched || 0,
                         user_total_ads: userData.total_ads_watched || 0,
                         user_referral_count: userData.referral_count || 0,
                     };
@@ -1132,7 +1159,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
             });
         }
         
-        // YENİ FONKSİYON: Çekim Talebi Kullanıcı Detaylarını Göster
         window.viewWithdrawalDetails = (userId, totalAds, referrals, dailyAds, currentBalance, requestedTrx) => {
             let details = `📝 Withdrawal Request Details:\n\n`;
             details += `👤 User UID: ${userId}\n`;
@@ -1147,6 +1173,7 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
         };
 
 
+        // ÇEKİM REDDİ İADE İSTİSNASI MANTIĞI
         window.processWithdrawal = (requestId, status, userIdToRefund, amountUsdToRefund) => {
             if (!ADMIN_TELEGRAM_IDS.includes(telegramId)) return;
             
@@ -1171,7 +1198,12 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                         const userData = snapshot.val();
                         if (userData) {
                             const newBalance = (userData.balance_usd || 0.0) + refundAmount;
-                            return rtdbUpdate(userRef, { balance_usd: newBalance });
+                            
+                            // İade miktarını RTDB'ye kaydet, böylece güvenlik kontrolü bunu atlayabilir.
+                            return rtdbUpdate(userRef, { 
+                                balance_usd: newBalance,
+                                last_refund_amount: refundAmount // İade miktarını kaydet
+                            });
                         }
                     }).then(() => {
                         window.Telegram.WebApp.showAlert(`Request rejected and $${refundAmount.toFixed(4)} refunded to user.`);
@@ -1197,7 +1229,6 @@ See you inside! #Tron #TRX #Crypto #FreeMoney`;
                     withdrawUsd.textContent = `$${(trx * currentTronPriceUsd).toFixed(4)}`;
                 }
             });
-            // Arama kutusuna anlık filtreleme (Opsiyonel: Performans için buraya debounce eklenebilir)
             document.getElementById('user-search-input').addEventListener('input', () => {
                  loadAllUsers();
             });
